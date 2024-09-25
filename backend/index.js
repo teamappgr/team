@@ -26,7 +26,11 @@ app.use(bodyParser.json()); // For parsing application/json
 const { Pool } = require('pg');
 
 const pool = new Pool({
-  connectionString: `postgres://${process.env.SUPABASE_USER}:${process.env.SUPABASE_PASSWORD}@${process.env.SUPABASE_HOST}:${process.env.SUPABASE_PORT || 5432}/${process.env.SUPABASE_DATABASE}`,
+  host: process.env.SUPABASE_HOST,
+  user: process.env.SUPABASE_USER,
+  password: process.env.SUPABASE_PASSWORD,
+  database: process.env.SUPABASE_DATABASE,
+  port: process.env.SUPABASE_PORT || 5432,
   ssl: { rejectUnauthorized: false },
 });
 
