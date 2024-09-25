@@ -23,7 +23,6 @@ app.use(express.json());
 app.use(cors());
 app.use(bodyParser.json()); // For parsing application/json
 
-const { Pool } = require('pg');
 
 const pool = new Pool({
   host: process.env.SUPABASE_HOST,
