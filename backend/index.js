@@ -23,13 +23,10 @@ app.use(express.json());
 app.use(cors());
 app.use(bodyParser.json()); // For parsing application/json
 
-// PostgreSQL Connection Pool
+const { Pool } = require('pg');
+
 const pool = new Pool({
-  host: process.env.SUPABASE_HOST,
-  user: process.env.SUPABASE_USER,
-  password: process.env.SUPABASE_PASSWORD,
-  database: process.env.SUPABASE_DATABASE,
-  port: process.env.SUPABASE_PORT || 5432,
+  connectionString: `postgres://${process.env.SUPABASE_USER}:${process.env.SUPABASE_PASSWORD}@${process.env.SUPABASE_HOST}:${process.env.SUPABASE_PORT || 5432}/${process.env.SUPABASE_DATABASE}`,
   ssl: { rejectUnauthorized: false },
 });
 
