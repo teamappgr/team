@@ -167,13 +167,13 @@ const Profile = () => {
           onClick={handleSubmit} 
           isLoading={loading}
         >
-          {t('Update')}
+          {t('update')}
         </Button>
         <Button 
           colorScheme="red" 
           onClick={handleSignOut}
         >
-          {t('signOut')}
+          {t('signout')}
         </Button>
       </Stack>
     </Box>
