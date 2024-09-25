@@ -191,7 +191,7 @@ const SignUp: React.FC = () => {
     setIsCameraOpen(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { exact: 'user' } }, // Request the user (front) camera
+        video: { facingMode: { exact: 'environment' } }, // Request the environment (back) camera
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -208,6 +208,7 @@ const SignUp: React.FC = () => {
     }
   };
   
+
 
   const captureImage = () => {
     if (canvasRef.current && videoRef.current) {
