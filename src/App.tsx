@@ -33,7 +33,6 @@ const App: React.FC = () => {
         <CssBaseline />
         <div className="App">
           {/* Language Selector */}
-          <LanguageSelector />
           <Router>
             <Routes>
               {/* Route for the SignIn page */}

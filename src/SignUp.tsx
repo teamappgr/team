@@ -95,7 +95,7 @@ const SignUp: React.FC = () => {
         return false;
       }
       // Validate phone number length and numeric content
-      if (!/^\d{10}$/.test(phone)) {
+      if (!/^69\d{8}$/.test(phone)) {
         toast({
           title: t('invalidPhone'),
           description: t('invalidPhoneDescription'),
@@ -105,7 +105,16 @@ const SignUp: React.FC = () => {
         });
         return false;
       }
-
+      if(firstName==null && lastName==null && email==null && phone==null){
+        toast({
+          title: t('invalidPhone'),
+          description: t('invalidPhoneDescription'),
+          status: 'error',
+          duration: 4000,
+          isClosable: true,
+        });
+        return false;
+      }
       return firstName && lastName && email && phone;
     } else if (activeStep === 1) {
       return (capturedImage !== null || uploadedImage !== null) && selectedUniversity !== null;

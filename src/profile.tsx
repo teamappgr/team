@@ -13,6 +13,7 @@ import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 import Layout from './Layout'; // Import the Layout component
 import { useTranslation } from 'react-i18next';
+import LanguageSelector from './LanguageSelector'; // Adjust the path as necessary
 
 const Profile = () => {
   const { t } = useTranslation(); // Use translation hook
@@ -40,7 +41,7 @@ const Profile = () => {
           duration: 3000,
           isClosable: true,
         });
-        navigate('/signin');
+        
         return;
       }
 
@@ -114,69 +115,72 @@ const Profile = () => {
 
   return (
     <Layout>
-    <Box p={5}>
-      <Heading mb={6}>{t('contactInfo')}</Heading>
-      <Stack spacing={4}>
-        <FormControl>
-          <FormLabel>{t('firstName')}</FormLabel>
-          <Input
-            name="first_name"
-            value={profileData.first_name}
-            onChange={handleChange}
-            placeholder={t('firstName')}
-          />
-        </FormControl>
-        <FormControl>
-          <FormLabel>{t('lastName')}</FormLabel>
-          <Input
-            name="last_name"
-            value={profileData.last_name}
-            onChange={handleChange}
-            placeholder={t('lastName')}
-          />
-        </FormControl>
-        <FormControl>
-          <FormLabel>{t('email')}</FormLabel>
-          <Input
-            name="email"
-            value={profileData.email}
-            onChange={handleChange}
-            placeholder={t('email')}
-          />
-        </FormControl>
-        <FormControl>
-          <FormLabel>{t('phone')}</FormLabel>
-          <Input
-            name="phone"
-            value={profileData.phone}
-            onChange={handleChange}
-            placeholder={t('phone')}
-          />
-        </FormControl>
-        <FormControl>
-          <FormLabel>{t('instagramInfo')}</FormLabel>
-          <Input
-            name="instagram_account"
-            value={profileData.instagram_account}
-            onChange={handleChange}
-            placeholder={t('instagramInfo')}
-          />
-        </FormControl>
-        <Button 
-          colorScheme="teal" 
-          onClick={handleSubmit} 
-          isLoading={loading}
-        >
-          {t('update')}
-        </Button>
-        <Button 
-          colorScheme="red" 
-          onClick={handleSignOut}
-        >
-          {t('signout')}
-        </Button>
-      </Stack>
-    </Box>
+      <Box p={5}>
+        <Heading mb={6}>{t('contactInfo')}</Heading>
+        <Stack spacing={4}>
+          <FormControl>
+            <FormLabel>{t('firstName')}</FormLabel>
+            <Input
+              name="first_name"
+              value={profileData.first_name}
+              onChange={handleChange}
+              placeholder={t('firstName')}
+            />
+          </FormControl>
+          <FormControl>
+            <FormLabel>{t('lastName')}</FormLabel>
+            <Input
+              name="last_name"
+              value={profileData.last_name}
+              onChange={handleChange}
+              placeholder={t('lastName')}
+            />
+          </FormControl>
+          <FormControl>
+            <FormLabel>{t('email')}</FormLabel>
+            <Input
+              name="email"
+              value={profileData.email}
+              onChange={handleChange}
+              placeholder={t('email')}
+            />
+          </FormControl>
+          <FormControl>
+            <FormLabel>{t('phone')}</FormLabel>
+            <Input
+              name="phone"
+              value={profileData.phone}
+              onChange={handleChange}
+              placeholder={t('phone')}
+            />
+          </FormControl>
+          <FormControl>
+            <FormLabel>{t('instagramInfo')}</FormLabel>
+            <Input
+              name="instagram_account"
+              value={profileData.instagram_account}
+              onChange={handleChange}
+              placeholder={t('instagramInfo')}
+            />
+          </FormControl>
+          <Button 
+            colorScheme="teal" 
+            onClick={handleSubmit} 
+            isLoading={loading}
+          >
+            {t('update')}
+          </Button>
+          <Button 
+            colorScheme="red" 
+            onClick={handleSignOut}
+          >
+            {t('signout')}
+          </Button>
+        </Stack>
+        
+        {/* Add the Language Selector here */}
+        <LanguageSelector />
+      </Box>
     </Layout>
   );
 };

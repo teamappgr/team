@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -16,13 +16,24 @@ import {
   HStack,
   IconButton,
   Text,
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogCloseButton,
+  useDisclosure,
+  Select, // Import Select for language selection
 } from '@chakra-ui/react';
 import { AddIcon, MinusIcon } from '@chakra-ui/icons';
 import Layout from './Layout'; // Import the Layout component
 import Cookies from 'js-cookie'; // Import Cookies for userId management
+import { useTranslation } from 'react-i18next'; // Import useTranslation
 
 const CreateAd: React.FC = () => {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation(); // Use the useTranslation hook
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [minCount, setMinCount] = useState(0);
@@ -32,6 +43,8 @@ const CreateAd: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [alertStatus, setAlertStatus] = useState<'error' | 'success' | 'warning' | 'info' | ''>('');
   const toast = useToast();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const cancelRef = useRef<HTMLButtonElement>(null); // Ensure it's a valid ref
 
   // Set the initial date to one day from today
   useEffect(() => {
@@ -39,7 +52,6 @@ const CreateAd: React.FC = () => {
     if (!userId) {
       navigate('/signup'); // Redirect to signup if userId is not available
     }
-    
   }, [navigate]);
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,8 +65,8 @@ const CreateAd: React.FC = () => {
     // Check if the selected date is today or before today
     if (selectedDate <= today) {
       toast({
-        title: 'Invalid Date Selected',
-        description: 'Please select a date that is at least one day in the future.',
+        title: t('invalidInput'),
+        description: t('invalidInput'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -67,13 +79,17 @@ const CreateAd: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    onOpen(); // Open the confirmation dialog instead of submitting directly
+  };
+
+  const confirmSubmission = async () => {
     setIsSubmitting(true);
-    
+
     // Perform validation before submitting
-    if (!date || !time || minCount <= 0 || maxCount <= minCount) {
+    if (!date || !time || minCount <= 0 || (maxCount < minCount && maxCount!=0)) {
       toast({
-        title: 'Invalid Input',
-        description: 'Please ensure date and time are selected, and that min is greater than 0 and less than max.',
+        title: t('invalidInput'),
+        description: t('invalidInput'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -81,7 +97,7 @@ const CreateAd: React.FC = () => {
       setIsSubmitting(false);
       return; // Stop submission if any validation fails
     }
-    
+
     const userId = Cookies.get('userId'); // Get the userId from cookies
     const requestData = {
       title,
@@ -92,7 +108,7 @@ const CreateAd: React.FC = () => {
       time,
       userId,
     };
-  
+
     try {
       const response = await fetch(process.env.REACT_APP_API + 'ads', {
         method: 'POST',
@@ -101,7 +117,7 @@ const CreateAd: React.FC = () => {
         },
         body: JSON.stringify(requestData), // Stringify the request data
       });
-  
+
       const result = await response.json();
       if (response.ok) {
         // Handle successful response
@@ -115,8 +131,8 @@ const CreateAd: React.FC = () => {
       } else {
         if (result.message === 'Your account is not verified.') {
           toast({
-            title: 'Account Not Verified',
-            description: 'Your account is not verified. Please verify your account to create ads.',
+            title: t('accountNotVerified'),
+            description: t('accountNotVerified'),
             status: 'error',
             duration: 5000,
             isClosable: true,
@@ -129,40 +145,48 @@ const CreateAd: React.FC = () => {
       setAlertStatus('error');
     } finally {
       setIsSubmitting(false);
+      onClose(); // Close dialog after action
     }
   };
-  
+
+  // Function to handle language change
+  const handleLanguageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    i18n.changeLanguage(event.target.value);
+  };
+
   return (
     <Layout>
       <Box maxW="500px" mx="auto" mt={8} p={6} boxShadow="lg" borderRadius="md" bg="white">
         <Heading mb={6} textAlign="center" fontSize="2xl" color="teal.600">
-          Create New Ad
+          {t('createAd')}
         </Heading>
+
+     
 
         {/* Alert Messages */}
         <Stack spacing={3} mb={4}>
           {alertStatus === 'error' && (
             <Alert status="error">
               <AlertIcon />
-              There was an error processing your request.
+              {t('createAdError')}
             </Alert>
           )}
           {alertStatus === 'success' && (
             <Alert status="success">
               <AlertIcon />
-              Ad created successfully! Fire on!
+              {t('createAdSuccess')}
             </Alert>
           )}
           {alertStatus === 'info' && (
             <Alert status="info">
               <AlertIcon />
-              Please fill in all required fields.
+              {t('missingFields')}
             </Alert>
           )}
           {alertStatus === 'warning' && (
             <Alert status="warning">
               <AlertIcon />
-              Warning: Something might be wrong, double-check your info.
+              {t('warningMessage')}
             </Alert>
           )}
         </Stack>
@@ -171,23 +195,23 @@ const CreateAd: React.FC = () => {
           <VStack spacing={5}>
             {/* Title Field */}
             <FormControl id="title" isRequired>
-              <FormLabel>Title</FormLabel>
+              <FormLabel>{t('title')}</FormLabel>
               <Input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter ad title"
+                placeholder={t('title')}
                 focusBorderColor="teal.500"
               />
             </FormControl>
 
             {/* Description Field */}
             <FormControl id="description" isRequired>
-              <FormLabel>Description</FormLabel>
+              <FormLabel>{t('description')}</FormLabel>
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter ad description"
+                placeholder={t('description')}
                 focusBorderColor="teal.500"
               />
             </FormControl>
@@ -195,7 +219,7 @@ const CreateAd: React.FC = () => {
             {/* Min and Max Fields */}
             <VStack spacing={4} align="start" width="100%">
               <HStack justify="space-between" width="100%">
-                <FormLabel>Min</FormLabel>
+                <FormLabel>{t('min')}</FormLabel>
                 <HStack>
                   <IconButton
                     aria-label="Decrease Min"
@@ -216,7 +240,7 @@ const CreateAd: React.FC = () => {
               </HStack>
 
               <HStack justify="space-between" width="100%">
-                <FormLabel>Max</FormLabel>
+                <FormLabel>{t('max')}</FormLabel>
                 <HStack>
                   <IconButton
                     aria-label="Decrease Max"
@@ -237,41 +261,57 @@ const CreateAd: React.FC = () => {
               </HStack>
             </VStack>
 
-            {/* Date Picker */}
+            {/* Date Field */}
             <FormControl id="date" isRequired>
-              <FormLabel>Date</FormLabel>
+              <FormLabel>{t('date')}</FormLabel>
               <Input
                 type="date"
-                value={date || ''} // Convert to empty string if null
-                onChange={handleDateChange} // Call handleDateChange here
+                value={date || ''}
+                onChange={handleDateChange}
                 focusBorderColor="teal.500"
               />
             </FormControl>
 
-            {/* Time Picker */}
+            {/* Time Field */}
             <FormControl id="time" isRequired>
-              <FormLabel>Time</FormLabel>
+              <FormLabel>{t('time')}</FormLabel>
               <Input
                 type="time"
-                value={time || ''} // Convert to empty string if null
+                value={time || ''}
                 onChange={(e) => setTime(e.target.value)}
                 focusBorderColor="teal.500"
               />
             </FormControl>
 
             {/* Submit Button */}
-            <Button
-              colorScheme="teal"
-              isLoading={isSubmitting}
-              type="submit"
-              width="full"
-              mt={4}
-            >
-              Create Ad
+            <Button type="submit" isLoading={isSubmitting} colorScheme="teal" width="full">
+              {t('submit')}
             </Button>
           </VStack>
         </form>
       </Box>
+
+      {/* Confirmation Dialog */}
+      <AlertDialog isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose}>
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize="lg" fontWeight="bold">
+              {t('confirmSubmission')}
+            </AlertDialogHeader>
+            <AlertDialogBody>
+              {t('confirmSubmissionMessage')}
+            </AlertDialogBody>
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={onClose}>
+                {t('cancel')}
+              </Button>
+              <Button colorScheme="teal" onClick={confirmSubmission} ml={3}>
+                {t('confirm')}
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
     </Layout>
   );
 };

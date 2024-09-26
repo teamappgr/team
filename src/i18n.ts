@@ -1,6 +1,7 @@
 // src/i18n.ts
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import Cookies from 'js-cookie'; // Import Cookies
 
 const resources = {
   en: {
@@ -23,7 +24,7 @@ const resources = {
       contactInfo: "Contact Info",
       fillContactInfo: "Fill out your name, email, and phone number.",
       uploadImage: "Upload Image",
-      uploadImageDescription: "Upload a profile picture.",
+      uploadImageDescription: "Upload a picture for verification.",
       instagramInfo: "Instagram Info",
       enterInstagramInfo: "Enter your Instagram account and password.",
       missingFields: "Please fill in all required fields before proceeding.",
@@ -38,7 +39,24 @@ const resources = {
       acceptTerms: "I accept the Terms and Conditions",
       invalidEmail: "Invalid Email",
       invalidEmailDescription: "Please use an email that ends with @example.com.",
-      or: "Or"
+      or: "Or",
+      invalidPhone:"Invalid Phone",
+      invalidPhoneDescription:"Ten Digits Start From 69",
+      createAd: "Create New Ad",
+      title: "Title",
+      description: "Description",
+      min: "Min",
+      max: "Max",
+      date: "Date",
+      time: "Time",
+      createAdSuccess: "Ad created successfully! Fire on!",
+      createAdError: "There was an error processing your request.",
+      invalidInput: "Please ensure date and time are selected, and that min is greater than 0 and less than max.",
+      accountNotVerified: "Your account is not verified. Please verify your account to create ads.",
+      discardChanges: "Discard Changes?",
+      discardConfirmation: "Are you sure you want to discard all of your notes? 44 words will be deleted.",
+      no: "No",
+      yes: "Yes",
     },
   },
   el: { // Greek translations
@@ -59,11 +77,11 @@ const resources = {
       signUp: "Εγγραφή",
       signout: "Αποσύνδεση",
       contactInfo: "Στοιχεία Επικοινωνίας",
-      fillContactInfo: "Συμπληρώστε το όνομα, το email και τον αριθμό τηλεφώνου.",
+      fillContactInfo: "Συμπληρώστε το όνομα, το email και τηλεφώνο",
       uploadImage: "Ανέβασμα Εικόνας",
-      uploadImageDescription: "Ανεβάστε μια φωτογραφία προφίλ.",
+      uploadImageDescription: "Ανεβάστε φωτογραφία το πάσου για επαλήθευση",
       instagramInfo: "Πληροφορίες Instagram",
-      enterInstagramInfo: "Εισάγετε το Instagram σας και τον κωδικό πρόσβασης.",
+      enterInstagramInfo: "Εισάγετε το Instagram σας και κωδικό.",
       missingFields: "Συμπληρώστε όλα τα απαιτούμενα πεδία πριν προχωρήσετε.",
       step: "Βήμα",
       of: "από",
@@ -76,16 +94,34 @@ const resources = {
       acceptTerms: "Αποδέχομαι τους Όρους και Προϋποθέσεις",
       invalidEmail: "Μη έγκυρο Email",
       invalidEmailDescription: "Παρακαλώ χρησιμοποιήστε ένα email που τελειώνει σε @example.com.",
-      or:"'Η"
+      or:"'Η",
+      invalidPhone:"Λάθος Αριθμός",
+      invalidPhoneDescription:"Δέκα ψηφια και να αρχιζει απο 69",
+      createAd: "Δημιουργία Νέας Διαφήμισης",
+      title: "Τίτλος",
+      description: "Περιγραφή",
+      min: "Ελάχιστο",
+      max: "Μέγιστο",
+      date: "Ημερομηνία",
+      time: "Ώρα",
+      createAdSuccess: "Η διαφήμιση δημιουργήθηκε επιτυχώς! Ξεκινήστε!",
+      createAdError: "Παρουσιάστηκε σφάλμα κατά την επεξεργασία του αιτήματός σας.",
+      invalidInput: "Βεβαιωθείτε ότι έχετε επιλέξει ημερομηνία και ώρα και ότι το ελάχιστο είναι μεγαλύτερο από 0 και μικρότερο από το μέγιστο.",
+      accountNotVerified: "Ο λογαριασμός σας δεν έχει επαληθευτεί. Παρακαλώ επαληθεύστε τον λογαριασμό σας για να δημιουργήσετε διαφημίσεις.",
+      discardChanges: "Απόρριψη Αλλαγών;",
+      discardConfirmation: "Είστε σίγουροι ότι θέλετε να απορρίψετε όλες τις σημειώσεις σας; 44 λέξεις θα διαγραφούν.",
+      no: "Όχι",
+      yes: "Ναι",
     },
   },
+  
 };
 
 i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: 'el', // Default language set to Greek
+    lng: Cookies.get('language'), // Default language set to Greek
     fallbackLng: 'en', // Use English as a fallback
     interpolation: {
       escapeValue: false, // React already safeguards against XSS
