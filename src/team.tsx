@@ -1,17 +1,17 @@
+// Team.tsx
 import React, { useEffect, useState } from 'react';
 import {
   Box,
   Heading,
   Text,
-  VStack,
   SimpleGrid,
   Card,
   CardBody,
   CardHeader,
-  Button,
   useToast,
-  Spinner, // Import Spinner from Chakra UI
+  Spinner,
 } from '@chakra-ui/react';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import Layout from './Layout'; // Import the Layout component
 
 interface Ad {
@@ -22,10 +22,11 @@ interface Ad {
   time: string;
 }
 
-const TeamFor: React.FC = () => {
+const Team: React.FC = () => {
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
+  const navigate = useNavigate(); // Initialize the navigate function
 
   useEffect(() => {
     const fetchAds = async () => {
@@ -61,22 +62,27 @@ const TeamFor: React.FC = () => {
     fetchAds();
   }, [toast]);
 
+  // Handle navigation to the ad detail page
+  const handleAdClick = (id: number) => {
+    navigate(`/event/${id}`); // Navigate to the detail page for the clicked ad
+  };
+
   return (
     <Layout>
       <Box maxW="1200px" mx="auto" p={6}>
         <Heading mb={6} textAlign="center" color="teal.600">
           Current Ads
         </Heading>
-        
+
         {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" height="300px"> {/* Center the spinner */}
+          <Box display="flex" justifyContent="center" alignItems="center" height="300px">
             <Spinner size="xl" />
           </Box>
         ) : (
           <SimpleGrid columns={[1, 2, 3]} spacing={4}>
             {ads.length > 0 ? (
               ads.map((ad) => (
-                <Card key={ad.id} borderWidth="1px" borderRadius="lg">
+                <Card key={ad.id} borderWidth="1px" borderRadius="lg" onClick={() => handleAdClick(ad.id)} cursor="pointer">
                   <CardHeader>
                     <Heading size="md">{ad.title}</Heading>
                   </CardHeader>
@@ -100,4 +106,4 @@ const TeamFor: React.FC = () => {
   );
 };
 
-export default TeamFor;
+export default Team;

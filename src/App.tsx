@@ -9,6 +9,7 @@ import SignUp from './SignUp'; // Import SignUp component
 import Create from './create'; 
 import Profile from './profile';
 import Team from './team'; 
+import EventDetail from './eventdetail';
 import './i18n'; // Import your i18n configuration
 import { ChakraProvider } from '@chakra-ui/react';
 
@@ -40,6 +41,8 @@ const App: React.FC = () => {
               {/* Route for the SignUp page */}
               <Route path="/" element={<SignUp />} />
               <Route path="/create" element={<Create />} />
+              <Route path="/event/:id" element={<EventDetail />} /> {/* Add this route */}
+
               <Route path="/team" element={<Team />} />
             </Routes>
           </Router>

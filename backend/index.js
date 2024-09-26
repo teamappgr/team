@@ -23,7 +23,6 @@ app.use(express.json());
 app.use(cors());
 app.use(bodyParser.json()); // For parsing application/json
 
-
 const pool = new Pool({
   host: process.env.SUPABASE_HOST,
   user: process.env.SUPABASE_USER,
@@ -45,7 +44,6 @@ app.post('/signin', async (req, res) => {
 
     if (result.rows.length > 0) {
       const user = result.rows[0];
-      // Return a JSON response with userId and a success message
       res.status(200).json({ userId: user.id, message: 'Sign-in successful' });
     } else {
       res.status(401).json({ message: 'Invalid email or password' });
@@ -87,8 +85,6 @@ app.post('/ads', async (req, res) => {
     return res.status(400).json({ message: 'Min and Max must be integers.' });
   }
 
-  // You can add additional validation checks here if needed
-
   try {
     // Check if the user is verified
     const userResult = await pool.query('SELECT verified FROM users WHERE id = $1', [userId]);
@@ -110,7 +106,8 @@ app.post('/ads', async (req, res) => {
     res.status(500).json({ message: 'Error creating ad' });
   }
 });
-// Add this in your server.js or wherever your routes are defined
+
+// Get all ads
 app.get('/ads', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM ads');
@@ -120,6 +117,24 @@ app.get('/ads', async (req, res) => {
     res.status(500).json({ message: 'Error fetching ads' });
   }
 });
+
+// Get ad by ID
+app.get('/ads/:id', async (req, res) => {
+  const { id } = req.params; // Get ad ID from request parameters
+  try {
+    const result = await pool.query('SELECT * FROM ads WHERE id = $1', [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Ad not found' });
+    }
+
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching ad:', error);
+    res.status(500).json({ message: 'Error fetching ad' });
+  }
+});
+
 // Get user profile by ID
 app.get('/profile/:userId', async (req, res) => {
   const { userId } = req.params;
@@ -140,6 +155,7 @@ app.get('/profile/:userId', async (req, res) => {
     res.status(500).json({ message: 'Error fetching profile' });
   }
 });
+
 // Update user profile
 app.put('/profile/:userId', async (req, res) => {
   const { userId } = req.params;
@@ -161,7 +177,6 @@ app.put('/profile/:userId', async (req, res) => {
     res.status(500).json({ message: 'Error updating profile' });
   }
 });
-
 
 // Start the server
 server.listen(PORT, () => {
