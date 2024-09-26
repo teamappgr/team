@@ -37,7 +37,8 @@ const resources = {
       selectUniversity: "Select University",
       acceptTerms: "I accept the Terms and Conditions",
       invalidEmail: "Invalid Email",
-      invalidEmailDescription: "Please use an email that ends with @example.com."
+      invalidEmailDescription: "Please use an email that ends with @example.com.",
+      or: "Or"
     },
   },
   el: { // Greek translations
@@ -74,7 +75,8 @@ const resources = {
       selectUniversity: "Επιλέξτε Πανεπιστήμιο",
       acceptTerms: "Αποδέχομαι τους Όρους και Προϋποθέσεις",
       invalidEmail: "Μη έγκυρο Email",
-      invalidEmailDescription: "Παρακαλώ χρησιμοποιήστε ένα email που τελειώνει σε @example.com."
+      invalidEmailDescription: "Παρακαλώ χρησιμοποιήστε ένα email που τελειώνει σε @example.com.",
+      or:"'Η"
     },
   },
 };

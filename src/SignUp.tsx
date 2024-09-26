@@ -7,7 +7,7 @@ import {
   Text,
   Flex,
   Progress,
-  Select, 
+  Select,
   Checkbox,
   useToast,
   VStack,
@@ -83,6 +83,7 @@ const SignUp: React.FC = () => {
     const { firstName, lastName, email, phone, instagramAccount, password } = formData;
 
     if (activeStep === 0) {
+      // Validate email
       if (!email.includes('@') || !email.includes('.com')) {
         toast({
           title: t('invalidEmail'),
@@ -93,6 +94,18 @@ const SignUp: React.FC = () => {
         });
         return false;
       }
+      // Validate phone number length and numeric content
+      if (!/^\d{10}$/.test(phone)) {
+        toast({
+          title: t('invalidPhone'),
+          description: t('invalidPhoneDescription'),
+          status: 'error',
+          duration: 4000,
+          isClosable: true,
+        });
+        return false;
+      }
+
       return firstName && lastName && email && phone;
     } else if (activeStep === 1) {
       return (capturedImage !== null || uploadedImage !== null) && selectedUniversity !== null;
@@ -191,7 +204,7 @@ const SignUp: React.FC = () => {
     setIsCameraOpen(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { exact: 'user' } }, // Request the environment (back) camera
+        video: { facingMode: { exact: 'user' } }, // Request the front camera
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -207,8 +220,6 @@ const SignUp: React.FC = () => {
       });
     }
   };
-  
-
 
   const captureImage = () => {
     if (canvasRef.current && videoRef.current) {
