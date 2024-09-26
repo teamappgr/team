@@ -154,13 +154,8 @@ const AdDetail: React.FC = () => {
         ) : ad ? (
           <>
             <Heading mb={4}>{ad.title}</Heading>
-            <Button 
-              colorScheme="teal" 
-              onClick={handleButtonClick} 
-              mb={4} // Margin bottom for spacing
-            >
-              I Want to Go
-            </Button>
+            
+    
             <Text mb={4}>{ad.description}</Text>
             <Text color="gray.500">
               Date: {new Date(ad.date).toLocaleDateString()} {ad.time}
@@ -213,6 +208,15 @@ const AdDetail: React.FC = () => {
         ) : (
           <Text>No ad details found.</Text>
         )}
+        {ad && ad.available > 0 && (
+  <Button 
+    colorScheme="teal" 
+    onClick={handleButtonClick} 
+    mb={4} 
+  >
+    I Want to Go
+  </Button>
+)}
       </Box>
     </Layout>
   );
