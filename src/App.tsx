@@ -8,7 +8,7 @@ import SignIn from './SignIn';
 import SignUp from './SignUp'; // Import SignUp component
 import Create from './create'; 
 import Profile from './profile';
-import TeamFor from './teamfor'; 
+import Team from './team'; 
 import './i18n'; // Import your i18n configuration
 import LanguageSelector from './LanguageSelector'; // Adjust the path as necessary
 
@@ -42,7 +42,7 @@ const App: React.FC = () => {
               {/* Route for the SignUp page */}
               <Route path="/" element={<SignUp />} />
               <Route path="/create" element={<Create />} />
-              <Route path="/teamfor" element={<TeamFor />} />
+              <Route path="/team" element={<Team />} />
             </Routes>
           </Router>
         </div>

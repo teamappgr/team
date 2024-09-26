@@ -44,7 +44,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <Flex justify="space-between" align="center" px={8} py={4} maxW="500px" mx="auto">
           
           {/* Home Link */}
-          <Link as={RouterLink} to="/teamfor" _hover={{ textDecor: 'none' }} display="flex" flexDirection="column" alignItems="center">
+          <Link as={RouterLink} to="/team" _hover={{ textDecor: 'none' }} display="flex" flexDirection="column" alignItems="center">
             <Icon as={FaHome} boxSize={6} color="teal.500" />
             <Text fontSize="xs" mt={1}>Home</Text>
           </Link>

@@ -101,7 +101,7 @@ export default function SignIn() {
             >              
               <Button
                 component="a"
-                href="/teamfor"
+                href="/team"
                 variant="text"
                 color="primary"
                 style={{ textTransform: 'none', fontSize: 'inherit', padding: 0, minWidth: 'auto', color: 'gray' }}
