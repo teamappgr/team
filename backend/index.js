@@ -95,8 +95,8 @@ app.post('/ads', async (req, res) => {
 
     // Proceed to insert the ad
     const result = await pool.query(
-      'INSERT INTO ads (title, description, user_id, min, max, date, time) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
-      [title, description, userId, min, max, date, time]
+      'INSERT INTO ads (title, description, user_id, min, max, date, time, available) VALUES ($1, $2, $3, $4, $5, $6, $7,$8) RETURNING id',
+      [title, description, userId, min, max, date, time,max]
     );
 
     const adId = result.rows[0].id;
@@ -177,7 +177,32 @@ app.put('/profile/:userId', async (req, res) => {
     res.status(500).json({ message: 'Error updating profile' });
   }
 });
+app.post('/requests', async (req, res) => {
+  const { ad_id, user_id } = req.body; // Get ad_id and user_id from request body
 
+  try {
+    // Insert into requests table
+    const result = await pool.query(
+      'INSERT INTO requests (ad_id, user_id) VALUES ($1, $2)',
+      [ad_id, user_id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(400).json({ message: 'Failed to create request' });
+    }
+
+    // Update available count for the ad
+    await pool.query(
+      'UPDATE ads SET available = available - 1 WHERE id = $1 AND available > 0',
+      [ad_id]
+    );
+
+    res.status(201).json({ message: 'Request created successfully' });
+  } catch (error) {
+    console.error('Error creating request: ', error);
+    res.status(500).json({ message: 'Error creating request' });
+  }
+});
 // Start the server
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
