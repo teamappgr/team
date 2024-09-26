@@ -122,21 +122,68 @@ app.get('/ads', async (req, res) => {
 });
 
 // Get ad by ID
-app.get('/ads/:id', async (req, res) => {
+// Get ad by ID with requests
+app.get('/ads/:id/requests', async (req, res) => {
   const { id } = req.params; // Get ad ID from request parameters
   try {
-    const result = await pool.query('SELECT * FROM ads WHERE id = $1', [id]);
+    const result = await pool.query(`
+      SELECT u.first_name, u.last_name, u.instagram_account, u.gender, r.answer
+      FROM requests r
+      JOIN users u ON r.user_id = u.id
+      WHERE r.ad_id = $1
+    `, [id]);
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Ad not found' });
-    }
-
-    res.status(200).json(result.rows[0]);
+    res.status(200).json(result.rows); // Respond with user data for the requests
   } catch (error) {
-    console.error('Error fetching ad:', error);
-    res.status(500).json({ message: 'Error fetching ad' });
+    console.error('Error fetching requests:', error);
+    res.status(500).json({ message: 'Error fetching requests' });
   }
 });
+
+
+// Accept a request
+app.post('/requests/:id/accept', async (req, res) => {
+  const { id } = req.params; // Get request ID from URL parameters
+  try {
+    // Start a transaction
+    await pool.query('BEGIN');
+    
+    // Update the requests table to set the answer to 1 (accepted)
+    const updateRequestResult = await pool.query(
+      'UPDATE requests SET answer = 1 WHERE id = $1 RETURNING ad_id',
+      [id]
+    );
+
+    const adId = updateRequestResult.rows[0].ad_id; // Get the ad_id for the updated request
+
+    // Decrease the available count in the ads table
+    await pool.query('UPDATE ads SET available = available - 1 WHERE id = $1', [adId]);
+
+    // Commit the transaction
+    await pool.query('COMMIT');
+
+    res.status(200).json({ message: 'Request accepted successfully' });
+  } catch (error) {
+    await pool.query('ROLLBACK'); // Rollback the transaction in case of an error
+    console.error('Error accepting request:', error);
+    res.status(500).json({ message: 'Error accepting request' });
+  }
+});
+
+// Reject a request
+app.post('/requests/:id/reject', async (req, res) => {
+  const { id } = req.params; // Get request ID from URL parameters
+  try {
+    // Update the requests table to set the answer to 0 (rejected)
+    await pool.query('UPDATE requests SET answer = 0 WHERE id = $1', [id]);
+    res.status(200).json({ message: 'Request rejected successfully' });
+  } catch (error) {
+    console.error('Error rejecting request:', error);
+    res.status(500).json({ message: 'Error rejecting request' });
+  }
+});
+
+
 
 // Get user profile by ID
 app.get('/profile/:userId', async (req, res) => {
