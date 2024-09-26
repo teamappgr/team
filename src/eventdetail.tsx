@@ -53,7 +53,8 @@ const AdDetail: React.FC = () => {
 
   // Function to calculate progress percentage
   const calculateProgress = (min: number, max: number, available: number) => {
-    if (max - available <= 0) return 100; // Full progress if max equals available
+    if (max === available) return 0; // Set bar to 0 if max equals available
+    if (max - available < 0) return 100; // Full progress if max equals available
     const progress = ((max - available) / min) * 100; // Calculate percentage
     return Math.min(progress, 100); // Cap the value at 100%
   };
@@ -61,6 +62,13 @@ const AdDetail: React.FC = () => {
   const calculatePeopleNeeded = (min: number, max: number, available: number) => {
     const needed = min - (max - available);
     return needed > 0 ? needed : 0; // Ensure we don't display negative numbers
+  };
+
+  const getLastAvailablePositions = (min: number, max: number, available: number) => {
+    if (min - (max - available) <= 0) {
+      return available; // Last available positions
+    }
+    return null; // Return null if not applicable
   };
 
   // Handle button click
@@ -71,17 +79,42 @@ const AdDetail: React.FC = () => {
 
   const handleConfirm = async () => {
     const userId = Cookies.get('userId'); // Get user ID from cookies
-    if (!userId || !ad) return; // Safety check
+    if (!userId) {
+      // If user ID is not present, show a toast and return
+      toast({
+        title: 'Error',
+        description: 'You must be logged in to express your interest.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
 
-    // Update the available count and insert a request
+    // Check if user is verified
     try {
+      const userResponse = await fetch(`${process.env.REACT_APP_API}profile/${userId}`);
+      const userData = await userResponse.json();
+
+      if (!userData || !userData.verified) {
+        toast({
+          title: 'Error',
+          description: 'Your account is not verified. Please verify your account before proceeding.',
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+        return;
+      }
+
+      // If checks passed, proceed to insert into requests
       const response = await fetch(`${process.env.REACT_APP_API}requests`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ad_id: ad.id,
+          ad_id: ad?.id,
           user_id: userId,
         }),
       });
@@ -142,6 +175,13 @@ const AdDetail: React.FC = () => {
               <Text mt={2}>
                 {calculatePeopleNeeded(ad.min, ad.max, ad.available)} people needed to reach the minimum number for this event.
               </Text>
+
+              {/* Show last available positions if applicable */}
+              {getLastAvailablePositions(ad.min, ad.max, ad.available) !== null && (
+                <Text mt={2} color="red.500">
+                  Last available positions: {getLastAvailablePositions(ad.min, ad.max, ad.available)}
+                </Text>
+              )}
             </Box>
 
             {/* Alert Dialog for confirmation */}
