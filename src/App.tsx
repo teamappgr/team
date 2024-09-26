@@ -11,6 +11,7 @@ import Profile from './profile';
 import Team from './team'; 
 import EventDetail from './eventdetail';
 import './i18n'; // Import your i18n configuration
+import MyEvents from './myevents' ;
 import { ChakraProvider } from '@chakra-ui/react';
 
 // Create a default theme
@@ -42,6 +43,7 @@ const App: React.FC = () => {
               <Route path="/" element={<SignUp />} />
               <Route path="/create" element={<Create />} />
               <Route path="/event/:id" element={<EventDetail />} /> {/* Add this route */}
+              <Route path="/myevents" element={<MyEvents />} />
 
               <Route path="/team" element={<Team />} />
             </Routes>

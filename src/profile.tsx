@@ -8,24 +8,26 @@ import {
   Stack,
   Heading,
   useToast,
-  Spinner, // Import Spinner from Chakra UI
+  Spinner,
+  Badge, // Import Badge from Chakra UI
 } from '@chakra-ui/react';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
-import Layout from './Layout'; // Import the Layout component
+import Layout from './Layout'; 
 import { useTranslation } from 'react-i18next';
-import LanguageSelector from './LanguageSelector'; // Adjust the path as necessary
+import LanguageSelector from './LanguageSelector';
 
 const Profile = () => {
-  const { t } = useTranslation(); // Use translation hook
+  const { t } = useTranslation(); 
   const [profileData, setProfileData] = useState({
     first_name: '',
     last_name: '',
     email: '',
     phone: '',
     instagram_account: '',
+    verified: false, // Add verified to the state
   });
-  const [loading, setLoading] = useState(true); // Set initial loading to true
+  const [loading, setLoading] = useState(true); 
   const toast = useToast();
   const navigate = useNavigate();
 
@@ -62,20 +64,18 @@ const Profile = () => {
           isClosable: true,
         });
       } finally {
-        setLoading(false); // Set loading to false after fetching data
+        setLoading(false); 
       }
     };
 
     fetchUserData();
   }, [userId, toast, navigate, t]);
 
-  // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setProfileData(prevState => ({ ...prevState, [name]: value }));
   };
 
-  // Handle form submission (Update user data)
   const handleSubmit = async () => {
     setLoading(true);
     try {
@@ -112,8 +112,8 @@ const Profile = () => {
   };
 
   const handleSignOut = () => {
-    Cookies.remove('userId'); // Clear userId cookie
-    navigate('/signin'); // Redirect to sign-in page
+    Cookies.remove('userId'); 
+    navigate('/signin'); 
   };
 
   return (
@@ -121,7 +121,7 @@ const Profile = () => {
       <Box p={5}>
         <Heading mb={6}>{t('contactInfo')}</Heading>
 
-        {loading ? ( // Show spinner while loading
+        {loading ? ( 
           <Spinner size="xl" />
         ) : (
           <Stack spacing={4}>
@@ -170,6 +170,16 @@ const Profile = () => {
                 placeholder={t('instagramInfo')}
               />
             </FormControl>
+
+            {/* Display verification badge */}
+            <Box>
+              <Stack direction='row'>
+              <Badge colorScheme={profileData.verified ? 'green' : 'red'}>
+  {profileData.verified ? t('verified') : t('notVerified')}
+</Badge>
+              </Stack>
+            </Box>
+
             <Button 
               colorScheme="teal" 
               onClick={handleSubmit} 
@@ -186,7 +196,6 @@ const Profile = () => {
           </Stack>
         )}
         
-        {/* Add the Language Selector here */}
         <LanguageSelector />
       </Box>
     </Layout>

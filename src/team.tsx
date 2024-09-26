@@ -13,6 +13,8 @@ import {
 } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import Layout from './Layout'; // Import the Layout component
+import { useTranslation } from 'react-i18next';
+
 
 interface Ad {
   id: number;
@@ -27,6 +29,8 @@ const Team: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const toast = useToast();
   const navigate = useNavigate(); // Initialize the navigate function
+  const { t, i18n } = useTranslation();
+
 
   useEffect(() => {
     const fetchAds = async () => {
@@ -71,7 +75,7 @@ const Team: React.FC = () => {
     <Layout>
       <Box maxW="1200px" mx="auto" p={6}>
         <Heading mb={6} textAlign="center" color="teal.600">
-          Current Ads
+        {t('showevents')}
         </Heading>
 
         {loading ? (
@@ -89,7 +93,7 @@ const Team: React.FC = () => {
                   <CardBody>
                     <Text>{ad.description}</Text>
                     <Text mt={2} color="gray.500">
-                      Date: {new Date(ad.date).toLocaleDateString()} {ad.time}
+                      {t('date')} {new Date(ad.date).toLocaleDateString()} {ad.time}
                     </Text>
                   </CardBody>
                 </Card>

@@ -55,10 +55,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             flexDirection="column" 
             alignItems="center" 
             cursor="pointer" 
-            onClick={() => checkUserAndNavigate('/myads')}  // Check user before navigating to /myads
+            onClick={() => checkUserAndNavigate('/myevents')}  // Check user before navigating to /myads
           >
             <Icon as={FaClipboardList} boxSize={6} color="teal.500" />
-            <Text fontSize="xs" mt={1}>Ads</Text>
+            <Text fontSize="xs" mt={1}>My events</Text>
           </Box>
 
           {/* Create New Ad Link with user check */}

@@ -24,16 +24,16 @@ import {
   AlertDialogFooter,
   AlertDialogCloseButton,
   useDisclosure,
-  Select, // Import Select for language selection
+  Switch,
 } from '@chakra-ui/react';
 import { AddIcon, MinusIcon } from '@chakra-ui/icons';
-import Layout from './Layout'; // Import the Layout component
-import Cookies from 'js-cookie'; // Import Cookies for userId management
-import { useTranslation } from 'react-i18next'; // Import useTranslation
+import Layout from './Layout';
+import Cookies from 'js-cookie';
+import { useTranslation } from 'react-i18next';
 
 const CreateAd: React.FC = () => {
   const navigate = useNavigate();
-  const { t, i18n } = useTranslation(); // Use the useTranslation hook
+  const { t, i18n } = useTranslation();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [minCount, setMinCount] = useState(0);
@@ -42,27 +42,41 @@ const CreateAd: React.FC = () => {
   const [time, setTime] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [alertStatus, setAlertStatus] = useState<'error' | 'success' | 'warning' | 'info' | ''>('');
+  const [emailAlerts, setEmailAlerts] = useState(false);
+  const [info, setinfo] = useState<string | null>(null); // State for user's first name
+  const [showName, setShowName] = useState(false); // State for show name toggle
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const cancelRef = useRef<HTMLButtonElement>(null); // Ensure it's a valid ref
+  const cancelRef = useRef<HTMLButtonElement>(null);
 
-  // Set the initial date to one day from today
+  // Fetch the user's first name on mount
   useEffect(() => {
     const userId = Cookies.get('userId');
     if (!userId) {
-      navigate('/signup'); // Redirect to signup if userId is not available
+      navigate('/signup');
+    } else {
+      fetchUserData(userId);
     }
   }, [navigate]);
+
+  const fetchUserData = async (userId: string) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API}users/${userId}`);
+      if (!response.ok) throw new Error('Failed to fetch user data');
+      const userData = await response.json();
+      setinfo(userData.info); // Assuming the user object has first_name property
+    } catch (error) {
+      console.error('Error fetching user data', error);
+    }
+  };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedDate = new Date(e.target.value);
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set to the start of the day
+    today.setHours(0, 0, 0, 0);
 
-    // Set date state
     setDate(e.target.value);
 
-    // Check if the selected date is today or before today
     if (selectedDate <= today) {
       toast({
         title: t('invalidInput'),
@@ -71,7 +85,6 @@ const CreateAd: React.FC = () => {
         duration: 5000,
         isClosable: true,
       });
-      // Reset date and time to null
       setDate(null);
       setTime(null);
     }
@@ -79,14 +92,13 @@ const CreateAd: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onOpen(); // Open the confirmation dialog instead of submitting directly
+    onOpen();
   };
 
   const confirmSubmission = async () => {
     setIsSubmitting(true);
 
-    // Perform validation before submitting
-    if (!date || !time || minCount <= 0 || (maxCount < minCount && maxCount!=0)) {
+    if (!date || !time || minCount <= 0 || (maxCount < minCount && maxCount !== 0)) {
       toast({
         title: t('invalidInput'),
         description: t('invalidInput'),
@@ -95,39 +107,42 @@ const CreateAd: React.FC = () => {
         isClosable: true,
       });
       setIsSubmitting(false);
-      return; // Stop submission if any validation fails
+      return;
     }
 
-    const userId = Cookies.get('userId'); // Get the userId from cookies
+    const userId = Cookies.get('userId');
     const requestData = {
       title,
       description,
-      min: parseInt(minCount.toString(), 10), // Ensure min is an integer
-      max: parseInt(maxCount.toString(), 10), // Ensure max is an integer
+      min: parseInt(minCount.toString(), 10),
+      max: parseInt(maxCount.toString(), 10),
       date,
       time,
       userId,
+      emailAlerts,
+      info: showName ? info : null, // Include first_name only if showName is true
     };
 
     try {
-      const response = await fetch(process.env.REACT_APP_API + 'ads', {
+      const response = await fetch(`${process.env.REACT_APP_API}ads`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json', // Set content type to JSON
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestData), // Stringify the request data
+        body: JSON.stringify(requestData),
       });
 
       const result = await response.json();
       if (response.ok) {
-        // Handle successful response
         setAlertStatus('success');
         setTitle('');
         setDescription('');
-        setMinCount(0); // Reset Min count
-        setMaxCount(0); // Reset Max count
-        setDate(null); // Reset date to null
-        setTime(null); // Reset time to null
+        setMinCount(0);
+        setMaxCount(0);
+        setDate(null);
+        setTime(null);
+        setEmailAlerts(false);
+        setShowName(false); // Reset showName toggle
       } else {
         if (result.message === 'Your account is not verified.') {
           toast({
@@ -145,11 +160,10 @@ const CreateAd: React.FC = () => {
       setAlertStatus('error');
     } finally {
       setIsSubmitting(false);
-      onClose(); // Close dialog after action
+      onClose();
     }
   };
 
-  // Function to handle language change
   const handleLanguageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     i18n.changeLanguage(event.target.value);
   };
@@ -161,9 +175,6 @@ const CreateAd: React.FC = () => {
           {t('createAd')}
         </Heading>
 
-     
-
-        {/* Alert Messages */}
         <Stack spacing={3} mb={4}>
           {alertStatus === 'error' && (
             <Alert status="error">
@@ -193,7 +204,6 @@ const CreateAd: React.FC = () => {
 
         <form onSubmit={handleSubmit}>
           <VStack spacing={5}>
-            {/* Title Field */}
             <FormControl id="title" isRequired>
               <FormLabel>{t('title')}</FormLabel>
               <Input
@@ -205,7 +215,6 @@ const CreateAd: React.FC = () => {
               />
             </FormControl>
 
-            {/* Description Field */}
             <FormControl id="description" isRequired>
               <FormLabel>{t('description')}</FormLabel>
               <Textarea
@@ -216,7 +225,6 @@ const CreateAd: React.FC = () => {
               />
             </FormControl>
 
-            {/* Min and Max Fields */}
             <VStack spacing={4} align="start" width="100%">
               <HStack justify="space-between" width="100%">
                 <FormLabel>{t('min')}</FormLabel>
@@ -261,7 +269,6 @@ const CreateAd: React.FC = () => {
               </HStack>
             </VStack>
 
-            {/* Date Field */}
             <FormControl id="date" isRequired>
               <FormLabel>{t('date')}</FormLabel>
               <Input
@@ -272,7 +279,6 @@ const CreateAd: React.FC = () => {
               />
             </FormControl>
 
-            {/* Time Field */}
             <FormControl id="time" isRequired>
               <FormLabel>{t('time')}</FormLabel>
               <Input
@@ -283,7 +289,17 @@ const CreateAd: React.FC = () => {
               />
             </FormControl>
 
-            {/* Submit Button */}
+            <FormControl display="flex" alignItems="center">
+              <FormLabel htmlFor="showname" mb="0">
+                {t('showname')}
+              </FormLabel>
+              <Switch
+                id="showname"
+                isChecked={showName}
+                onChange={(e) => setShowName(e.target.checked)}
+              />
+            </FormControl>
+
             <Button type="submit" isLoading={isSubmitting} colorScheme="teal" width="full">
               {t('submit')}
             </Button>
@@ -291,7 +307,6 @@ const CreateAd: React.FC = () => {
         </form>
       </Box>
 
-      {/* Confirmation Dialog */}
       <AlertDialog isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose}>
         <AlertDialogOverlay>
           <AlertDialogContent>

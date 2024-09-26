@@ -56,13 +56,13 @@ app.post('/signin', async (req, res) => {
 
 // Sign-Up Endpoint
 app.post('/signup', upload.single('image'), async (req, res) => {
-  const { firstName, lastName, email, phone, instagramAccount, instagramPassword, university } = req.body;
+  const { firstName, lastName, email, phone, instagramAccount, password, university, gender } = req.body;
   const imageUrl = req.file.path; // The URL of the uploaded image from Cloudinary
 
   try {
     const result = await pool.query(
-      'INSERT INTO users (first_name, last_name, email, phone, instagram_account, password, image_url, university) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
-      [firstName, lastName, email, phone, instagramAccount, password, imageUrl, university]
+      'INSERT INTO users (first_name, last_name, email, phone, instagram_account, password, image_url, university, gender) VALUES ($1, $2, $3, $4, $5, $6, $7, $8,$9) RETURNING id',
+      [firstName, lastName, email, phone, instagramAccount, password, imageUrl, university, gender]
     );
 
     const userId = result.rows[0].id;
@@ -75,9 +75,8 @@ app.post('/signup', upload.single('image'), async (req, res) => {
 
 // Create Ad Endpoint
 app.post('/ads', async (req, res) => {
-  const { title, description, min, max, date, time, userId } = req.body;
+  const { title, description, min, max, date, time, userId, includeFirstName } = req.body; // Destructure includeFirstName
 
-  // Log the received request body for debugging
   console.log('Received request body:', req.body);
 
   // Check if min and max are valid integers
@@ -87,16 +86,19 @@ app.post('/ads', async (req, res) => {
 
   try {
     // Check if the user is verified
-    const userResult = await pool.query('SELECT verified FROM users WHERE id = $1', [userId]);
+    const userResult = await pool.query('SELECT first_name, verified FROM users WHERE id = $1', [userId]);
     
     if (userResult.rows.length === 0 || !userResult.rows[0].verified) {
       return res.status(403).json({ message: 'Your account is not verified.' });
     }
 
+    // If the switch is on, get the first name; otherwise, set it to null
+    const firstName = includeFirstName ? userResult.rows[0].first_name : null; 
+
     // Proceed to insert the ad
     const result = await pool.query(
-      'INSERT INTO ads (title, description, user_id, min, max, date, time, available) VALUES ($1, $2, $3, $4, $5, $6, $7,$8) RETURNING id',
-      [title, description, userId, min, max, date, time,max]
+      'INSERT INTO ads (title, description, user_id, min, max, date, time, info, available) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id',
+      [title, description, userId, min, max, date, time, firstName, max] // Insert firstName (or null) into the query
     );
 
     const adId = result.rows[0].id;
@@ -106,6 +108,7 @@ app.post('/ads', async (req, res) => {
     res.status(500).json({ message: 'Error creating ad' });
   }
 });
+
 
 // Get all ads
 app.get('/ads', async (req, res) => {
@@ -141,7 +144,7 @@ app.get('/profile/:userId', async (req, res) => {
 
   try {
     const result = await pool.query(
-      'SELECT first_name, last_name, email, phone, instagram_account FROM users WHERE id = $1',
+      'SELECT * FROM users WHERE id = $1',
       [userId]
     );
 

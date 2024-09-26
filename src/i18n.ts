@@ -57,6 +57,10 @@ const resources = {
       discardConfirmation: "Are you sure you want to discard all of your notes? 44 words will be deleted.",
       no: "No",
       yes: "Yes",
+      verified: "Verified", // Added translation for Verified
+      notVerified: "Not Verified", // Added translation for Not Verified
+      showname:"Show Name",
+      showevents:"Available Events"
     },
   },
   el: { // Greek translations
@@ -112,6 +116,11 @@ const resources = {
       discardConfirmation: "Είστε σίγουροι ότι θέλετε να απορρίψετε όλες τις σημειώσεις σας; 44 λέξεις θα διαγραφούν.",
       no: "Όχι",
       yes: "Ναι",
+      verified: "Επαληθευμένος", // Added translation for Verified
+      notVerified: "Μη Επαληθευμένος" ,// Added translation for Not Verified
+      showname:"Δείξε όνομα",
+      showevents:"Διαθέσημες Εκδηλώσεις"
+
     },
   },
   

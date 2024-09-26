@@ -62,11 +62,14 @@ const SignUp: React.FC = () => {
     phone: '',
     instagramAccount: '',
     password: '',
+    gender: '',
   });
 
   const [selectedUniversity, setSelectedUniversity] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
-
+  const handleGenderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    handleInputChange('gender', e.target.value);
+  };
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -80,7 +83,7 @@ const SignUp: React.FC = () => {
   };
 
   const validateFields = () => {
-    const { firstName, lastName, email, phone, instagramAccount, password } = formData;
+    const { firstName, lastName, email, phone, instagramAccount, password,gender } = formData;
 
     if (activeStep === 0) {
       // Validate email
@@ -119,7 +122,7 @@ const SignUp: React.FC = () => {
     } else if (activeStep === 1) {
       return (capturedImage !== null || uploadedImage !== null) && selectedUniversity !== null;
     } else if (activeStep === 2) {
-      return instagramAccount && password && termsAccepted;
+      return instagramAccount && password && termsAccepted&&gender;
     }
     return false;
   };
@@ -166,6 +169,8 @@ const SignUp: React.FC = () => {
     formDataToSubmit.append('lastName', formData.lastName);
     formDataToSubmit.append('email', formData.email);
     formDataToSubmit.append('phone', formData.phone);
+    formDataToSubmit.append('gender', formData.gender); // Ensure gender is appended
+
 
     // Add image (either from file upload or camera capture)
     if (uploadedImage) {
@@ -188,7 +193,7 @@ const SignUp: React.FC = () => {
       if (response.ok) {
         const result = await response.json();
         Cookies.set('userId', result.userId);
-        navigate('/teamfor');
+        navigate('/team');
       } else {
         toast({
           title: t('userIdError'),
@@ -392,6 +397,10 @@ const SignUp: React.FC = () => {
                   onChange={(e) => handleInputChange('password', e.target.value)}
                   required
                 />
+                <Select placeholder={t('selectGender')} onChange={handleGenderChange}>
+                <option value="male">{t('male')}</option>
+                <option value="female">{t('female')}</option>
+              </Select>
                 <Checkbox
                   isChecked={termsAccepted}
                   onChange={handleTermsChange}

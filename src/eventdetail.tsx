@@ -1,6 +1,21 @@
-// AdDetail.tsx
 import React, { useEffect, useState } from 'react';
-import { Box, Heading, Text, Spinner, useToast, Progress, Button, AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, AlertDialogOverlay, AlertDialogCloseButton, useDisclosure } from '@chakra-ui/react';
+import {
+  Box,
+  Heading,
+  Text,
+  Spinner,
+  useToast,
+  Progress,
+  Button,
+  AlertDialog,
+  AlertDialogBody,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogContent,
+  AlertDialogOverlay,
+  AlertDialogCloseButton,
+  useDisclosure,
+} from '@chakra-ui/react';
 import { useParams } from 'react-router-dom';
 import Cookies from 'js-cookie'; // Import Cookies to manage user cookies
 import Layout from './Layout'; // Adjust the import path as necessary
@@ -14,6 +29,7 @@ interface Ad {
   min: number;
   max: number;
   available: number;
+  info?: string; // Add this line to include additional info
 }
 
 const AdDetail: React.FC = () => {
@@ -154,9 +170,13 @@ const AdDetail: React.FC = () => {
         ) : ad ? (
           <>
             <Heading mb={4}>{ad.title}</Heading>
-            
-    
             <Text mb={4}>{ad.description}</Text>
+            {/* Display additional information if available */}
+            {ad.info && (
+              <Text mb={4} fontStyle="italic" color="gray.600">
+                From: {ad.info}
+              </Text>
+            )}
             <Text color="gray.500">
               Date: {new Date(ad.date).toLocaleDateString()} {ad.time}
             </Text>
@@ -209,14 +229,14 @@ const AdDetail: React.FC = () => {
           <Text>No ad details found.</Text>
         )}
         {ad && ad.available > 0 && (
-  <Button 
-    colorScheme="teal" 
-    onClick={handleButtonClick} 
-    mb={4} 
-  >
-    I Want to Go
-  </Button>
-)}
+          <Button 
+            colorScheme="teal" 
+            onClick={handleButtonClick} 
+            mb={4} 
+          >
+            I Want to Go
+          </Button>
+        )}
       </Box>
     </Layout>
   );
