@@ -10,8 +10,6 @@ import Create from './create';
 import Profile from './profile';
 import Team from './team'; 
 import './i18n'; // Import your i18n configuration
-import LanguageSelector from './LanguageSelector'; // Adjust the path as necessary
-
 import { ChakraProvider } from '@chakra-ui/react';
 
 // Create a default theme
