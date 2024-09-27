@@ -13,7 +13,8 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Cookies from 'js-cookie';
-import { useTranslation } from 'react-i18next'; // Import useTranslation
+import { useTranslation } from 'react-i18next';
+import backround from './backimg.jpeg'; // Correct import
 
 function Copyright(props: any) {
   return (
@@ -31,14 +32,13 @@ function Copyright(props: any) {
 const defaultTheme = createTheme();
 
 export default function SignIn() {
-  const { t } = useTranslation(); // Access the translation function
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
-  // Redirect if userId cookie exists
   useEffect(() => {
     const userId = Cookies.get('userId');
     if (userId) {
-      navigate('/create'); // Redirect to home if authenticated
+      navigate('/create');
     }
   }, [navigate]);
 
@@ -61,9 +61,9 @@ export default function SignIn() {
 
       if (response.ok) {
         const result = await response.json();
-        Cookies.set('userId', result.userId); // Save user ID in cookies
+        Cookies.set('userId', result.userId);
         console.log('User ID saved in cookies:', Cookies.get('userId'));
-        navigate('/profile'); // Navigate to the profile page
+        navigate('/profile');
       } else {
         alert(t('userIdError'));
       }
@@ -79,7 +79,15 @@ export default function SignIn() {
 
   return (
     <ThemeProvider theme={defaultTheme}>
-      <div className="signin-container"> {/* Apply the new CSS class here */}
+      <div 
+        className="signin-container"
+        style={{
+          backgroundImage: `url(${backround})`, // Use imported image here
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          height: '100vh',
+        }}
+      >
         <Container component="main" maxWidth="xs">
           <CssBaseline />
           <Box
@@ -90,15 +98,14 @@ export default function SignIn() {
               alignItems: 'center',
             }}
           >
-            {/* Link to the right side */}
             <Box
               sx={{
                 position: 'fixed',
                 top: 16,
                 right: 16,
-                zIndex: 1201, // Ensures it is above other content
+                zIndex: 1201,
               }}
-            >              
+            >
               <Button
                 component="a"
                 href="/team"
