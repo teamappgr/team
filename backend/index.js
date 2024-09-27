@@ -109,6 +109,22 @@ app.post('/ads', async (req, res) => {
   }
 });
 
+// Get ads by user ID
+app.get('/ads1', async (req, res) => {
+  const userId = req.query.user_id;
+
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required' });
+  }
+
+  try {
+    const result = await pool.query('SELECT * FROM ads WHERE user_id = $1', [userId]);
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error('Error fetching ads:', error);
+    res.status(500).json({ message: 'Error fetching ads' });
+  }
+});
 
 // Get all ads
 app.get('/ads', async (req, res) => {
@@ -183,6 +199,22 @@ app.post('/requests/:id/reject', async (req, res) => {
   }
 });
 
+// Assuming you have already imported necessary modules like express and your database connection
+
+// Fetch ad details by ID
+app.get('/ads/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT * FROM ads WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Ad not found' });
+    }
+    res.status(200).json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching ad details:', error);
+    res.status(500).json({ message: 'Error fetching ad details' });
+  }
+});
 
 
 // Get user profile by ID
@@ -242,10 +274,7 @@ app.post('/requests', async (req, res) => {
     }
 
     // Update available count for the ad
-    await pool.query(
-      'UPDATE ads SET available = available - 1 WHERE id = $1 AND available > 0',
-      [ad_id]
-    );
+    
 
     res.status(201).json({ message: 'Request created successfully' });
   } catch (error) {

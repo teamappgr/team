@@ -17,6 +17,7 @@ import {
 } from '@chakra-ui/react';
 import Cookies from 'js-cookie';
 import Layout from './Layout';
+import { useTranslation } from 'react-i18next';
 
 interface User {
   first_name: string;
@@ -44,7 +45,8 @@ const MyEvents: React.FC = () => {
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
-  
+  const { t, i18n } = useTranslation();
+
   // Alert dialog state
   const [isOpen, setIsOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<{ requestId: number; adId: number; action: 'accept' | 'reject' } | null>(null);
@@ -125,7 +127,7 @@ const MyEvents: React.FC = () => {
       }
 
       try {
-        const response = await fetch(`${process.env.REACT_APP_API}ads?user_id=${userId}`);
+        const response = await fetch(`${process.env.REACT_APP_API}ads1?user_id=${userId}`);
         if (!response.ok) {
           throw new Error('Failed to fetch ads');
         }
@@ -160,6 +162,9 @@ const MyEvents: React.FC = () => {
   return (
     <Layout>
       <Box maxW="800px" mx="auto" p={6}>
+      <Heading mb={6} textAlign="center" color="teal.600">
+        {t('showmyevents')}
+        </Heading>
         {loading ? (
           <Spinner size="xl" />
         ) : ads.length > 0 ? (
@@ -168,9 +173,9 @@ const MyEvents: React.FC = () => {
               <Heading size="md" mb={2}>{ad.title}</Heading>
               <Text mb={2}>{ad.description}</Text>
               <Text color="gray.500">
-                Date: {new Date(ad.date).toLocaleDateString()} {ad.time}
+              {t('date')}: {new Date(ad.date).toLocaleDateString()} {ad.time}
               </Text>
-              <Text color="gray.500">Available: {ad.available}</Text>
+              <Text color="gray.500">{t('availability')}: {ad.available}</Text>
               {ad.requests && ad.requests.length > 0 ? (
   ad.requests.map((user: User) => (
     <Box key={user.requestId} borderWidth="1px" borderRadius="lg" p={2} mt={2}>
@@ -216,7 +221,7 @@ const MyEvents: React.FC = () => {
     </Box>
   ))
 ) : (
-  <Text>No requests found for this event.</Text>
+  <Text>{t('norequests')}</Text>
 )}
 
               {ad.info && (

@@ -60,7 +60,11 @@ const resources = {
       verified: "Verified", // Added translation for Verified
       notVerified: "Not Verified", // Added translation for Not Verified
       showname:"Show Name",
-      showevents:"Available Events"
+      showevents:"Available Events",
+      showmyevents:"My Events",
+      norequests:"No requests found for this event.",
+      availability:"Availability"
+
     },
   },
   el: { // Greek translations
@@ -119,7 +123,10 @@ const resources = {
       verified: "Επαληθευμένος", // Added translation for Verified
       notVerified: "Μη Επαληθευμένος" ,// Added translation for Not Verified
       showname:"Δείξε όνομα",
-      showevents:"Διαθέσημες Εκδηλώσεις"
+      showevents:"Διαθέσημες Εκδηλώσεις",
+      showmyevents:"Οι Εκδηλώσεις Μου",
+      norequests:"Δεν υπάρχουν αιτήσεις για αύτο το συμβάν.",
+      availability:"Διαθέσημες θέσεις"
 
     },
   },

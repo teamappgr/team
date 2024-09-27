@@ -17,8 +17,8 @@ import {
   useDisclosure,
 } from '@chakra-ui/react';
 import { useParams } from 'react-router-dom';
-import Cookies from 'js-cookie'; // Import Cookies to manage user cookies
-import Layout from './Layout'; // Adjust the import path as necessary
+import Cookies from 'js-cookie';
+import Layout from './Layout';
 
 interface Ad {
   id: number;
@@ -29,18 +29,16 @@ interface Ad {
   min: number;
   max: number;
   available: number;
-  info?: string; // Add this line to include additional info
+  info?: string;
 }
 
 const AdDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>(); // Get the ad id from the URL parameters
+  const { id } = useParams<{ id: string }>();
   const [ad, setAd] = useState<Ad | null>(null);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
-  
-  // Alert Dialog state
   const { isOpen, onOpen, onClose } = useDisclosure();
-  const cancelRef = React.useRef<HTMLButtonElement>(null); // Use for cancel button reference
+  const cancelRef = React.useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const fetchAdDetail = async () => {
@@ -67,36 +65,27 @@ const AdDetail: React.FC = () => {
     fetchAdDetail();
   }, [id, toast]);
 
-  // Function to calculate progress percentage
   const calculateProgress = (min: number, max: number, available: number) => {
-    if (max === available) return 0; // Set bar to 0 if max equals available
-    if (max - available < 0) return 100; // Full progress if max equals available
-    const progress = ((max - available) / min) * 100; // Calculate percentage
-    return Math.min(progress, 100); // Cap the value at 100%
+    if (max === available) return 0;
+    if (max - available < 0) return 100;
+    const progress = ((max - available) / min) * 100;
+    return Math.min(progress, 100);
   };
 
   const calculatePeopleNeeded = (min: number, max: number, available: number) => {
     const needed = min - (max - available);
-    return needed > 0 ? needed : 0; // Ensure we don't display negative numbers
+    return needed > 0 ? needed : 0;
   };
 
   const getLastAvailablePositions = (min: number, max: number, available: number) => {
-    if (min - (max - available) <= 0) {
-      return available; // Last available positions
-    }
-    return null; // Return null if not applicable
+    return min - (max - available) <= 0 ? available : null;
   };
 
-  // Handle button click
-  const handleButtonClick = async () => {
-    // Show the alert dialog
-    onOpen();
-  };
+  const handleButtonClick = () => onOpen();
 
   const handleConfirm = async () => {
-    const userId = Cookies.get('userId'); // Get user ID from cookies
+    const userId = Cookies.get('userId');
     if (!userId) {
-      // If user ID is not present, show a toast and return
       toast({
         title: 'Error',
         description: 'You must be logged in to express your interest.',
@@ -107,7 +96,6 @@ const AdDetail: React.FC = () => {
       return;
     }
 
-    // Check if user is verified
     try {
       const userResponse = await fetch(`${process.env.REACT_APP_API}profile/${userId}`);
       const userData = await userResponse.json();
@@ -123,25 +111,19 @@ const AdDetail: React.FC = () => {
         return;
       }
 
-      // If checks passed, proceed to insert into requests
       const response = await fetch(`${process.env.REACT_APP_API}requests`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ad_id: ad?.id,
-          user_id: userId,
-        }),
+        body: JSON.stringify({ ad_id: ad?.id, user_id: userId }),
       });
 
       if (!response.ok) {
         throw new Error('Failed to create request');
       }
 
-      // Update available count
-      setAd(prevAd => (prevAd ? { ...prevAd, available: prevAd.available - 1 } : prevAd));
-
+      
       toast({
         title: 'Success!',
         description: 'You have expressed your interest in attending this event.',
@@ -158,7 +140,7 @@ const AdDetail: React.FC = () => {
         isClosable: true,
       });
     } finally {
-      onClose(); // Close the dialog
+      onClose();
     }
   };
 
@@ -171,7 +153,6 @@ const AdDetail: React.FC = () => {
           <>
             <Heading mb={4}>{ad.title}</Heading>
             <Text mb={4}>{ad.description}</Text>
-            {/* Display additional information if available */}
             {ad.info && (
               <Text mb={4} fontStyle="italic" color="gray.600">
                 From: {ad.info}
@@ -182,16 +163,10 @@ const AdDetail: React.FC = () => {
             </Text>
             <Box mt={4}>
               <Text fontWeight="bold">Progress:</Text>
-              <Progress 
-                hasStripe 
-                value={calculateProgress(ad.min, ad.max, ad.available)} 
-                colorScheme="teal" 
-              />
+              <Progress hasStripe value={calculateProgress(ad.min, ad.max, ad.available)} colorScheme="teal" />
               <Text mt={2}>
                 {calculatePeopleNeeded(ad.min, ad.max, ad.available)} people needed to reach the minimum number for this event.
               </Text>
-
-              {/* Show last available positions if applicable */}
               {getLastAvailablePositions(ad.min, ad.max, ad.available) !== null && (
                 <Text mt={2} color="red.500">
                   Last available positions: {getLastAvailablePositions(ad.min, ad.max, ad.available)}
@@ -199,9 +174,8 @@ const AdDetail: React.FC = () => {
               )}
             </Box>
 
-            {/* Alert Dialog for confirmation */}
             <AlertDialog
-              motionPreset='slideInBottom'
+              motionPreset="slideInBottom"
               leastDestructiveRef={cancelRef}
               onClose={onClose}
               isOpen={isOpen}
@@ -218,7 +192,7 @@ const AdDetail: React.FC = () => {
                   <Button ref={cancelRef} onClick={onClose}>
                     No
                   </Button>
-                  <Button colorScheme='teal' ml={3} onClick={handleConfirm}>
+                  <Button colorScheme="teal" ml={3} onClick={handleConfirm}>
                     Yes
                   </Button>
                 </AlertDialogFooter>
@@ -229,11 +203,7 @@ const AdDetail: React.FC = () => {
           <Text>No ad details found.</Text>
         )}
         {ad && ad.available > 0 && (
-          <Button 
-            colorScheme="teal" 
-            onClick={handleButtonClick} 
-            mb={4} 
-          >
+          <Button colorScheme="teal" onClick={handleButtonClick} mb={4}>
             I Want to Go
           </Button>
         )}
