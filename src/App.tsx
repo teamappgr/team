@@ -12,6 +12,7 @@ import Team from './team';
 import EventDetail from './eventdetail';
 import './i18n'; // Import your i18n configuration
 import MyEvents from './myevents' ;
+
 import { ChakraProvider } from '@chakra-ui/react';
 
 // Create a default theme
@@ -31,7 +32,7 @@ const App: React.FC = () => {
     <ThemeProvider theme={theme}>
       <ChakraProvider>
         <CssBaseline />
-        <div className="App">
+        <div className="App" >
           {/* Language Selector */}
           <Router>
             <Routes>

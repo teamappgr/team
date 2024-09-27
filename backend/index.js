@@ -282,6 +282,28 @@ app.post('/requests', async (req, res) => {
     res.status(500).json({ message: 'Error creating request' });
   }
 });
+// Get user requests
+app.get('/myrequests', async (req, res) => {
+  const userId = req.query.user_id;
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID is required.' });
+  }
+
+  try {
+    const result = await pool.query(`
+      SELECT a.title, a.description, a.date, a.time, a.available, r.answer
+      FROM requests r
+      JOIN ads a ON r.ad_id = a.id
+      WHERE r.user_id = $1
+    `, [userId]);
+
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error('Error fetching user requests:', error);
+    res.status(500).json({ message: 'Error fetching requests' });
+  }
+});
+
 // Start the server
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
