@@ -1,22 +1,28 @@
-import React from 'react';
-import { Box, Flex, Icon, Link, Text } from '@chakra-ui/react';
+import React, { useState } from 'react';
+import { Box, Flex, Icon, Link, Text, Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, Button } from '@chakra-ui/react';
 import { FaHome, FaClipboardList, FaUser, FaPlus } from 'react-icons/fa';
 import { Link as RouterLink, useNavigate } from 'react-router-dom'; // For navigation
 import Cookies from 'js-cookie'; // Import js-cookie for cookie management
+import SignIn from './SignIn'; // Import your SignIn component
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const navigate = useNavigate();  // useNavigate hook for programmatic navigation
+  const navigate = useNavigate(); // useNavigate hook for programmatic navigation
+  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
+
+  const openSignInModal = () => {
+    setIsModalOpen(true); // Open the modal
+  };
 
   // Reusable function to check if the user is authenticated (userId exists in cookies)
   const checkUserAndNavigate = (route: string) => {
-    const userId = Cookies.get('userId');  // Fetch the userId from cookies
+    const userId = Cookies.get('userId'); // Fetch the userId from cookies
     if (!userId) {
-      // If userId is null, redirect to the signin page
-      navigate('/signin'); // Change to '/signin' for sign-in page
+      // If userId is null, open the sign-in modal
+      openSignInModal();
     } else {
       // Else, navigate to the specified route
       navigate(route);
@@ -55,7 +61,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             flexDirection="column" 
             alignItems="center" 
             cursor="pointer" 
-            onClick={() => checkUserAndNavigate('/myevents')}  // Check user before navigating to /myads
+            onClick={() => checkUserAndNavigate('/myevents')}  // Check user before navigating to /myevents
           >
             <Icon as={FaClipboardList} boxSize={6} color="teal.500" />
             <Text fontSize="xs" mt={1}>My events</Text>
@@ -86,6 +92,18 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </Box>
         </Flex>
       </Box>
+
+      {/* Sign-In Modal */}
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Sign In</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <SignIn onClose={() => setIsModalOpen(false)} /> {/* Pass close handler to SignIn */}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };

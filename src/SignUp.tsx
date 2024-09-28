@@ -24,6 +24,8 @@ import {
 } from '@chakra-ui/react';
 import Cookies from 'js-cookie';
 import { useTranslation } from 'react-i18next';
+import backround from './backimg.jpeg'; // Correct import
+
 
 const steps = [
   { title: 'contactInfo', description: 'fillContactInfo' },
@@ -265,12 +267,14 @@ const SignUp: React.FC = () => {
 
   return (
     <Flex height="100vh" width="100vw" alignItems="center" justifyContent="center" backgroundColor="gray.50">
+      
       <Box width="400px" p={8} border="1px solid lightgray" borderRadius="md" bg="white" shadow="md">
         <VStack spacing={4} align="stretch">
           <Text fontSize="2xl" mb={4} textAlign="left">{t('signUp')}</Text>
           <Progress value={(activeStep + 1) * (100 / steps.length)} mb={4} />
-
+          
           <Stepper index={activeStep} orientation="vertical">
+            
             {steps.map((step, index) => (
               <Step key={index}>
                 <StepIndicator>

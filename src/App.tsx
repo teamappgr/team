@@ -1,5 +1,5 @@
 // App.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import './App.css';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles'; // Import createTheme
@@ -12,7 +12,7 @@ import Team from './team';
 import EventDetail from './eventdetail';
 import './i18n'; // Import your i18n configuration
 import MyEvents from './myevents' ;
-
+import { Modal, ModalOverlay, ModalContent } from '@chakra-ui/react';
 import { ChakraProvider } from '@chakra-ui/react';
 
 // Create a default theme
@@ -28,6 +28,10 @@ const theme = createTheme({
 });
 
 const App: React.FC = () => {
+  const [isSignInOpen, setSignInOpen] = useState(false);
+
+  const openSignIn = () => setSignInOpen(true);
+  const closeSignIn = () => setSignInOpen(false);
   return (
     <ThemeProvider theme={theme}>
       <ChakraProvider>
@@ -35,9 +39,14 @@ const App: React.FC = () => {
         <div className="App" >
           {/* Language Selector */}
           <Router>
+        <Modal isOpen={isSignInOpen} onClose={closeSignIn}>
+          <ModalOverlay />
+          <ModalContent>
+            <SignIn onClose={closeSignIn} /> {/* Pass onClose prop here */}
+          </ModalContent>
+        </Modal>
             <Routes>
               {/* Route for the SignIn page */}
-              <Route path="/signin" element={<SignIn />} />
               <Route path="/profile" element={<Profile />} />
 
               {/* Route for the SignUp page */}
