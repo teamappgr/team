@@ -2,6 +2,7 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import Cookies from 'js-cookie'; // Import Cookies
+import { Language, Upcoming } from '@mui/icons-material';
 
 const resources = {
   en: {
@@ -63,8 +64,19 @@ const resources = {
       showevents:"Available Events",
       showmyevents:"My Events",
       norequests:"No requests found for this event.",
-      availability:"Availability"
-
+      availability:"Availability",
+      changelanguage:"Change Language",
+      upcoming:"Upcoming Events",
+      past:"Past Events",
+      myrequests:"My Requests",
+      language:"Language",
+      accepted:"Accepted",
+      rejected:"Rejected",
+      pending:"pending",
+      contactus:"Contuct Us",
+      home: "Home",
+      create: "Create",
+      profile: "Profile"
     },
   },
   el: { // Greek translations
@@ -126,8 +138,19 @@ const resources = {
       showevents:"Διαθέσημες Εκδηλώσεις",
       showmyevents:"Οι Εκδηλώσεις Μου",
       norequests:"Δεν υπάρχουν αιτήσεις για αύτο το συμβάν.",
-      availability:"Διαθέσημες θέσεις"
-
+      availability:"Διαθέσημες θέσεις",
+      changelanguage:"Αλλαγή Γλώσσας",
+      upcoming:"Επερχόμενες Εκδηλώσεις",
+      past:"Προηγούμενα Γεγονότα",
+      myrequests:"Οι Αιτήσεις Μου",
+      language:"Γλώσσα",
+      accepted:"Αποδεκτός",
+      rejected:"Απορρίφθηκε",
+      pending:"Σε Αναμονή",
+      contactus:"Επικοινωνηστε Μαζι Μας",
+      home: "Αρχική",
+      create: "Δημιουργία",
+      profile: "Προφίλ"
     },
   },
   

@@ -6,7 +6,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles'; // Import cre
 import { CssBaseline } from '@mui/material';
 import SignIn from './SignIn';
 import SignIn1 from './SignIn copy';
-
+import ContactUs from './contactus'; 
 import SignUp from './SignUp'; // Import SignUp component
 import Create from './create'; 
 import Profile from './profile';
@@ -58,7 +58,7 @@ const App: React.FC = () => {
               <Route path="/event/:id" element={<EventDetail />} /> {/* Add this route */}
               <Route path="/myevents" element={<MyEvents />} />
               <Route path="/signin" element={<SignIn1 />} />
-
+              <Route path="/contactus" element={<ContactUs />} />
               <Route path="/team" element={<Team />} />
             </Routes>
           </Router>

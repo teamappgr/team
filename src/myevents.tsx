@@ -196,7 +196,7 @@ const MyEvents: React.FC = () => {
               <h2>
                 <AccordionButton>
                   <Box as='span' flex='1' textAlign='left'>
-                    Upcoming Events
+                  {t('upcoming')}
                   </Box>
                   <AccordionIcon />
                 </AccordionButton>
@@ -268,7 +268,7 @@ const MyEvents: React.FC = () => {
               <h2>
                 <AccordionButton>
                   <Box as='span' flex='1' textAlign='left'>
-                    Past Events
+                  {t('past')}
                   </Box>
                   <AccordionIcon />
                 </AccordionButton>
@@ -292,7 +292,7 @@ const MyEvents: React.FC = () => {
   <h2>
     <AccordionButton>
       <Box as='span' flex='1' textAlign='left'>
-        My Requests
+      {t('myrequests')}
       </Box>
       <AccordionIcon />
     </AccordionButton>
@@ -315,10 +315,11 @@ const MyEvents: React.FC = () => {
     'yellow.500'
   }
 >
-  {request.answer === 1 ? 'Accepted' : 
-   request.answer === 0 ? 'Rejected' : 
-   'Pending'}
+  {request.answer === 1 ? t('accepted') : 
+   request.answer === 0 ? t('rejected') : 
+   t('pending')}
 </Text>
+
         </Box>
       ))
     ) : (

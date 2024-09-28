@@ -1,4 +1,3 @@
-// Team.tsx
 import React, { useEffect, useState } from 'react';
 import {
   Box,
@@ -11,10 +10,9 @@ import {
   useToast,
   Spinner,
 } from '@chakra-ui/react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import Layout from './Layout'; // Import the Layout component
+import { useNavigate } from 'react-router-dom';
+import Layout from './Layout';
 import { useTranslation } from 'react-i18next';
-
 
 interface Ad {
   id: number;
@@ -22,15 +20,15 @@ interface Ad {
   description: string;
   date: string;
   time: string;
+  verified: boolean; // Add verified property
 }
 
 const Team: React.FC = () => {
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
-  const navigate = useNavigate(); // Initialize the navigate function
-  const { t, i18n } = useTranslation();
-
+  const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const fetchAds = async () => {
@@ -38,7 +36,8 @@ const Team: React.FC = () => {
         const response = await fetch(`${process.env.REACT_APP_API}ads`);
         const data = await response.json();
         if (response.ok) {
-          const filteredAds = data.filter((ad: Ad) => new Date(ad.date) >= new Date());
+          // Filter ads to include only those that are verified and have a future date
+          const filteredAds = data.filter((ad: Ad) => ad.verified && new Date(ad.date) >= new Date());
           setAds(filteredAds);
         } else {
           toast({
@@ -66,16 +65,15 @@ const Team: React.FC = () => {
     fetchAds();
   }, [toast]);
 
-  // Handle navigation to the ad detail page
   const handleAdClick = (id: number) => {
-    navigate(`/event/${id}`); // Navigate to the detail page for the clicked ad
+    navigate(`/event/${id}`);
   };
 
   return (
     <Layout>
       <Box maxW="1200px" mx="auto" p={6}>
         <Heading mb={6} textAlign="center" color="teal.600">
-        {t('showevents')}
+          {t('showevents')}
         </Heading>
 
         {loading ? (

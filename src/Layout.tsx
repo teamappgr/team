@@ -1,42 +1,39 @@
 import React, { useState } from 'react';
-import { Box, Flex, Icon, Link, Text, Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody, Button } from '@chakra-ui/react';
+import { Box, Flex, Icon, Link, Text, Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody } from '@chakra-ui/react';
 import { FaHome, FaClipboardList, FaUser, FaPlus } from 'react-icons/fa';
-import { Link as RouterLink, useNavigate } from 'react-router-dom'; // For navigation
-import Cookies from 'js-cookie'; // Import js-cookie for cookie management
-import SignIn from './SignIn'; // Import your SignIn component
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
+import SignIn from './SignIn';
+import { useTranslation } from 'react-i18next';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const navigate = useNavigate(); // useNavigate hook for programmatic navigation
-  const [isModalOpen, setIsModalOpen] = useState(false); // State for modal visibility
+  const { t } = useTranslation(); // Hook for translation
+  const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const openSignInModal = () => {
-    setIsModalOpen(true); // Open the modal
+    setIsModalOpen(true);
   };
 
-  // Reusable function to check if the user is authenticated (userId exists in cookies)
   const checkUserAndNavigate = (route: string) => {
-    const userId = Cookies.get('userId'); // Fetch the userId from cookies
+    const userId = Cookies.get('userId');
     if (!userId) {
-      // If userId is null, open the sign-in modal
       openSignInModal();
     } else {
-      // Else, navigate to the specified route
       navigate(route);
     }
   };
 
   return (
     <Box>
-      {/* Main content */}
-      <Box mb="60px"> {/* Adjust for bottom navigation height */}
+      <Box mb="60px">
         {children}
       </Box>
 
-      {/* Bottom Navigation Bar */}
       <Box
         position="fixed"
         bottom="0"
@@ -49,58 +46,53 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       >
         <Flex justify="space-between" align="center" px={8} py={4} maxW="500px" mx="auto">
           
-          {/* Home Link */}
           <Link as={RouterLink} to="/team" _hover={{ textDecor: 'none' }} display="flex" flexDirection="column" alignItems="center">
             <Icon as={FaHome} boxSize={6} color="teal.500" />
-            <Text fontSize="xs" mt={1}>Home</Text>
+            <Text fontSize="xs" mt={1}>{t('home')}</Text>
           </Link>
 
-          {/* Ads List Link with user check */}
           <Box 
             display="flex" 
             flexDirection="column" 
             alignItems="center" 
             cursor="pointer" 
-            onClick={() => checkUserAndNavigate('/myevents')}  // Check user before navigating to /myevents
+            onClick={() => checkUserAndNavigate('/myevents')}
           >
             <Icon as={FaClipboardList} boxSize={6} color="teal.500" />
-            <Text fontSize="xs" mt={1}>My events</Text>
+            <Text fontSize="xs" mt={1}>{t('showmyevents')}</Text>
           </Box>
 
-          {/* Create New Ad Link with user check */}
           <Box 
             display="flex" 
             flexDirection="column" 
             alignItems="center" 
             cursor="pointer" 
-            onClick={() => checkUserAndNavigate('/create')}  // Check user before navigating to /create
+            onClick={() => checkUserAndNavigate('/create')}
           >
             <Icon as={FaPlus} boxSize={6} color="teal.500" />
-            <Text fontSize="xs" mt={1}>Create</Text>
+            <Text fontSize="xs" mt={1}>{t('create')}</Text>
           </Box>
 
-          {/* User Profile Link with user check */}
           <Box 
             display="flex" 
             flexDirection="column" 
             alignItems="center" 
             cursor="pointer" 
-            onClick={() => checkUserAndNavigate('/profile')}  // Check user before navigating to /profile
+            onClick={() => checkUserAndNavigate('/profile')}
           >
             <Icon as={FaUser} boxSize={6} color="teal.500" />
-            <Text fontSize="xs" mt={1}>Profile</Text>
+            <Text fontSize="xs" mt={1}>{t('profile')}</Text>
           </Box>
         </Flex>
       </Box>
 
-      {/* Sign-In Modal */}
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Sign In</ModalHeader>
+          <ModalHeader>{t('signIn')}</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <SignIn onClose={() => setIsModalOpen(false)} /> {/* Pass close handler to SignIn */}
+            <SignIn onClose={() => setIsModalOpen(false)} />
           </ModalBody>
         </ModalContent>
       </Modal>

@@ -303,7 +303,34 @@ app.get('/myrequests', async (req, res) => {
     res.status(500).json({ message: 'Error fetching requests' });
   }
 });
+app.post('/send-email', async (req, res) => {
+  const { name, email, message } = req.body;
+  const nodemailer = require('nodemailer');
 
+  // Configure your email transport
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: 'teamappgr24@gmail.com',
+      pass: 'xzym nceu qcqo dirc',
+    },
+  });
+
+  const mailOptions = {
+    from: email,
+    to: 'giorgos.gio45@gmail.com',
+    subject: `Contact Us Message from ${name}`,
+    text: `From ${email} ${message}`,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).send('Email sent successfully');
+  } catch (error) {
+    console.error('Error sending email:', error);
+    res.status(500).send('Error sending email');
+}
+});
 // Start the server
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

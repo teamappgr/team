@@ -9,13 +9,22 @@ import {
   Heading,
   useToast,
   Spinner,
-  Badge, // Import Badge from Chakra UI
+  Badge,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverArrow,
+  PopoverCloseButton,
+  PopoverHeader,
+  PopoverBody,
 } from '@chakra-ui/react';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 import Layout from './Layout'; 
 import { useTranslation } from 'react-i18next';
 import LanguageSelector from './LanguageSelector';
+import { MdBuild, MdCall } from "react-icons/md";
+import { EmailIcon } from '@chakra-ui/icons'; // Import EmailIcon
 
 const Profile = () => {
   const { t } = useTranslation(); 
@@ -25,7 +34,7 @@ const Profile = () => {
     email: '',
     phone: '',
     instagram_account: '',
-    verified: false, // Add verified to the state
+    verified: false,
   });
   const [loading, setLoading] = useState(true); 
   const toast = useToast();
@@ -33,7 +42,6 @@ const Profile = () => {
 
   const userId = Cookies.get('userId');
 
-  // Fetch user data when the component loads
   useEffect(() => {
     const fetchUserData = async () => {
       if (!userId) {
@@ -44,7 +52,6 @@ const Profile = () => {
           duration: 3000,
           isClosable: true,
         });
-        
         return;
       }
 
@@ -75,6 +82,7 @@ const Profile = () => {
     const { name, value } = e.target;
     setProfileData(prevState => ({ ...prevState, [name]: value }));
   };
+  
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -171,12 +179,11 @@ const Profile = () => {
               />
             </FormControl>
 
-            {/* Display verification badge */}
             <Box>
               <Stack direction='row'>
-              <Badge colorScheme={profileData.verified ? 'green' : 'red'}>
-  {profileData.verified ? t('verified') : t('notVerified')}
-</Badge>
+                <Badge colorScheme={profileData.verified ? 'green' : 'red'}>
+                  {profileData.verified ? t('verified') : t('notVerified')}
+                </Badge>
               </Stack>
             </Box>
 
@@ -195,8 +202,34 @@ const Profile = () => {
             </Button>
           </Stack>
         )}
-        
-        <LanguageSelector />
+
+        <Stack direction='row' spacing={4} mt={5}>
+          <Popover>
+            <PopoverTrigger>
+              <Button leftIcon={<MdBuild />} colorScheme='pink' variant='solid'>
+              {t('language')}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent>
+              <PopoverArrow />
+              <PopoverCloseButton />
+              <PopoverHeader>{t('changelanguage')}</PopoverHeader>
+              <PopoverBody>
+                
+                <LanguageSelector />
+              </PopoverBody>
+            </PopoverContent>
+          </Popover>
+          
+          <Button
+            leftIcon={<EmailIcon />}
+            colorScheme='teal'
+            variant='solid'
+            onClick={() => navigate('/contactus')}
+          >
+            {t('contactus')}
+          </Button>
+        </Stack>
       </Box>
     </Layout>
   );
