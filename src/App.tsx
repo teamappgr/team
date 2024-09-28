@@ -5,6 +5,8 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles'; // Import createTheme
 import { CssBaseline } from '@mui/material';
 import SignIn from './SignIn';
+import SignIn1 from './SignIn copy';
+
 import SignUp from './SignUp'; // Import SignUp component
 import Create from './create'; 
 import Profile from './profile';
@@ -46,6 +48,7 @@ const App: React.FC = () => {
           </ModalContent>
         </Modal>
             <Routes>
+              
               {/* Route for the SignIn page */}
               <Route path="/profile" element={<Profile />} />
 
@@ -54,6 +57,7 @@ const App: React.FC = () => {
               <Route path="/create" element={<Create />} />
               <Route path="/event/:id" element={<EventDetail />} /> {/* Add this route */}
               <Route path="/myevents" element={<MyEvents />} />
+              <Route path="/signin" element={<SignIn1 />} />
 
               <Route path="/team" element={<Team />} />
             </Routes>
