@@ -79,7 +79,7 @@ const MyEvents: React.FC = () => {
     console.log(`Confirming action: ${action} for requestId: ${requestId}, adId: ${adId}`);
     
     try {
-      const response = await fetch(`/requests/${requestId}/${action}`, {
+      const response = await fetch(`${process.env.REACT_APP_API}requests/${requestId}/${action}`, {
         method: 'POST',
       });
       if (!response.ok) throw new Error(`Failed to ${action} request`);
