@@ -19,11 +19,25 @@ const io = new Server(server, {
     credentials: true,
   },
 });
-const vapidKeys = webpush.generateVAPIDKeys();
-webpush.setVapidDetails('mailto:your-email@example.com', vapidKeys.publicKey, vapidKeys.privateKey);
+// Retrieve VAPID keys from environment variables
+const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
+const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
 
-// Log VAPID keys (remove in production)
-console.log('VAPID Keys:', vapidKeys);
+if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
+  console.error('VAPID keys are missing. Please check your environment variables.');
+  process.exit(1); // Exit the application if keys are not set
+}
+
+// Set VAPID details using the keys from the environment variables
+webpush.setVapidDetails(
+  'mailto:teamappgr24@gmail.com', // Replace with your email
+  VAPID_PUBLIC_KEY,
+  VAPID_PRIVATE_KEY
+);
+
+// Log the VAPID keys to verify they're correctly loaded (remove this in production)
+console.log('VAPID Keys from .env:', { publicKey: VAPID_PUBLIC_KEY, privateKey: VAPID_PRIVATE_KEY });
+
 
 app.use(express.json());
 app.use(cors());
@@ -268,13 +282,21 @@ app.put('/profile/:userId', async (req, res) => {
 app.post('/subscribe', async (req, res) => {
   const { userId, endpoint, keys } = req.body;
 
-  console.log('Received subscription:', { userId, endpoint, keys }); // Log the received data
+  // Log the received subscription data for debugging
+  console.log('Received subscription:', { userId, endpoint, keys }); 
 
-  // Save the subscription to the database
+  // Check if all required fields are provided
+  if (!userId || !endpoint || !keys) {
+      return res.status(400).json({ message: 'Invalid subscription data.' });
+  }
+
   try {
-      // Ensure you're inserting the correct details into the database
-      const result = await pool.query('INSERT INTO subscriptions (user_id, endpoint, keys) VALUES ($1, $2, $3)', [userId, endpoint, JSON.stringify(keys)]);
-      
+      // Save the subscription to the database
+      const result = await pool.query(
+          'INSERT INTO subscriptions (user_id, endpoint, keys) VALUES ($1, $2, $3)',
+          [userId, endpoint, JSON.stringify(keys)]
+      );
+
       if (result.rowCount === 0) {
           return res.status(400).json({ message: 'Failed to subscribe user.' });
       }
@@ -304,9 +326,10 @@ app.post('/send-notification', async (req, res) => {
   }
 });
 
-// Modify existing request creation logic to send a notification
 app.post('/requests', async (req, res) => {
   const { ad_id, user_id } = req.body;
+
+  console.log('Received request to create:', { ad_id, user_id });
 
   try {
       // Insert into requests table
@@ -316,25 +339,65 @@ app.post('/requests', async (req, res) => {
       );
 
       if (result.rowCount === 0) {
+          console.error('Failed to create request in database.');
           return res.status(400).json({ message: 'Failed to create request' });
       }
+      console.log('Request created successfully in database.');
 
       // Fetch the ad's details including the title
       const adResult = await pool.query('SELECT title, user_id FROM ads WHERE id = $1', [ad_id]);
       const ad = adResult.rows[0];
+
+      console.log('Fetched ad details:', ad);
+
       const adOwnerId = ad?.user_id;
 
       // Fetch the owner's subscription from the database
       const subscriptionResult = await pool.query('SELECT * FROM subscriptions WHERE user_id = $1', [adOwnerId]);
       const userSubscription = subscriptionResult.rows[0];
 
+      console.log('User Subscription:', userSubscription);
+
+      // Log the keys
+      console.log('Stored Keys:', userSubscription.keys);
+
       // Send a notification to the ad owner
       if (userSubscription) {
-          const payload = {
+          let keys;
+          try {
+              keys = typeof userSubscription.keys === 'string' 
+                  ? JSON.parse(userSubscription.keys) 
+                  : userSubscription.keys; 
+          } catch (error) {
+              console.error('Error parsing keys:', error);
+              return res.status(500).json({ message: 'Failed to parse subscription keys' });
+          }
+
+          const subscription = {
+              endpoint: userSubscription.endpoint,
+              keys: keys,
+          };
+
+          console.log('Constructed Subscription Object:', subscription);
+
+          // Prepare the payload
+          const payload = JSON.stringify({
               title: 'New Request',
               message: `User ${user_id} has expressed interest in your ad: ${ad.title}`,
-          };
-          await webpush.sendNotification(userSubscription.endpoint, JSON.stringify(payload));
+          });
+
+          console.log('Payload to send:', payload);
+
+          // Log VAPID keys for comparison
+          console.log('Using VAPID Public Key:', process.env.VAPID_PUBLIC_KEY);
+          console.log('Using VAPID Private Key:', process.env.VAPID_PRIVATE_KEY);
+
+          // Send the push notification
+          await webpush.sendNotification(subscription, payload);
+          console.log('Notification sent successfully.');
+      } else {
+          console.error('No subscription found for user:', adOwnerId);
+          return res.status(404).json({ message: 'No subscription found' });
       }
 
       res.status(201).json({ message: 'Request created successfully' });
