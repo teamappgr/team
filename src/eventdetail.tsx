@@ -143,80 +143,7 @@ const AdDetail: React.FC = () => {
     }
   };
 // Utility function to convert the Base64 VAPID public key to a Uint8Array
-const urlB64ToUint8Array = (base64String: string): Uint8Array => {
-  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const rawData = window.atob(base64);
-  return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
-};
 
-  const handleSubscribe = async () => {
-    console.log('Attempting to subscribe...');
-
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-        try {
-            // Register the service worker
-            const registration = await navigator.serviceWorker.register('/service-worker.js');
-            console.log('Service Worker registered:', registration);
-
-            // Check if push manager is available and service worker is active
-            if (registration.active && registration.pushManager) {
-                // Get existing subscriptions
-                const existingSubscription = await registration.pushManager.getSubscription();
-
-                // If there's an existing subscription, unsubscribe from it
-                if (existingSubscription) {
-                    await existingSubscription.unsubscribe();
-                    console.log('Unsubscribed from existing subscription.');
-                }
-
-                // Retrieve the VAPID public key from environment variables
-                const applicationServerKey = process.env.REACT_APP_VAPID_PUBLIC_KEY;
-                if (!applicationServerKey) {
-                    console.error('VAPID public key is not defined.');
-                    return;
-                }
-
-                // Convert the VAPID public key to the required Uint8Array format
-                const convertedVapidKey = urlB64ToUint8Array(applicationServerKey);
-
-                // Subscribe to push notifications using the converted VAPID public key
-                const newSubscription = await registration.pushManager.subscribe({
-                    userVisibleOnly: true,
-                    applicationServerKey: convertedVapidKey,
-                });
-                console.log('Subscription request sent:', newSubscription);
-
-                // Send the subscription to the backend
-                const response = await fetch(`${process.env.REACT_APP_API}subscribe`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        userId: Cookies.get('userId'),
-                        endpoint: newSubscription.endpoint,
-                        keys: newSubscription.toJSON().keys, // Make sure keys are sent as JSON
-                    }),
-                });
-
-                // Handle the response from the backend
-                if (!response.ok) {
-                    const errorMessage = await response.json();
-                    console.error('Failed to subscribe:', errorMessage);
-                } else {
-                    console.log('Subscription successful!');
-                }
-            } else {
-                console.error('Service Worker is not active or Push Manager is unavailable.');
-            }
-        } catch (error) {
-            console.error('Subscription error:', error);
-        }
-    } else {
-        console.error('Service workers or Push notifications are not supported in this browser.');
-    }
-};
 
 
   return (
@@ -282,9 +209,7 @@ const urlB64ToUint8Array = (base64String: string): Uint8Array => {
             I Want to Go
           </Button>
         )}
-        <Button colorScheme="teal" onClick={handleSubscribe}>
-          Subscribe for Notifications
-        </Button>
+
       </Box>
     </Layout>
   );
