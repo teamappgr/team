@@ -231,52 +231,53 @@ const MyEvents: React.FC = () => {
       </Text>
 
       {ad.requests && ad.requests.length > 0 ? (
-        ad.requests.map((user: User) => (
-          <Box key={user.requestId} borderWidth="1px" borderRadius="lg" p={2} mt={2}>
-            <Text><strong>Name:</strong> {user.first_name} {user.last_name}</Text>
-            <Text><strong>Instagram:</strong> {user.instagram_account}</Text>
-            <Box display="flex" alignItems="center">
-              <Avatar
-                size="sm"
-                name={user.gender === 'male' ? 'Male' : 'Female'}
-                src={user.gender === 'male' 
-                  ? 'https://static.vecteezy.com/system/resources/previews/001/840/612/non_2x/picture-profile-icon-male-icon-human-or-people-sign-and-symbol-free-vector.jpg' 
-                  : 'https://i.pinimg.com/736x/1b/2e/31/1b2e314e767a957a44ed8f992c6d9098.jpg'}
-                ml={2}
-              />
-            </Box>
-            <Box mt={2}>
-              {user.answer === 2 ? (
-                <>
-                  <Button 
-                    colorScheme="green" 
-                    onClick={() => onOpen(user.requestId, ad.id, 'accept')} 
-                    isDisabled={ad.available <= 0}
-                  >
-                    Accept
-                  </Button>
-                  <Button 
-                    colorScheme="red" 
-                    onClick={() => onOpen(user.requestId, ad.id, 'reject')} 
-                    ml={2}
-                  >
-                    Reject
-                  </Button>
-                </>
-              ) : (
-                <Text 
-                  fontWeight="bold" 
-                  color={user.answer === 1 ? 'green.500' : 'red.500'}
-                >
-                  {user.answer === 1 ? 'Accepted' : 'Rejected'}
-                </Text>
-              )}
-            </Box>
-          </Box>
-        ))
-      ) : (
-        <Text>{t('norequests')}</Text>
-      )}
+  ad.requests.map((user: User) => (
+    <Box key={user.requestId} borderWidth="1px" borderRadius="lg" p={2} mt={2}>
+      <Text><strong>Name:</strong> {user.first_name} {user.last_name}</Text>
+      <Text><strong>Instagram:</strong> {user.instagram_account}</Text>
+      <Box display="flex" alignItems="center">
+        <Avatar
+          size="sm"
+          name={user.gender === 'male' ? 'Male' : 'Female'}
+          src={user.gender === 'male' 
+            ? 'https://static.vecteezy.com/system/resources/previews/001/840/612/non_2x/picture-profile-icon-male-icon-human-or-people-sign-and-symbol-free-vector.jpg' 
+            : 'https://i.pinimg.com/736x/1b/2e/31/1b2e314e767a957a44ed8f992c6d9098.jpg'}
+          ml={2}
+        />
+      </Box>
+      <Box mt={2}>
+        {user.answer === 2 ? (
+          <>
+            <Button 
+              colorScheme="green" 
+              onClick={() => onOpen(user.requestId, ad.id, 'accept')} // Ensure requestId is correctly referenced
+              isDisabled={ad.available <= 0}
+            >
+              Accept
+            </Button>
+            <Button 
+              colorScheme="red" 
+              onClick={() => onOpen(user.requestId, ad.id, 'reject')} // Ensure requestId is correctly referenced
+              ml={2}
+            >
+              Reject
+            </Button>
+          </>
+        ) : (
+          <Text 
+            fontWeight="bold" 
+            color={user.answer === 1 ? 'green.500' : 'red.500'}
+          >
+            {user.answer === 1 ? 'Accepted' : 'Rejected'}
+          </Text>
+        )}
+      </Box>
+    </Box>
+  ))
+) : (
+  <Text>{t('norequests')}</Text>
+)}
+
     </Box>
   ))}
 </AccordionPanel>
