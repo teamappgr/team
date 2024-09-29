@@ -160,7 +160,7 @@ const SignUp: React.FC = () => {
     return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
   };
 
-  const handleSubmit = async () => {
+const handleSubmit = async () => {
     if (!validateFields()) {
         toast({
             title: t('missingFields'),
