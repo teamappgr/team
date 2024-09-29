@@ -25,11 +25,11 @@ import Layout from './Layout';
 import { useTranslation } from 'react-i18next';
 
 interface User {
+  requestid: number;
   first_name: string;
   last_name: string;
   instagram_account: string;
   gender: string;
-  requestId: number;
   answer: number;
 }
 
@@ -91,7 +91,7 @@ const MyEvents: React.FC = () => {
               ...ad,
               available: action === 'accept' ? ad.available - 1 : ad.available,
               requests: ad.requests?.map(req => 
-                req.requestId === requestId ? { ...req, answer: action === 'accept' ? 1 : 0 } : req
+                req.requestid === requestId ? { ...req, answer: action === 'accept' ? 1 : 0 } : req
               ),
             };
           }
@@ -232,7 +232,7 @@ const MyEvents: React.FC = () => {
 
       {ad.requests && ad.requests.length > 0 ? (
   ad.requests.map((user: User) => (
-    <Box key={user.requestId} borderWidth="1px" borderRadius="lg" p={2} mt={2}>
+    <Box key={user.requestid} borderWidth="1px" borderRadius="lg" p={2} mt={2}>
       <Text><strong>Name:</strong> {user.first_name} {user.last_name}</Text>
       <Text><strong>Instagram:</strong> {user.instagram_account}</Text>
       <Box display="flex" alignItems="center">
@@ -248,20 +248,28 @@ const MyEvents: React.FC = () => {
       <Box mt={2}>
         {user.answer === 2 ? (
           <>
-            <Button 
-              colorScheme="green" 
-              onClick={() => onOpen(user.requestId, ad.id, 'accept')} // Ensure requestId is correctly referenced
-              isDisabled={ad.available <= 0}
-            >
-              Accept
-            </Button>
-            <Button 
-              colorScheme="red" 
-              onClick={() => onOpen(user.requestId, ad.id, 'reject')} // Ensure requestId is correctly referenced
-              ml={2}
-            >
-              Reject
-            </Button>
+<Button 
+  colorScheme="green" 
+  onClick={() => {
+    console.log("User object:", user); // Log the entire user object
+    onOpen(user.requestid, ad.id, 'accept');
+  }}
+  isDisabled={ad.available <= 0}
+>
+  Accept
+</Button>
+<Button 
+  colorScheme="red" 
+  onClick={() => {
+    console.log("User object for reject:", user); // Log the user object to check requestId
+    onOpen(user.requestid, ad.id, 'reject'); // Change requestId to requestid
+  }}
+  ml={2}
+>
+  Reject
+</Button>
+
+
           </>
         ) : (
           <Text 

@@ -158,13 +158,12 @@ app.get('/ads', async (req, res) => {
 });
 
 // Get ad by ID
-// Get ad by ID with requests
 app.get('/ads/:id/requests', async (req, res) => {
   const { id } = req.params; // Get ad ID from request parameters
   try {
     const result = await pool.query(`
       SELECT 
-        r.id AS requestId,  // Add this line to include the request ID
+        r.id AS requestId,  -- Fetch the request ID from the requests table
         u.first_name, 
         u.last_name, 
         u.instagram_account, 
@@ -175,6 +174,7 @@ app.get('/ads/:id/requests', async (req, res) => {
       WHERE r.ad_id = $1
     `, [id]);
 
+    console.log(result.rows); // Log the fetched rows for debugging
     res.status(200).json(result.rows); // Respond with user data for the requests
   } catch (error) {
     console.error('Error fetching requests:', error);
@@ -215,15 +215,28 @@ app.post('/requests/:id/accept', async (req, res) => {
 // Reject a request
 app.post('/requests/:id/reject', async (req, res) => {
   const { id } = req.params; // Get request ID from URL parameters
+
   try {
+    // Ensure id is a valid number or the expected type
+    if (isNaN(id)) {
+      return res.status(400).json({ message: 'Invalid request ID' });
+    }
+
     // Update the requests table to set the answer to 0 (rejected)
-    await pool.query('UPDATE requests SET answer = 0 WHERE id = $1', [id]);
+    const result = await pool.query('UPDATE requests SET answer = 0 WHERE id = $1 RETURNING *', [id]);
+
+    // Check if the update was successful
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+
     res.status(200).json({ message: 'Request rejected successfully' });
   } catch (error) {
     console.error('Error rejecting request:', error);
     res.status(500).json({ message: 'Error rejecting request' });
   }
 });
+
 
 // Assuming you have already imported necessary modules like express and your database connection
 
