@@ -17,6 +17,6 @@ self.addEventListener('notificationclick', function(event) {
     event.notification.close();
     // Handle the click event
     event.waitUntil(
-        clients.openWindow(process.env.PUBLIC_URL   ) // Change to your desired URL
+        clients.openWindow('http://localhost:3000/') // Change to your desired URL
     );
 });
