@@ -61,9 +61,11 @@ const MyEvents: React.FC = () => {
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   const onOpen = (requestId: number, adId: number, action: 'accept' | 'reject') => {
+    console.log(`Opening dialog with requestId: ${requestId}, adId: ${adId}, action: ${action}`);
     setSelectedRequest({ requestId, adId, action });
     setIsOpen(true);
   };
+  
   
   const onClose = () => {
     setIsOpen(false);
@@ -72,15 +74,16 @@ const MyEvents: React.FC = () => {
 
   const handleConfirm = async () => {
     if (!selectedRequest) return;
-
+  
     const { requestId, adId, action } = selectedRequest;
+    console.log(`Confirming action: ${action} for requestId: ${requestId}, adId: ${adId}`);
     
     try {
       const response = await fetch(`/requests/${requestId}/${action}`, {
         method: 'POST',
       });
       if (!response.ok) throw new Error(`Failed to ${action} request`);
-
+  
       setAds((prevAds) =>
         prevAds.map((ad) => {
           if (ad.id === adId) {
@@ -95,7 +98,7 @@ const MyEvents: React.FC = () => {
           return ad;
         })
       );
-
+  
       toast({
         title: 'Success',
         description: `Request ${action}ed successfully.`,
@@ -106,7 +109,7 @@ const MyEvents: React.FC = () => {
     } catch (error) {
       toast({
         title: 'Error',
-        description: "error.message",
+        description: error.message,
         status: 'error',
         duration: 5000,
         isClosable: true,
