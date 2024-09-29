@@ -153,19 +153,26 @@ const SignUp: React.FC = () => {
       setActiveStep((prev) => prev - 1);
     }
   };
+  const urlB64ToUint8Array = (base64String: string): Uint8Array => {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+  };
 
   const handleSubmit = async () => {
     if (!validateFields()) {
-      toast({
-        title: t('missingFields'),
-        description: t('missingFields'),
-        status: 'error',
-        duration: 4000,
-        isClosable: true,
-      });
-      return;
+        toast({
+            title: t('missingFields'),
+            description: t('missingFields'),
+            status: 'error',
+            duration: 4000,
+            isClosable: true,
+        });
+        return; // Stop further execution if validation fails
     }
 
+    // Existing code to handle form submission...
     const formDataToSubmit = new FormData();
     formDataToSubmit.append('firstName', formData.firstName);
     formDataToSubmit.append('lastName', formData.lastName);
@@ -173,14 +180,13 @@ const SignUp: React.FC = () => {
     formDataToSubmit.append('phone', formData.phone);
     formDataToSubmit.append('gender', formData.gender); // Ensure gender is appended
 
-
     // Add image (either from file upload or camera capture)
     if (uploadedImage) {
-      formDataToSubmit.append('image', uploadedImage);
+        formDataToSubmit.append('image', uploadedImage);
     } else if (capturedImage) {
-      const response = await fetch(capturedImage);
-      const blob = await response.blob();
-      formDataToSubmit.append('image', new File([blob], 'captured-image.png', { type: 'image/png' }));
+        const response = await fetch(capturedImage);
+        const blob = await response.blob();
+        formDataToSubmit.append('image', new File([blob], 'captured-image.png', { type: 'image/png' }));
     }
 
     formDataToSubmit.append('instagramAccount', formData.instagramAccount);
@@ -188,33 +194,107 @@ const SignUp: React.FC = () => {
     formDataToSubmit.append('university', selectedUniversity || '');
 
     try {
-      const response = await fetch(process.env.REACT_APP_API + 'signup', {
-        method: 'POST',
-        body: formDataToSubmit,
-      });
-      if (response.ok) {
-        const result = await response.json();
-        Cookies.set('userId', result.userId);
-        navigate('/team');
-      } else {
-        toast({
-          title: t('userIdError'),
-          description: t('userIdError'),
-          status: 'error',
-          duration: 4000,
-          isClosable: true,
+        const response = await fetch(process.env.REACT_APP_API + 'signup', {
+            method: 'POST',
+            body: formDataToSubmit,
         });
-      }
+
+        if (response.ok) {
+            const result = await response.json();
+            const userId: string = result.userId; // Explicitly define userId type
+            Cookies.set('userId', userId); // Set the user ID for later use
+            console.log('User signed up successfully:', result);
+
+            // Proceed to subscribe to push notifications
+            await subscribeUserToPushNotifications(userId);
+
+            navigate('/team');
+        } else {
+            toast({
+                title: t('userIdError'),
+                description: t('userIdError'),
+                status: 'error',
+                duration: 4000,
+                isClosable: true,
+            });
+        }
     } catch (error) {
-      toast({
-        title: t('networkError'),
-        description: t('networkError'),
-        status: 'error',
-        duration: 4000,
-        isClosable: true,
-      });
+        toast({
+            title: t('networkError'),
+            description: t('networkError'),
+            status: 'error',
+            duration: 4000,
+            isClosable: true,
+        });
     }
-  };
+};
+
+// Function to handle push subscription
+const subscribeUserToPushNotifications = async (userId: string) => { // Explicitly define userId type
+    console.log('Attempting to subscribe...');
+
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+        try {
+            // Register the service worker
+            const registration = await navigator.serviceWorker.register('/service-worker.js');
+            console.log('Service Worker registered:', registration);
+
+            // Check if push manager is available and service worker is active
+            const existingSubscription = await registration.pushManager.getSubscription();
+
+            // If there's an existing subscription, unsubscribe from it
+            if (existingSubscription) {
+                await existingSubscription.unsubscribe();
+                console.log('Unsubscribed from existing subscription.');
+            }
+
+            // Retrieve the VAPID public key from environment variables
+            const applicationServerKey = process.env.REACT_APP_VAPID_PUBLIC_KEY;
+            if (!applicationServerKey) {
+                console.error('VAPID public key is not defined.');
+                return;
+            }
+
+            // Convert the VAPID public key to the required Uint8Array format
+            const convertedVapidKey = urlB64ToUint8Array(applicationServerKey);
+
+            // Subscribe to push notifications using the converted VAPID public key
+            const newSubscription: PushSubscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: convertedVapidKey,
+            });
+            console.log('Subscription request sent:', newSubscription);
+
+            // Send the subscription to the backend
+            const response = await fetch(`${process.env.REACT_APP_API}subscribe`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userId: userId, // Pass the userId here
+                    endpoint: newSubscription.endpoint,
+                    keys: newSubscription.toJSON().keys, // Ensure keys are sent as JSON
+                }),
+            });
+
+            // Handle the response from the backend
+            if (!response.ok) {
+                const errorMessage = await response.json();
+                console.error('Failed to subscribe:', errorMessage);
+            } else {
+                console.log('Subscription successful!');
+            }
+        } catch (error) {
+            console.error('Subscription error:', error);
+        }
+    } else {
+        console.error('Service workers or Push notifications are not supported in this browser.');
+    }
+};
+
+
+
 
   const openCamera = async () => {
     setIsCameraOpen(true);
