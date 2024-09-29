@@ -175,7 +175,6 @@ app.get('/ads/:id/requests', async (req, res) => {
     `, [id]);
 
     console.log(result.rows); // Log the fetched rows for debugging
-    res.status(200).json(result.rows); // Respond with user data for the requests
   } catch (error) {
     console.error('Error fetching requests:', error);
     res.status(500).json({ message: 'Error fetching requests' });
