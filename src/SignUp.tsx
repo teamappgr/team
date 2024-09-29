@@ -202,7 +202,7 @@ const handleSubmit = async () => {
         if (response.ok) {
             const result = await response.json();
             const userId: string = result.userId; // Explicitly define userId type
-            Cookies.set('userId', userId); // Set the user ID for later use
+            Cookies.set('userId', userId, { expires: 7 }); // The cookie will expire in 7 days
             console.log('User signed up successfully:', result);
 
             // Proceed to subscribe to push notifications
