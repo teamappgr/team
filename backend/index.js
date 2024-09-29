@@ -160,6 +160,7 @@ app.get('/ads', async (req, res) => {
 // Get ad by ID
 app.get('/ads/:id/requests', async (req, res) => {
   const { id } = req.params; // Get ad ID from request parameters
+
   try {
     const result = await pool.query(`
       SELECT 
@@ -174,12 +175,19 @@ app.get('/ads/:id/requests', async (req, res) => {
       WHERE r.ad_id = $1
     `, [id]);
 
-    console.log(result.rows); // Log the fetched rows for debugging
+
+    // Check if any rows were returned
+    if (result.rows.length > 0) {
+      res.status(200).json(result.rows); // Send the results back to the client
+    } else {
+      res.status(404).json({ message: 'No requests found for this ad ID' }); // Handle no results case
+    }
   } catch (error) {
     console.error('Error fetching requests:', error);
     res.status(500).json({ message: 'Error fetching requests' });
   }
 });
+
 
 
 // Accept a request
