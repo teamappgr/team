@@ -47,9 +47,7 @@ interface Ad {
   verified: boolean | null; // Updated to include the 'verified' field
 
 }
-interface Requests{
-  id: number;
-}
+
 const MyEvents: React.FC = () => {
   const [ads, setAds] = useState<Ad[]>([]);
   const [requests, setRequests] = useState<any[]>([]);

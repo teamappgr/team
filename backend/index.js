@@ -163,7 +163,13 @@ app.get('/ads/:id/requests', async (req, res) => {
   const { id } = req.params; // Get ad ID from request parameters
   try {
     const result = await pool.query(`
-      SELECT u.first_name, u.last_name, u.instagram_account, u.gender, r.answer
+      SELECT 
+        r.id AS requestId,  // Add this line to include the request ID
+        u.first_name, 
+        u.last_name, 
+        u.instagram_account, 
+        u.gender, 
+        r.answer
       FROM requests r
       JOIN users u ON r.user_id = u.id
       WHERE r.ad_id = $1
