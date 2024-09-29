@@ -119,10 +119,62 @@ const Profile = () => {
     }
   };
 
-  const handleSignOut = () => {
-    Cookies.remove('userId'); 
-    navigate('/signin'); 
-  };
+  const handleSignOut = async () => {
+    try {
+        // Get the userId from cookies
+        const userId = Cookies.get('userId');
+
+        // Ensure userId is defined
+        if (!userId) {
+            toast({
+                title: 'Error',
+                description: 'User ID not found.',
+                status: 'error',
+                duration: 3000,
+                isClosable: true,
+            });
+            return;
+        }
+
+        Cookies.remove('userId');
+
+        // Navigate to sign-in page
+        navigate('/signin');        const response = await fetch(`${process.env.REACT_APP_API}subscriptions/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Failed to delete subscription');
+        }
+
+        // Successfully deleted the subscription
+        toast({
+            title: 'Success',
+            description: 'Subscription deleted successfully.',
+            status: 'success',
+            duration: 3000,
+            isClosable: true,
+        });
+
+        // Remove user ID cookie
+
+
+    } catch (error) {
+
+    }
+};
+
+// In your component render:
+<Button 
+    colorScheme="red" 
+    onClick={handleSignOut}
+>
+    {t('signout')}
+</Button>
 
   return (
     <Layout>

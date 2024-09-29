@@ -133,7 +133,7 @@ const AdDetail: React.FC = () => {
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Failed to express your interest. Please try again.',
+        description: 'You Have Already Requested For That Event.',
         status: 'error',
         duration: 5000,
         isClosable: true,

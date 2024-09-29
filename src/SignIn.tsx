@@ -39,7 +39,7 @@ export default function SignIn({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     const userId = Cookies.get('userId');
     if (userId) {
-      navigate('/create');
+      navigate('/team');
     }
   }, [navigate]);
 
@@ -62,9 +62,13 @@ export default function SignIn({ onClose }: { onClose: () => void }) {
 
       if (response.ok) {
         const result = await response.json();
-        Cookies.set('userId', result.userId);
-        console.log('User ID saved in cookies:', Cookies.get('userId'));
-        onClose(); // Close the modal on successful sign-in
+        const userId: string = result.userId; // Explicitly define userId type
+        Cookies.set('userId', userId); // Set the user ID for later use
+        console.log('User signed up successfully:', result);
+
+        // Proceed to subscribe to push notifications
+        await subscribeUserToPushNotifications(userId);
+
         navigate('/profile');
       } else {
         alert(t('userIdError'));
@@ -74,7 +78,74 @@ export default function SignIn({ onClose }: { onClose: () => void }) {
       alert(t('networkError'));
     }
   };
+  const urlB64ToUint8Array = (base64String: string): Uint8Array => {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+  };
+  const subscribeUserToPushNotifications = async (userId: string) => { // Explicitly define userId type
+    console.log('Attempting to subscribe...');
 
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+        try {
+            // Register the service worker
+            const registration = await navigator.serviceWorker.register('team/service-worker.js');
+            console.log('Service Worker registered:', registration);
+
+            // Check if push manager is available and service worker is active
+            const existingSubscription = await registration.pushManager.getSubscription();
+
+            // If there's an existing subscription, unsubscribe from it
+            if (existingSubscription) {
+                await existingSubscription.unsubscribe();
+                console.log('Unsubscribed from existing subscription.');
+            }
+
+            // Retrieve the VAPID public key from environment variables
+            const applicationServerKey = process.env.REACT_APP_VAPID_PUBLIC_KEY;
+            if (!applicationServerKey) {
+                console.error('VAPID public key is not defined.');
+                return;
+            }
+
+            // Convert the VAPID public key to the required Uint8Array format
+            const convertedVapidKey = urlB64ToUint8Array(applicationServerKey);
+
+            // Subscribe to push notifications using the converted VAPID public key
+            const newSubscription: PushSubscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: convertedVapidKey,
+            });
+            console.log('Subscription request sent:', newSubscription);
+
+            // Send the subscription to the backend
+            const response = await fetch(`${process.env.REACT_APP_API}subscribe`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    userId: userId, // Pass the userId here
+                    endpoint: newSubscription.endpoint,
+                    keys: newSubscription.toJSON().keys, // Ensure keys are sent as JSON
+                }),
+            });
+
+            // Handle the response from the backend
+            if (!response.ok) {
+                const errorMessage = await response.json();
+                console.error('Failed to subscribe:', errorMessage);
+            } else {
+                console.log('Subscription successful!');
+            }
+        } catch (error) {
+            console.error('Subscription error:', error);
+        }
+    } else {
+        console.error('Service workers or Push notifications are not supported in this browser.');
+    }
+};
   return (
     <ThemeProvider theme={defaultTheme}>
       <Container component="main" maxWidth="xs">

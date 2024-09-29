@@ -15,7 +15,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: '*',
-    methods: ['GET', 'POST'],
+    methods: ['GET', 'POST','DELETE'],
     credentials: true,
   },
 });
@@ -283,7 +283,7 @@ app.post('/subscribe', async (req, res) => {
   const { userId, endpoint, keys } = req.body;
 
   // Log the received subscription data for debugging
-  console.log('Received subscription:', { userId, endpoint, keys }); 
+  console.log('Received subscription:', { userId, endpoint, keys });
 
   // Check if all required fields are provided
   if (!userId || !endpoint || !keys) {
@@ -291,7 +291,19 @@ app.post('/subscribe', async (req, res) => {
   }
 
   try {
-      // Save the subscription to the database
+      // Check if a subscription already exists for the given userId
+      const existingSubscription = await pool.query(
+          'SELECT * FROM subscriptions WHERE user_id = $1',
+          [userId]
+      );
+
+      if (existingSubscription.rowCount > 0) {
+          // If subscription exists, no need to insert a new one
+          console.log('User is already subscribed.');
+          return res.status(200).json({ message: 'User already subscribed.' });
+      }
+
+      // Save the new subscription to the database if no existing subscription is found
       const result = await pool.query(
           'INSERT INTO subscriptions (user_id, endpoint, keys) VALUES ($1, $2, $3)',
           [userId, endpoint, JSON.stringify(keys)]
@@ -307,6 +319,7 @@ app.post('/subscribe', async (req, res) => {
       res.status(500).json({ message: 'Internal Server Error' });
   }
 });
+
 
 app.post('/send-notification', async (req, res) => {
   const { title, message, userSubscription } = req.body;
@@ -332,6 +345,17 @@ app.post('/requests', async (req, res) => {
   console.log('Received request to create:', { ad_id, user_id });
 
   try {
+      // Check if the user has already requested the same ad
+      const existingRequestResult = await pool.query(
+          'SELECT * FROM requests WHERE ad_id = $1 AND user_id = $2',
+          [ad_id, user_id]
+      );
+
+      if (existingRequestResult.rowCount > 0) {
+          console.error('User has already requested this ad.');
+          return res.status(400).json({ message: 'You have already requested this ad.' });
+      }
+
       // Insert into requests table
       const result = await pool.query(
           'INSERT INTO requests (ad_id, user_id) VALUES ($1, $2)',
@@ -344,13 +368,24 @@ app.post('/requests', async (req, res) => {
       }
       console.log('Request created successfully in database.');
 
-      // Fetch the ad's details including the title
-      const adResult = await pool.query('SELECT title, user_id FROM ads WHERE id = $1', [ad_id]);
+      // Fetch the ad's details including the title and the user’s first name
+      const adResult = await pool.query(
+          `SELECT ads.title, ads.user_id AS ad_owner_id, users.first_name 
+           FROM ads 
+           JOIN users ON ads.user_id = users.id 
+           WHERE ads.id = $1`, 
+          [ad_id]
+      );
       const ad = adResult.rows[0];
+
+      if (!ad) {
+          console.error('Ad not found.');
+          return res.status(404).json({ message: 'Ad not found' });
+      }
 
       console.log('Fetched ad details:', ad);
 
-      const adOwnerId = ad?.user_id;
+      const adOwnerId = ad.ad_owner_id;
 
       // Fetch the owner's subscription from the database
       const subscriptionResult = await pool.query('SELECT * FROM subscriptions WHERE user_id = $1', [adOwnerId]);
@@ -358,11 +393,8 @@ app.post('/requests', async (req, res) => {
 
       console.log('User Subscription:', userSubscription);
 
-      // Log the keys
-      console.log('Stored Keys:', userSubscription.keys);
-
-      // Send a notification to the ad owner
-      if (userSubscription) {
+      // Check if the subscription exists and is valid
+      if (userSubscription && userSubscription.endpoint) {
           let keys;
           try {
               keys = typeof userSubscription.keys === 'string' 
@@ -380,10 +412,10 @@ app.post('/requests', async (req, res) => {
 
           console.log('Constructed Subscription Object:', subscription);
 
-          // Prepare the payload
+          // Prepare the payload with user's first name
           const payload = JSON.stringify({
               title: 'New Request',
-              message: `User ${user_id} has expressed interest in your ad: ${ad.title}`,
+              message: `User ${ad.first_name} has expressed interest in your ad: ${ad.title}`,
           });
 
           console.log('Payload to send:', payload);
@@ -406,6 +438,7 @@ app.post('/requests', async (req, res) => {
       res.status(500).json({ message: 'Error creating request' });
   }
 });
+
 
 
 // Get user requests
@@ -457,6 +490,26 @@ app.post('/send-email', async (req, res) => {
     res.status(500).send('Error sending email');
 }
 });
+app.delete('/subscriptions/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+      // Attempt to delete the subscription associated with the userId
+      const result = await pool.query('DELETE FROM subscriptions WHERE user_id = $1', [userId]);
+
+      // Check if any rows were affected by the delete operation
+      if (result.rowCount === 0) {
+          return res.status(404).json({ message: 'Subscription not found' });
+      }
+
+      // Successfully deleted the subscription
+      res.status(200).json({ message: 'Subscription deleted successfully' });
+  } catch (error) {
+      console.error('Error deleting subscription:', error);
+      res.status(500).json({ message: 'Error deleting subscription' });
+  }
+});
+
 // Start the server
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

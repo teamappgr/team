@@ -48,7 +48,7 @@ const SignUp: React.FC = () => {
   useEffect(() => {
     const userId = Cookies.get('userId');
     if (userId) {
-      navigate('/create');
+      navigate('/team');
     }
   }, [navigate]);
 
