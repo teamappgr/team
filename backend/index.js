@@ -308,7 +308,23 @@ app.post('/subscribe', async (req, res) => {
   }
 });
 
+app.post('/send-notification', async (req, res) => {
+  const { title, message, userSubscription } = req.body;
 
+  console.log('Received subscription:', userSubscription); // Log subscription details
+
+  if (!userSubscription || !userSubscription.endpoint) {
+    return res.status(400).json({ message: 'Invalid subscription data' });
+  }
+
+  try {
+    await webpush.sendNotification(userSubscription.endpoint, JSON.stringify({ title, message }));
+    res.status(200).json({ message: 'Notification sent' });
+  } catch (error) {
+    console.error('Error sending notification:', error);
+    res.sendStatus(500);
+  }
+});
 
 app.post('/requests', async (req, res) => {
   const { ad_id, user_id } = req.body;
