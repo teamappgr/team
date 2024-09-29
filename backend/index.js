@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const upload = require('./cloudinary'); // Multer configuration for cloudinary
 
 const PORT = process.env.PORT || 5000;
+const webpush = require('web-push'); // Add this line to import web-push
 
 const app = express();
 const server = http.createServer(app);
@@ -18,6 +19,11 @@ const io = new Server(server, {
     credentials: true,
   },
 });
+const vapidKeys = webpush.generateVAPIDKeys();
+webpush.setVapidDetails('mailto:your-email@example.com', vapidKeys.publicKey, vapidKeys.privateKey);
+
+// Log VAPID keys (remove in production)
+console.log('VAPID Keys:', vapidKeys);
 
 app.use(express.json());
 app.use(cors());
@@ -259,29 +265,86 @@ app.put('/profile/:userId', async (req, res) => {
     res.status(500).json({ message: 'Error updating profile' });
   }
 });
-app.post('/requests', async (req, res) => {
-  const { ad_id, user_id } = req.body; // Get ad_id and user_id from request body
+app.post('/subscribe', async (req, res) => {
+  const { userId, endpoint, keys } = req.body;
 
+  console.log('Received subscription:', { userId, endpoint, keys }); // Log the received data
+
+  // Save the subscription to the database
   try {
-    // Insert into requests table
-    const result = await pool.query(
-      'INSERT INTO requests (ad_id, user_id) VALUES ($1, $2)',
-      [ad_id, user_id]
-    );
+      // Ensure you're inserting the correct details into the database
+      const result = await pool.query('INSERT INTO subscriptions (user_id, endpoint, keys) VALUES ($1, $2, $3)', [userId, endpoint, JSON.stringify(keys)]);
+      
+      if (result.rowCount === 0) {
+          return res.status(400).json({ message: 'Failed to subscribe user.' });
+      }
 
-    if (result.rowCount === 0) {
-      return res.status(400).json({ message: 'Failed to create request' });
-    }
-
-    // Update available count for the ad
-    
-
-    res.status(201).json({ message: 'Request created successfully' });
+      res.status(201).json({ message: 'Subscribed successfully!' });
   } catch (error) {
-    console.error('Error creating request: ', error);
-    res.status(500).json({ message: 'Error creating request' });
+      console.error('Error saving subscription:', error);
+      res.status(500).json({ message: 'Internal Server Error' });
   }
 });
+
+app.post('/send-notification', async (req, res) => {
+  const { title, message, userSubscription } = req.body;
+
+  console.log('Received subscription:', userSubscription); // Log subscription details
+
+  if (!userSubscription || !userSubscription.endpoint) {
+    return res.status(400).json({ message: 'Invalid subscription data' });
+  }
+
+  try {
+    await webpush.sendNotification(userSubscription.endpoint, JSON.stringify({ title, message }));
+    res.status(200).json({ message: 'Notification sent' });
+  } catch (error) {
+    console.error('Error sending notification:', error);
+    res.sendStatus(500);
+  }
+});
+
+// Modify existing request creation logic to send a notification
+app.post('/requests', async (req, res) => {
+  const { ad_id, user_id } = req.body;
+
+  try {
+      // Insert into requests table
+      const result = await pool.query(
+          'INSERT INTO requests (ad_id, user_id) VALUES ($1, $2)',
+          [ad_id, user_id]
+      );
+
+      if (result.rowCount === 0) {
+          return res.status(400).json({ message: 'Failed to create request' });
+      }
+
+      // Fetch the ad's details including the title
+      const adResult = await pool.query('SELECT title, user_id FROM ads WHERE id = $1', [ad_id]);
+      const ad = adResult.rows[0];
+      const adOwnerId = ad?.user_id;
+
+      // Fetch the owner's subscription from the database
+      const subscriptionResult = await pool.query('SELECT * FROM subscriptions WHERE user_id = $1', [adOwnerId]);
+      const userSubscription = subscriptionResult.rows[0];
+
+      // Send a notification to the ad owner
+      if (userSubscription) {
+          const payload = {
+              title: 'New Request',
+              message: `User ${user_id} has expressed interest in your ad: ${ad.title}`,
+          };
+          await webpush.sendNotification(userSubscription.endpoint, JSON.stringify(payload));
+      }
+
+      res.status(201).json({ message: 'Request created successfully' });
+  } catch (error) {
+      console.error('Error creating request:', error);
+      res.status(500).json({ message: 'Error creating request' });
+  }
+});
+
+
 // Get user requests
 app.get('/myrequests', async (req, res) => {
   const userId = req.query.user_id;

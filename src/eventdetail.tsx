@@ -123,7 +123,6 @@ const AdDetail: React.FC = () => {
         throw new Error('Failed to create request');
       }
 
-      
       toast({
         title: 'Success!',
         description: 'You have expressed your interest in attending this event.',
@@ -143,6 +142,71 @@ const AdDetail: React.FC = () => {
       onClose();
     }
   };
+
+  const handleSubscribe = async () => {
+    console.log('Attempting to subscribe...');
+
+    if ('serviceWorker' in navigator) {
+        try {
+            const registration = await navigator.serviceWorker.register('/service-worker.js');
+            console.log('Service Worker registered:', registration);
+
+            // Check if push manager is available
+            if (registration.active && registration.pushManager) {
+                // Get existing subscriptions
+                const existingSubscriptions = await registration.pushManager.getSubscription();
+
+                // If there's an existing subscription, unsubscribe
+                if (existingSubscriptions) {
+                    await existingSubscriptions.unsubscribe();
+                    console.log('Unsubscribed from existing subscription.');
+                }
+
+                // Ensure the VAPID key is defined
+                const applicationServerKey = process.env.REACT_APP_VAPID_PUBLIC_KEY;
+                if (!applicationServerKey) {
+                    console.error('VAPID public key is not defined.');
+                    return;
+                }
+
+                // Subscribe to push notifications
+                const subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlB64ToUint8Array(applicationServerKey),
+                });
+                console.log('Subscription request sent:', subscription);
+
+                // Send subscription to backend
+                const response = await fetch(`${process.env.REACT_APP_API}subscribe`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userId: Cookies.get('userId'),
+                        endpoint: subscription.endpoint,
+                        keys: subscription.toJSON().keys,
+                    }),
+                });
+
+                // Handle response from backend
+                if (!response.ok) {
+                    console.error('Failed to subscribe:', await response.json());
+                } else {
+                    console.log('Subscription successful!');
+                }
+            } else {
+                console.error('Service Worker is not active or Push manager is unavailable.');
+            }
+        } catch (error) {
+            console.error('Subscription error:', error);
+        }
+    } else {
+        console.error('Service workers are not supported in this browser.');
+    }
+};
+
+
 
   return (
     <Layout>
@@ -207,9 +271,20 @@ const AdDetail: React.FC = () => {
             I Want to Go
           </Button>
         )}
+        <Button colorScheme="teal" onClick={handleSubscribe}>
+          Subscribe for Notifications
+        </Button>
       </Box>
     </Layout>
   );
 };
+
+// Utility function to convert VAPID key
+function urlB64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  return new Uint8Array([...rawData].map((char) => char.charCodeAt(0)));
+}
 
 export default AdDetail;
