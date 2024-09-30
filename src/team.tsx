@@ -37,8 +37,8 @@ const Team: React.FC = () => {
         const data = await response.json();
         if (response.ok) {
           const filteredAds = data
-          .filter((ad: Ad) => ad.verified && new Date(ad.date) >= new Date())
-          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Sorting in reverse order
+            .filter((ad: Ad) => ad.verified && new Date(ad.date) >= new Date())
+            .sort((a: Ad, b: Ad) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Added type annotations for a and b
 
           setAds(filteredAds);
         } else {
