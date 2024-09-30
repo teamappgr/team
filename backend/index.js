@@ -118,7 +118,7 @@ app.post('/ads', async (req, res) => {
     // Proceed to insert the ad
     const result = await pool.query(
       'INSERT INTO ads (title, description, user_id, min, max, date, time, info, available) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id',
-      [title, description, userId, min, max, date, time, info, max] // Insert firstName (or null) into the query
+      [title, description, userId, min, max, date, time, firstName, max] // Insert firstName (or null) into the query
     );
 
     const adId = result.rows[0].id;
