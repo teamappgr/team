@@ -237,7 +237,7 @@ const subscribeUserToPushNotifications = async (userId: string) => { // Explicit
     if ('serviceWorker' in navigator && 'PushManager' in window) {
         try {
             // Register the service worker
-            const registration = await navigator.serviceWorker.register('service-worker.js');
+            const registration = await navigator.serviceWorker.register('team/service-worker.js');
             console.log('Service Worker registered:', registration);
 
             // Check if push manager is available and service worker is active
