@@ -43,13 +43,16 @@ const CreateAd: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [alertStatus, setAlertStatus] = useState<'error' | 'success' | 'warning' | 'info' | ''>('');
   const [emailAlerts, setEmailAlerts] = useState(false);
-  const [info, setinfo] = useState<string | null>(null); // State for user's first name
-  const [showName, setShowName] = useState(false); // State for show name toggle
+  const [info, setInfo] = useState<string | null>(null);
+  const [userData, setUserData] = useState<{ first_name: string; last_name: string; instagram_account: string } | null>(null); // New state for user data
+  const [showName, setShowName] = useState(false);
+  const [showLastName, setShowLastName] = useState(false);
+  const [showInstagramAccount, setShowInstagramAccount] = useState(false);
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
 
-  // Fetch the user's first name on mount
+  // Fetch the user's first name and last name on mount
   useEffect(() => {
     const userId = Cookies.get('userId');
     if (!userId) {
@@ -64,7 +67,8 @@ const CreateAd: React.FC = () => {
       const response = await fetch(`${process.env.REACT_APP_API}users/${userId}`);
       if (!response.ok) throw new Error('Failed to fetch user data');
       const userData = await response.json();
-      setinfo(userData.info); // Assuming the user object has first_name property
+      setUserData(userData); // Store user data in state
+      setInfo(userData.info); // Assuming the user object has info property
     } catch (error) {
       console.error('Error fetching user data', error);
     }
@@ -111,6 +115,25 @@ const CreateAd: React.FC = () => {
     }
 
     const userId = Cookies.get('userId');
+
+    if (!userData) {
+      toast({
+        title: t('userDataError'),
+        description: t('userDataError'),
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Construct the info string based on the toggles
+    let constructedInfo = '';
+    if (showName) constructedInfo += userData.first_name; // Include first name if toggle is on
+    if (showLastName) constructedInfo += ` ${userData.last_name}`; // Append last name
+    if (showInstagramAccount) constructedInfo += ` ${userData.instagram_account}`; // Append Instagram account
+
     const requestData = {
       title,
       description,
@@ -120,7 +143,7 @@ const CreateAd: React.FC = () => {
       time,
       userId,
       emailAlerts,
-      info: showName ? info : null, // Include first_name only if showName is true
+      info: constructedInfo.trim() || null, // Only include if constructedInfo is not empty
     };
 
     try {
@@ -142,7 +165,9 @@ const CreateAd: React.FC = () => {
         setDate(null);
         setTime(null);
         setEmailAlerts(false);
-        setShowName(false); // Reset showName toggle
+        setShowName(false);
+        setShowLastName(false); // Reset show last name toggle
+        setShowInstagramAccount(false); // Reset show Instagram account toggle
       } else {
         if (result.message === 'Your account is not verified.') {
           toast({
@@ -297,6 +322,28 @@ const CreateAd: React.FC = () => {
                 id="showname"
                 isChecked={showName}
                 onChange={(e) => setShowName(e.target.checked)}
+              />
+            </FormControl>
+
+            <FormControl display="flex" alignItems="center">
+              <FormLabel htmlFor="showlastname" mb="0">
+                {t('showlastname')}
+              </FormLabel>
+              <Switch
+                id="showlastname"
+                isChecked={showLastName}
+                onChange={(e) => setShowLastName(e.target.checked)}
+              />
+            </FormControl>
+
+            <FormControl display="flex" alignItems="center">
+              <FormLabel htmlFor="showinstagram" mb="0">
+                {t('showinstagram')}
+              </FormLabel>
+              <Switch
+                id="showinstagram"
+                isChecked={showInstagramAccount}
+                onChange={(e) => setShowInstagramAccount(e.target.checked)}
               />
             </FormControl>
 

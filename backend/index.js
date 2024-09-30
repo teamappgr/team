@@ -95,7 +95,7 @@ app.post('/signup', upload.single('image'), async (req, res) => {
 
 // Create Ad Endpoint
 app.post('/ads', async (req, res) => {
-  const { title, description, min, max, date, time, userId, includeFirstName } = req.body; // Destructure includeFirstName
+  const { title, description, min, max, date, time, userId, info } = req.body; // Destructure info
 
   console.log('Received request body:', req.body);
 
@@ -112,13 +112,10 @@ app.post('/ads', async (req, res) => {
       return res.status(403).json({ message: 'Your account is not verified.' });
     }
 
-    // If the switch is on, get the first name; otherwise, set it to null
-    const firstName = includeFirstName ? userResult.rows[0].first_name : null; 
-
-    // Proceed to insert the ad
+    // Proceed to insert the ad with the received info
     const result = await pool.query(
       'INSERT INTO ads (title, description, user_id, min, max, date, time, info, available) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id',
-      [title, description, userId, min, max, date, time, firstName, max] // Insert firstName (or null) into the query
+      [title, description, userId, min, max, date, time, info, max] // Set available to true or based on your logic
     );
 
     const adId = result.rows[0].id;
