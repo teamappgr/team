@@ -36,8 +36,10 @@ const Team: React.FC = () => {
         const response = await fetch(`${process.env.REACT_APP_API}ads`);
         const data = await response.json();
         if (response.ok) {
-          // Filter ads to include only those that are verified and have a future date
-          const filteredAds = data.filter((ad: Ad) => ad.verified && new Date(ad.date) >= new Date());
+          const filteredAds = data
+          .filter((ad: Ad) => ad.verified && new Date(ad.date) >= new Date())
+          .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Sorting in reverse order
+
           setAds(filteredAds);
         } else {
           toast({
