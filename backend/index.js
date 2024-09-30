@@ -371,6 +371,25 @@ app.post('/requests', async (req, res) => {
   console.log('Received request to create:', { ad_id, user_id });
 
   try {
+      // Check if the ad exists and get its owner
+      const adOwnerCheckResult = await pool.query(
+          'SELECT user_id FROM ads WHERE id = $1',
+          [ad_id]
+      );
+
+      if (adOwnerCheckResult.rowCount === 0) {
+          console.error('Ad not found.');
+          return res.status(404).json({ message: 'Ad not found' });
+      }
+
+      const adOwnerId = adOwnerCheckResult.rows[0].user_id;
+
+      // Check if the user is trying to request their own ad
+      if (adOwnerId === user_id) {
+          console.error('User cannot request their own event.');
+          return res.status(400).json({ message: 'This is your event, you cannot request it.' });
+      }
+
       // Check if the user has already requested the same ad
       const existingRequestResult = await pool.query(
           'SELECT * FROM requests WHERE ad_id = $1 AND user_id = $2',
@@ -378,8 +397,8 @@ app.post('/requests', async (req, res) => {
       );
 
       if (existingRequestResult.rowCount > 0) {
-          console.error('User has already requested this ad.');
-          return res.status(400).json({ message: 'You have already requested this ad.' });
+          console.error('User has already requested this event.');
+          return res.status(400).json({ message: 'You have already requested this event.' });
       }
 
       // Insert into requests table
@@ -410,8 +429,6 @@ app.post('/requests', async (req, res) => {
       }
 
       console.log('Fetched ad details:', ad);
-
-      const adOwnerId = ad.ad_owner_id;
 
       // Fetch the owner's subscription from the database
       const subscriptionResult = await pool.query('SELECT * FROM subscriptions WHERE user_id = $1', [adOwnerId]);
@@ -464,7 +481,6 @@ app.post('/requests', async (req, res) => {
       res.status(500).json({ message: 'Error creating request' });
   }
 });
-
 
 
 // Get user requests
