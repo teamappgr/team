@@ -486,7 +486,7 @@ const switchCamera = () => {
                   required
                 />
                 <Input
-                  placeholder={t('instagramPassword')}
+                  placeholder={t('password')}
                   type="password"
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}

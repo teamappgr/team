@@ -73,10 +73,17 @@ const resources = {
       accepted:"Accepted",
       rejected:"Rejected",
       pending:"pending",
-      contactus:"Contuct Us",
+      contactus:"Contact Us",
       home: "Home",
       create: "Create",
-      profile: "Profile"
+      profile: "Profile",
+      name:"Name",
+      message:"Message",
+      sendmessage:"Send Message",
+      accept:"Accept",
+      reject:"Reject",
+      confirmyourattendance:"Confirm Your Attendance",
+      sureinterest:"Are you sure you want to express your interest in this event?"
     },
   },
   el: { // Greek translations
@@ -141,7 +148,7 @@ const resources = {
       availability:"Διαθέσημες θέσεις",
       changelanguage:"Αλλαγή Γλώσσας",
       upcoming:"Επερχόμενες Εκδηλώσεις",
-      past:"Προηγούμενα Γεγονότα",
+      past:"Περασμένα Γεγονότα",
       myrequests:"Οι Αιτήσεις Μου",
       language:"Γλώσσα",
       accepted:"Αποδεκτός",
@@ -150,7 +157,14 @@ const resources = {
       contactus:"Επικοινωνηστε Μαζι Μας",
       home: "Αρχική",
       create: "Δημιουργία",
-      profile: "Προφίλ"
+      profile: "Προφίλ",
+      name:"Όνομα",
+      Message:"Μήνυμα",
+      sendmessage:"Αποστολή Μηνύματος",
+      accept:"Αποδοχή",
+      reject:"Απόρρηψη",
+      confirmyourattendance:"Επιβεβαιώστε την συμμετοχή σας",
+      sureinterst:"Είστε βέβαιοι ότι θέλετε να εκφράσετε το ενδιαφέρον σας για αυτήν την εκδήλωση;"
     },
   },
   

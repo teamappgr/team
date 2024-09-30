@@ -225,15 +225,15 @@ const MyEvents: React.FC = () => {
           'yellow.500'
         }
       >
-        {ad.verified === true ? 'Accepted' : 
-         ad.verified === false ? 'Rejected' : 
+        {ad.verified === true ? t('accepted') : 
+         ad.verified === false ? t('rejected') : 
          'Pending'}
       </Text>
 
       {ad.requests && ad.requests.length > 0 ? (
   ad.requests.map((user: User) => (
     <Box key={user.requestid} borderWidth="1px" borderRadius="lg" p={2} mt={2}>
-      <Text><strong>Name:</strong> {user.first_name} {user.last_name}</Text>
+      <Text><strong>{t('contactus')}:</strong> {user.first_name} {user.last_name}</Text>
       <Text><strong>Instagram:</strong> {user.instagram_account}</Text>
       <Box display="flex" alignItems="center">
         <Avatar
@@ -256,7 +256,7 @@ const MyEvents: React.FC = () => {
   }}
   isDisabled={ad.available <= 0}
 >
-  Accept
+  t('accept')
 </Button>
 <Button 
   colorScheme="red" 
@@ -266,7 +266,7 @@ const MyEvents: React.FC = () => {
   }}
   ml={2}
 >
-  Reject
+t('reject')
 </Button>
 
 
@@ -276,7 +276,7 @@ const MyEvents: React.FC = () => {
             fontWeight="bold" 
             color={user.answer === 1 ? 'green.500' : 'red.500'}
           >
-            {user.answer === 1 ? 'Accepted' : 'Rejected'}
+            {user.answer === 1 ? t('accept') : t('rejected')}
           </Text>
         )}
       </Box>

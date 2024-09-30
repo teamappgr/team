@@ -185,17 +185,17 @@ const AdDetail: React.FC = () => {
             >
               <AlertDialogOverlay />
               <AlertDialogContent>
-                <AlertDialogHeader>Confirm Your Attendance</AlertDialogHeader>
+                <AlertDialogHeader>t('confirmyourattendance')</AlertDialogHeader>
                 <AlertDialogCloseButton />
                 <AlertDialogBody>
-                  Are you sure you want to express your interest in this event?
+                t('sureinterest')
                 </AlertDialogBody>
                 <AlertDialogFooter>
                   <Button ref={cancelRef} onClick={onClose}>
-                    No
+                  t('no')
                   </Button>
                   <Button colorScheme="teal" ml={3} onClick={handleConfirm}>
-                    Yes
+                  t('yes')
                   </Button>
                 </AlertDialogFooter>
               </AlertDialogContent>

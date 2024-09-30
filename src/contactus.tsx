@@ -10,12 +10,14 @@ import {
   useToast,
 } from '@chakra-ui/react';
 import { useTranslation } from 'react-i18next';
+import Layout from './Layout';
 
 const ContactUs: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const toast = useToast();
+  const { t, i18n } = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,11 +58,12 @@ const ContactUs: React.FC = () => {
   };
 
   return (
+    <Layout>
     <Box maxW="600px" mx="auto" p={6}>
-      <Heading mb={6}>Contact Us</Heading>
+      <Heading mb={6}>{t('contactus')}</Heading>
       <form onSubmit={handleSubmit}>
         <FormControl mb={4} isRequired>
-          <FormLabel>Name</FormLabel>
+          <FormLabel>{t('name')}</FormLabel>
           <Input
             type="text"
             value={name}
@@ -78,7 +81,7 @@ const ContactUs: React.FC = () => {
           />
         </FormControl>
         <FormControl mb={4} isRequired>
-          <FormLabel>Message</FormLabel>
+          <FormLabel>{t('message')}</FormLabel>
           <Textarea
             value={message}
             onChange={(e) => setMessage(e.target.value)}
@@ -87,10 +90,11 @@ const ContactUs: React.FC = () => {
           />
         </FormControl>
         <Button colorScheme="teal" type="submit">
-          Send Message
+        {t('sendmessage')}
         </Button>
       </form>
     </Box>
+    </Layout>
   );
 };
 
