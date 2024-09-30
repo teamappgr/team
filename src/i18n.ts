@@ -83,7 +83,7 @@ const resources = {
       accept:"Accept",
       reject:"Reject",
       confirmyourattendance:"Confirm Your Attendance",
-      sureinterest:"Are you sure you want to express your interest in this event?",
+      sureInterest:"Are you sure you want to express your interest in this event?",
       confirmSubmission:"Confirm Submission",
       confirmSubmissionMessage:"Are You Sure To Submit",
       errorFetchingAdDetails: "Error fetching ad details",
