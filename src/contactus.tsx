@@ -8,16 +8,20 @@ import {
   Textarea,
   Heading,
   useToast,
+  IconButton, // Import IconButton for better UI
 } from '@chakra-ui/react';
 import { useTranslation } from 'react-i18next';
 import Layout from './Layout';
+import { ArrowBackIcon } from '@chakra-ui/icons'; // Import the ArrowBackIcon
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const ContactUs: React.FC = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
   const toast = useToast();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
+  const navigate = useNavigate(); // Initialize navigate
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,41 +63,51 @@ const ContactUs: React.FC = () => {
 
   return (
     <Layout>
-    <Box maxW="600px" mx="auto" p={6}>
-      <Heading mb={6}>{t('contactus')}</Heading>
-      <form onSubmit={handleSubmit}>
-        <FormControl mb={4} isRequired>
-          <FormLabel>{t('name')}</FormLabel>
-          <Input
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Your Name"
+      <Box maxW="600px" mx="auto" p={6}>
+        <Box display="flex" alignItems="center" mb={6}>
+          <IconButton
+            icon={<ArrowBackIcon />}
+            aria-label="Go back to profile"
+            onClick={() => navigate('/profile')} // Redirect to profile page
+            variant="outline" // Optional styling
+            colorScheme="teal" // Optional styling
+            mr={4} // Add margin to the right for spacing
           />
-        </FormControl>
-        <FormControl mb={4} isRequired>
-          <FormLabel>Email</FormLabel>
-          <Input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="Your Email"
-          />
-        </FormControl>
-        <FormControl mb={4} isRequired>
-          <FormLabel>{t('message')}</FormLabel>
-          <Textarea
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Your Message"
-            rows={6}
-          />
-        </FormControl>
-        <Button colorScheme="teal" type="submit">
-        {t('sendmessage')}
-        </Button>
-      </form>
-    </Box>
+          <Heading>{t('contactus')}</Heading>
+        </Box>
+        <form onSubmit={handleSubmit}>
+          <FormControl mb={4} isRequired>
+            <FormLabel>{t('name')}</FormLabel>
+            <Input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Your Name"
+            />
+          </FormControl>
+          <FormControl mb={4} isRequired>
+            <FormLabel>Email</FormLabel>
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Your Email"
+            />
+          </FormControl>
+          <FormControl mb={4} isRequired>
+            <FormLabel>{t('message')}</FormLabel>
+            <Textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Your Message"
+              rows={6}
+            />
+          </FormControl>
+          <Button colorScheme="teal" type="submit">
+            {t('sendmessage')}
+          </Button>
+        </form>
+      </Box>
     </Layout>
   );
 };
