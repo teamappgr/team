@@ -9,7 +9,7 @@ const LanguageSelector: React.FC = () => {
 
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng); // Change language
-    Cookies.set('language', lng); // Save the selected language to cookies
+    Cookies.set('language', lng, { expires: 100 }); // Save the selected language to cookies
   };
 
   useEffect(() => {
