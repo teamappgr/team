@@ -156,8 +156,8 @@ const AdDetail: React.FC = () => {
         <Box display="flex" alignItems="center" mb={4}>
           <IconButton
             icon={<ArrowBackIcon />}
-            aria-label={t('goBackToProfile')} // Use translation for aria-label
-            onClick={() => navigate('/profile')} // Redirect to profile page
+            aria-label={t('gohome')} // Use translation for aria-label
+            onClick={() => navigate('/team')} // Redirect to profile page
             variant="outline" // Optional styling
             colorScheme="teal" // Optional styling
             mr={4} // Add margin to the right for spacing
