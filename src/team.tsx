@@ -38,7 +38,7 @@ const Team: React.FC = () => {
         if (response.ok) {
           const filteredAds = data
             .filter((ad: Ad) => ad.verified && new Date(ad.date) >= new Date())
-            .sort((a: Ad, b: Ad) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Added type annotations for a and b
+            .sort((b: Ad, a: Ad) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Added type annotations for a and b
 
           setAds(filteredAds);
         } else {
