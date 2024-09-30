@@ -256,7 +256,7 @@ const MyEvents: React.FC = () => {
   }}
   isDisabled={ad.available <= 0}
 >
-  t('accept')
+  Accept
 </Button>
 <Button 
   colorScheme="red" 
@@ -266,7 +266,7 @@ const MyEvents: React.FC = () => {
   }}
   ml={2}
 >
-t('reject')
+Reject
 </Button>
 
 
