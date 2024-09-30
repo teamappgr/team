@@ -44,6 +44,7 @@ const SignUp: React.FC = () => {
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null); // For camera-captured image
   const [uploadedImage, setUploadedImage] = useState<File | null>(null); // For file-uploaded image
+  const [cameraMode, setCameraMode] = useState<'user' | 'environment'>('user'); // New state for camera mode
 
   useEffect(() => {
     const userId = Cookies.get('userId');
@@ -295,27 +296,34 @@ const subscribeUserToPushNotifications = async (userId: string) => { // Explicit
 
 
 
-
-  const openCamera = async () => {
-    setIsCameraOpen(true);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: { exact: 'user' } }, // Request the front camera
-      });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        videoRef.current.play();
-      }
-    } catch (error) {
-      toast({
-        title: t('cameraError'),
-        description: t('cameraErrorDescription'),
-        status: 'error',
-        duration: 4000,
-        isClosable: true,
-      });
+const openCamera = async () => {
+  setIsCameraOpen(true);
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { exact: cameraMode } }, // Use cameraMode state
+    });
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+      videoRef.current.play();
     }
-  };
+  } catch (error) {
+    toast({
+      title: t('cameraError'),
+      description: t('cameraErrorDescription'),
+      status: 'error',
+      duration: 4000,
+      isClosable: true,
+    });
+  }
+};
+
+const switchCamera = () => {
+  // Switch between 'user' (front) and 'environment' (back) camera modes
+  const newMode = cameraMode === 'user' ? 'environment' : 'user';
+  setCameraMode(newMode);
+  closeCamera(); // Close the current camera stream
+  openCamera(); // Open the camera with the new mode
+};
 
   const captureImage = () => {
     if (canvasRef.current && videoRef.current) {
@@ -422,6 +430,9 @@ const subscribeUserToPushNotifications = async (userId: string) => { // Explicit
                         </Button>
                         <Button onClick={closeCamera} mt={3} ml={3}>
                           {t('closeCamera')}
+                        </Button>
+                        <Button onClick={switchCamera} mt={3} ml={3}>
+                          {t('switchCamera')}
                         </Button>
                       </>
                     ) : (
