@@ -64,7 +64,7 @@ const CreateAd: React.FC = () => {
       const response = await fetch(`${process.env.REACT_APP_API}users/${userId}`);
       if (!response.ok) throw new Error('Failed to fetch user data');
       const userData = await response.json();
-      setinfo(userData.first_name); // Assuming the user object has first_name property
+      setinfo(userData.info); // Assuming the user object has first_name property
     } catch (error) {
       console.error('Error fetching user data', error);
     }
