@@ -15,7 +15,6 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Cookies from 'js-cookie';
 import { useTranslation } from 'react-i18next';
 import backround from './backimg.jpeg'; // Correct import
-import CloseIcon from '@mui/icons-material/Close'; // Import CloseIcon
 
 function Copyright(props: any) {
   return (
@@ -32,7 +31,7 @@ function Copyright(props: any) {
 
 const defaultTheme = createTheme();
 
-export default function SignIn({ onClose }: { onClose: () => void }) {
+export default function SignIn() {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -146,91 +145,109 @@ export default function SignIn({ onClose }: { onClose: () => void }) {
         console.error('Service workers or Push notifications are not supported in this browser.');
     }
 };
+  const handleSignIn = () => {
+    navigate('/');
+  };
+
   return (
     <ThemeProvider theme={defaultTheme}>
-      <Container component="main" maxWidth="xs">
-        <CssBaseline />
-        <Box
-          sx={{
-            marginTop: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-          }}
-        >
+      <div 
+        className="signin-container"
+        style={{
+          backgroundImage: `url(${backround})`, // Use imported image here
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          height: '100vh',
+        }}
+      >
+        <Container component="main" maxWidth="xs">
+       
+          <CssBaseline />
           <Box
             sx={{
-              position: 'fixed',
-              top: 16,
-              right: 16,
-              zIndex: 1201,
+              marginTop: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
             }}
           >
-            <Button
-              onClick={onClose} // Call onClose to close the modal
-              variant="text"
-              color="primary"
-              style={{ textTransform: 'none', fontSize: 'inherit', padding: 0, minWidth: 'auto', color: 'gray' }}
+            <Box
+              sx={{
+                position: 'fixed',
+                top: 16,
+                right: 16,
+                zIndex: 1201,
+              }}
             >
-            </Button>
-          </Box>
-          <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
-            <LockOutlinedIcon />
-          </Avatar>
-          <Typography component="h1" variant="h5">
-            {t('signIn')}
-          </Typography>
-          <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label={t('email')}
-              name="email"
-              autoComplete="email"
-              autoFocus
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label={t('password')}
-              type="password"
-              id="password"
-              autoComplete="current-password"
-            />
-            <Button
-              type="submit"
-              fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-            >
+              <Button
+                component="a"
+                href="/team"
+                variant="text"
+                color="primary"
+                style={{ textTransform: 'none', fontSize: 'inherit', padding: 0, minWidth: 'auto', color: 'gray' }}
+              >
+                {t('skip')}
+              </Button>
+            </Box>
+            <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
+              <LockOutlinedIcon />
+            </Avatar>
+            <Typography component="h1" variant="h5">
               {t('signIn')}
-            </Button>
-            <Grid container>
-              <Grid item xs>
-                <Link href="#" variant="body2">
-                  {t('forgotPassword')}
-                </Link>
+            </Typography>
+            <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 1 }}>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="email"
+                label={t('email')}
+                name="email"
+                autoComplete="email"
+                autoFocus
+              />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                name="password"
+                label={t('password')}
+                type="password"
+                id="password"
+                autoComplete="current-password"
+              />
+              <Button
+                type="submit"
+                fullWidth
+                variant="contained"
+                sx={{ mt: 3, mb: 2 }}
+              >
+                {t('signIn')}
+              </Button>
+              <Grid container>
+                <Grid item xs>
+                  <Link href="#" variant="body2">
+                    {t('forgotPassword')}
+                  </Link>
+                </Grid>
+                <Grid item>
+                  <Button
+                    component="a"
+                    onClick={handleSignIn}
+                    variant="text"
+                    color="primary"
+                    style={{ textTransform: 'none', fontSize: 'inherit', padding: 0, minWidth: 'auto' }}
+                  >
+                    {t('dontHaveAccount')}
+                  </Button>
+                </Grid>
               </Grid>
-              <Grid item>
-                <Button
-                  component="a"
-                  onClick={() => navigate('/')} // Replace with your desired navigation
-                  variant="text"
-                  color="primary"
-                  style={{ textTransform: 'none', fontSize: 'inherit', padding: 0, minWidth: 'auto' }}
-                >
-                  {t('dontHaveAccount')}
-                </Button>
-              </Grid>
-            </Grid>
+            </Box>
           </Box>
-        </Box>
-        <Copyright sx={{ mt: 8, mb: 4 }} />
-      </Container>
+          <Copyright sx={{ mt: 8, mb: 4 }} />
+          
+        </Container>
+      </div>
     </ThemeProvider>
   );
 }
