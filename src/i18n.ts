@@ -101,7 +101,8 @@ const resources = {
       from: "From",
       forEvent: "for this event",
       iWantToGo: "I Want to Go",
-      noAdDetailsFound: "No ad details found."
+      noAdDetailsFound: "No ad details found.",
+      deletead:"Delete Event"
     },
   },
   el: { // Greek translations
@@ -199,6 +200,7 @@ const resources = {
       lastAvailablePositions: "Τελευταίες διαθέσιμες θέσεις",
       confirmYourAttendance: "Επιβεβαιώστε την Παρουσία σας",
       sureInterest: "Είστε σίγουροι ότι θέλετε να εκφράσετε το ενδιαφέρον σας;",
+      deletead:"Διαγραφή Εκδήλωσης",
 
       from: "Από",
       forEvent: "για αυτό το γεγονός",

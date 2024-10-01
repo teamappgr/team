@@ -185,6 +185,61 @@ app.get('/ads/:id/requests', async (req, res) => {
   }
 });
 
+app.get('/api/requests/:userId', async (req, res) => {
+  const userId = parseInt(req.params.userId); // Ensure it's an integer
+
+  try {
+      // Query to fetch requests for the user
+      const requestResult = await pool.query('SELECT * FROM requests WHERE user_id = $1', [userId]);
+      const requests = requestResult.rows; // Access the rows property to get the actual data
+
+      // For each request, join with ads to get the necessary fields
+      const requestsWithAds = await Promise.all(requests.map(async (request) => {
+          // Query to fetch ad details based on ad_id
+          const adResult = await pool.query('SELECT title, description, available, date, time FROM ads WHERE id = $1', [request.ad_id]);
+          const ad = adResult.rows[0]; // Access the first row of the result
+
+          return { ...request, ad }; // Combine request and ad data
+      }));
+
+      res.json(requestsWithAds); // Send combined data as response
+  } catch (error) {
+      console.error('Error fetching requests:', error);
+      res.status(500).send('Internal Server Error');
+  }
+});
+
+// Assuming you have a function to get the ad ID from the request
+app.delete('/api/requests/:id', async (req, res) => {
+  const requestId = req.params.id;
+
+  try {
+      // First, fetch the request to check its answer and get the associated ad_id
+      const requestResult = await pool.query('SELECT * FROM requests WHERE id = ?', [requestId]);
+      const request = requestResult[0];
+
+      if (!request) {
+          return res.status(404).send('Request not found');
+      }
+
+      // If request.answer is 1, increase the availability of the ad
+      if (request.answer === 1) {
+          await pool.query('UPDATE ads SET available = available + 1 WHERE id = ?', [request.ad_id]);
+      }
+
+      // Delete the request
+      const result = await pool.query('DELETE FROM requests WHERE id = ?', [requestId]);
+      if (result.affectedRows > 0) {
+          res.status(204).send(); // No content, successful deletion
+      } else {
+          res.status(404).send('Request not found');
+      }
+  } catch (error) {
+      console.error(error);
+      res.status(500).send('Internal Server Error');
+  }
+});
+
 
 
 // Accept a request
@@ -245,20 +300,53 @@ app.post('/requests/:id/reject', async (req, res) => {
 // Assuming you have already imported necessary modules like express and your database connection
 
 // Fetch ad details by ID
-app.get('/ads/:id', async (req, res) => {
+app.delete('/ads/:id', async (req, res) => {
   const { id } = req.params;
+
+  // Start a transaction
+  const client = await pool.connect();
   try {
-    const result = await pool.query('SELECT * FROM ads WHERE id = $1', [id]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Ad not found' });
+    await client.query('BEGIN');
+
+    // First, delete all requests associated with the ad
+    await client.query('DELETE FROM requests WHERE ad_id = $1', [id]);
+
+    // Then, delete the ad itself
+    const result = await client.query('DELETE FROM ads WHERE id = $1 RETURNING *', [id]);
+
+    if (result.rowCount === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Ad not found' });
     }
-    res.status(200).json(result.rows[0]);
+
+    // Commit the transaction
+    await client.query('COMMIT');
+    res.json({ message: 'Ad and associated requests deleted successfully', deletedAd: result.rows[0] });
   } catch (error) {
-    console.error('Error fetching ad details:', error);
-    res.status(500).json({ message: 'Error fetching ad details' });
+    await client.query('ROLLBACK');
+    console.error('Error deleting ad and requests:', error);
+    res.status(500).json({ error: 'An error occurred while deleting the ad and its requests' });
+  } finally {
+    client.release();
   }
 });
+app.delete('/requests/:id', async (req, res) => {
+  const { id } = req.params; // Get the request ID from the request parameters
 
+  try {
+    const result = await pool.query('DELETE FROM requests WHERE id = $1 RETURNING *', [id]);
+
+    // Check if any row was deleted
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Request not found' });
+    }
+
+    res.status(200).json({ message: 'Request deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting request:', error);
+    res.status(500).json({ message: 'Error deleting request' });
+  }
+});
 
 // Get user profile by ID
 app.get('/profile/:userId', async (req, res) => {
@@ -455,7 +543,7 @@ app.post('/requests', async (req, res) => {
           // Prepare the payload with user's first name
           const payload = JSON.stringify({
               title: 'New Request',
-              message: `User ${ad.first_name} has expressed interest in your ad: ${ad.title}`,
+              message: `A user has expressed interest in your ad: ${ad.title}`,
           });
 
           console.log('Payload to send:', payload);

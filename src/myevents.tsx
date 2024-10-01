@@ -47,17 +47,23 @@ interface Ad {
   verified: boolean | null; // Updated to include the 'verified' field
 
 }
-
+interface Request {
+  id: number;
+  user_id: number; // This may be redundant if you only fetch by userId
+  ad_id: number; // Foreign key to ads table
+  answer: number; // 0 for rejected, 1 for accepted, 2 for pending
+  ad: Ad; // Include the ad details
+}
 const MyEvents: React.FC = () => {
   const [ads, setAds] = useState<Ad[]>([]);
-  const [requests, setRequests] = useState<any[]>([]);
+  const [requests, setRequests] = useState<Request[]>([]);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
   const { t } = useTranslation();
-
+  const [selectedAdId, setSelectedAdId] = useState<number | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<{ requestId: number; adId: number; action: 'accept' | 'reject' } | null>(null);
-  
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const cancelRef = useRef<HTMLButtonElement>(null);
 
   const onOpen = (requestId: number, adId: number, action: 'accept' | 'reject') => {
@@ -66,12 +72,53 @@ const MyEvents: React.FC = () => {
     setIsOpen(true);
   };
   
-  
+  const onDeleteOpen = (adId: number) => {
+    setSelectedAdId(adId);
+    setIsDeleteOpen(true);
+  };
+
+  const onDeleteClose = () => {
+    setIsDeleteOpen(false);
+    setSelectedAdId(null);
+  };
+
+  const handleDelete = async () => {
+    if (selectedAdId === null) return;
+
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API}ads/${selectedAdId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete ad');
+
+      setAds(ads.filter(ad => ad.id !== selectedAdId));
+
+      toast({
+        title: 'Success',
+        description: 'Ad deleted successfully.',
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: "Failed to delete ad.",
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      onDeleteClose();
+    }
+  };
+
   const onClose = () => {
     setIsOpen(false);
     setSelectedRequest(null);
   };
-
+  
+  
   const handleConfirm = async () => {
     if (!selectedRequest) return;
   
@@ -163,237 +210,264 @@ const MyEvents: React.FC = () => {
         setLoading(false);
       }
     };
-
-    const fetchMyRequests = async () => {
+    const fetchRequests = async () => {
       const userId = Cookies.get('userId');
       try {
-        const response = await fetch(`${process.env.REACT_APP_API}myrequests?user_id=${userId}`);
-        if (!response.ok) throw new Error('Failed to fetch requests');
-        const requestsData = await response.json();
-        setRequests(requestsData);
+        const response = await fetch(`${process.env.REACT_APP_API}api/requests/${userId}`);
+        const data = await response.json();
+        setRequests(data);
       } catch (error) {
-        toast({
-          title: 'Error',
-          description: 'Failed to fetch your requests.',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
+        console.error("Error fetching requests:", error);
       }
     };
 
+    fetchRequests();
     fetchMyEvents();
-    fetchMyRequests();
-  }, [toast]);
-
+  }, [toast],);
+  const handleDeleteRequest = async (requestId:number) => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API}api/requests/${requestId}`, {
+        method: 'DELETE',
+      });
+      if (response.ok) {
+        // Remove the deleted request from the state
+        setRequests(prevRequests => prevRequests.filter(request => request.id !== requestId));
+      }
+    } catch (error) {
+      console.error("Error deleting request:", error);
+    }
+  };
   return (
-    <Layout>
-      <Box maxW="800px" mx="auto" p={6}>
+<Layout>
+    <Box maxW="800px" mx="auto" p={6}>
         <Heading mb={6} textAlign="center" color="teal.600">
-          {t('showmyevents')}
+            {t('showmyevents')}
         </Heading>
         {loading ? (
-          <Spinner size="xl" />
+            <Spinner size="xl" />
         ) : (
-          <Accordion allowMultiple>
-            {/* Existing Sections */}
-            <AccordionItem>
-              <h2>
-                <AccordionButton>
-                  <Box as='span' flex='1' textAlign='left'>
-                  {t('upcoming')}
-                  </Box>
-                  <AccordionIcon />
-                </AccordionButton>
-              </h2>
-              <AccordionPanel pb={4}>
-  {ads.filter(ad => new Date(ad.date) >= new Date()).map(ad => (
-    <Box key={ad.id} borderWidth="1px" borderRadius="lg" p={4} mb={4}>
-      <Heading size="md" mb={2}>{ad.title}</Heading>
-      <Text mb={2}>{ad.description}</Text>
-      <Text color="gray.500">
-        {t('date')}: {new Date(ad.date).toLocaleDateString()} {ad.time}
-      </Text>
-      <Text color="gray.500">{t('availability')}: {ad.available}</Text>
+            <Accordion allowMultiple>
+                {/* Existing Upcoming Events Section */}
+                <AccordionItem>
+                    <h2>
+                        <AccordionButton>
+                            <Box as='span' flex='1' textAlign='left'>
+                                {t('upcoming')}
+                            </Box>
+                            <AccordionIcon />
+                        </AccordionButton>
+                    </h2>
+                    <AccordionPanel pb={4}>
+                        {ads.filter(ad => new Date(ad.date) >= new Date()).map(ad => (
+                            <Box key={ad.id} borderWidth="1px" borderRadius="lg" p={4} mb={4}>
+                                <Heading size="md" mb={2}>{ad.title}</Heading>
+                                <Text mb={2}>{ad.description}</Text>
+                                <Text color="gray.500">
+                                    {t('date')}: {new Date(ad.date).toLocaleDateString()} {ad.time}
+                                </Text>
+                                <Text color="gray.500">{t('availability')}: {ad.available}</Text>
+                                <Text 
+                                    fontWeight="bold" 
+                                    color={
+                                        ad.verified === true ? 'green.500' : 
+                                        ad.verified === false ? 'red.500' : 
+                                        'yellow.500'
+                                    }
+                                >
+                                    {ad.verified === true ? t('accepted') : 
+                                     ad.verified === false ? t('rejected') : 
+                                     'Pending'}
+                                </Text>
+                                {ad.requests && ad.requests.length > 0 ? (
+                                    ad.requests.map((user: User) => (
+                                        <Box key={user.requestid} borderWidth="1px" borderRadius="lg" p={2} mt={2}>
+                                            <Text><strong>{t('contactus')}:</strong> {user.first_name} {user.last_name}</Text>
+                                            <Text><strong>Instagram:</strong> {user.instagram_account}</Text>
+                                            <Box display="flex" alignItems="center">
+                                                <Avatar
+                                                    size="sm"
+                                                    name={user.gender === 'male' ? 'Male' : 'Female'}
+                                                    src={user.gender === 'male' 
+                                                        ? 'https://static.vecteezy.com/system/resources/previews/001/840/612/non_2x/picture-profile-icon-male-icon-human-or-people-sign-and-symbol-free-vector.jpg' 
+                                                        : 'https://i.pinimg.com/736x/1b/2e/31/1b2e314e767a957a44ed8f992c6d9098.jpg'}
+                                                    ml={2}
+                                                />
+                                            </Box>
+                                            <Box mt={2}>
+                                                {user.answer === 2 ? (
+                                                    <>
+                                                        <Button 
+                                                            colorScheme="green" 
+                                                            onClick={() => {
+                                                                console.log("User object:", user);
+                                                                onOpen(user.requestid, ad.id, 'accept');
+                                                            }}
+                                                            isDisabled={ad.available <= 0}
+                                                        >
+                                                            Accept
+                                                        </Button>
+                                                        <Button 
+                                                            colorScheme="red" 
+                                                            onClick={() => {
+                                                                console.log("User object for reject:", user);
+                                                                onOpen(user.requestid, ad.id, 'reject');
+                                                            }}
+                                                            ml={2}
+                                                        >
+                                                            Reject
+                                                        </Button>
+                                                    </>
+                                                ) : (
+                                                    <Text 
+                                                        fontWeight="bold" 
+                                                        color={user.answer === 1 ? 'green.500' : 'red.500'}
+                                                    >
+                                                        {user.answer === 1 ? t('accept') : t('rejected')}
+                                                    </Text>
+                                                )}
+                                            </Box>
+                                        </Box>
+                                    ))
+                                ) : (
+                                    <Text>{t('norequests')}</Text>
+                                )}
+                                <Button 
+                                    colorScheme="red" 
+                                    onClick={() => onDeleteOpen(ad.id)} 
+                                    mt={4}
+                                >
+                                    {t('delete')}
+                                </Button>
+                            </Box>
+                        ))}
+                    </AccordionPanel>
+                </AccordionItem>
 
-      {/* Display the verification status here */}
-      <Text 
-        fontWeight="bold" 
-        color={
-          ad.verified === true ? 'green.500' : 
-          ad.verified === false ? 'red.500' : 
-          'yellow.500'
-        }
-      >
-        {ad.verified === true ? t('accepted') : 
-         ad.verified === false ? t('rejected') : 
-         'Pending'}
-      </Text>
+                {/* Existing Past Events Section */}
+                <AccordionItem>
+                    <h2>
+                        <AccordionButton>
+                            <Box as='span' flex='1' textAlign='left'>
+                                {t('past')}
+                            </Box>
+                            <AccordionIcon />
+                        </AccordionButton>
+                    </h2>
+                    <AccordionPanel pb={4}>
+                        {ads.filter(ad => new Date(ad.date) < new Date()).map(ad => (
+                            <Box key={ad.id} borderWidth="1px" borderRadius="lg" p={4} mb={4}>
+                                <Heading size="md" mb={2}>{ad.title}</Heading>
+                                <Text mb={2}>{ad.description}</Text>
+                                <Text color="gray.500">
+                                    {t('date')}: {new Date(ad.date).toLocaleDateString()} {ad.time}
+                                </Text>
+                                <Text color="gray.500">{t('availability')}: {ad.available}</Text>
+                                <Text 
+                                    fontWeight="bold" 
+                                    color={
+                                        ad.verified === true ? 'green.500' : 
+                                        ad.verified === false ? 'red.500' : 
+                                        'yellow.500'
+                                    }
+                                >
+                                    {ad.verified === true ? 'Accepted' : 
+                                     ad.verified === false ? 'Rejected' : 
+                                     'Pending'}
+                                </Text>
+                            </Box>
+                        ))}
+                    </AccordionPanel>
+                </AccordionItem>
 
-      {ad.requests && ad.requests.length > 0 ? (
-  ad.requests.map((user: User) => (
-    <Box key={user.requestid} borderWidth="1px" borderRadius="lg" p={2} mt={2}>
-      <Text><strong>{t('contactus')}:</strong> {user.first_name} {user.last_name}</Text>
-      <Text><strong>Instagram:</strong> {user.instagram_account}</Text>
-      <Box display="flex" alignItems="center">
-        <Avatar
-          size="sm"
-          name={user.gender === 'male' ? 'Male' : 'Female'}
-          src={user.gender === 'male' 
-            ? 'https://static.vecteezy.com/system/resources/previews/001/840/612/non_2x/picture-profile-icon-male-icon-human-or-people-sign-and-symbol-free-vector.jpg' 
-            : 'https://i.pinimg.com/736x/1b/2e/31/1b2e314e767a957a44ed8f992c6d9098.jpg'}
-          ml={2}
-        />
-      </Box>
-      <Box mt={2}>
-        {user.answer === 2 ? (
-          <>
-<Button 
-  colorScheme="green" 
-  onClick={() => {
-    console.log("User object:", user); // Log the entire user object
-    onOpen(user.requestid, ad.id, 'accept');
-  }}
-  isDisabled={ad.available <= 0}
->
-  Accept
-</Button>
-<Button 
-  colorScheme="red" 
-  onClick={() => {
-    console.log("User object for reject:", user); // Log the user object to check requestId
-    onOpen(user.requestid, ad.id, 'reject'); // Change requestId to requestid
-  }}
-  ml={2}
->
-Reject
-</Button>
-
-
-          </>
-        ) : (
-          <Text 
-            fontWeight="bold" 
-            color={user.answer === 1 ? 'green.500' : 'red.500'}
-          >
-            {user.answer === 1 ? t('accept') : t('rejected')}
-          </Text>
+                {/* My Requests Section */}
+                <AccordionItem>
+                    <h2>
+                        <AccordionButton>
+                            <Box as='span' flex='1' textAlign='left'>
+                                My Requests
+                            </Box>
+                            <AccordionIcon />
+                        </AccordionButton>
+                    </h2>
+                    <AccordionPanel pb={4}>
+                        {requests.map(request => (
+                            <Box key={request.id} borderWidth="1px" borderRadius="lg" p={4} mb={4}>
+                                <Heading size="md" mb={2}>{request.ad.title}</Heading>
+                                <Text mb={2}>{request.ad.description}</Text>
+                                <Text color="gray.500">
+                                    Date: {new Date(request.ad.date).toLocaleDateString()} {request.ad.time}
+                                </Text>
+                                <Text color="gray.500">Availability: {request.ad.available}</Text>
+                                <Text 
+                                    fontWeight="bold" 
+                                    color={
+                                        request.answer === 1 ? 'green.500' : 
+                                        request.answer === 0 ? 'red.500' : 
+                                        'yellow.500'
+                                    }
+                                >
+                                    {request.answer === 1 ? 'Accepted' : 
+                                     request.answer === 0 ? 'Rejected' : 
+                                     'Pending'}
+                                </Text>
+                                <Button colorScheme="red" onClick={() => handleDeleteRequest(request.id)}>
+                                    Cancel
+                                </Button>
+                            </Box>
+                        ))}
+                    </AccordionPanel>
+                </AccordionItem>
+            </Accordion>
         )}
-      </Box>
     </Box>
-  ))
-) : (
-  <Text>{t('norequests')}</Text>
-)}
 
-    </Box>
-  ))}
-</AccordionPanel>
-
-            </AccordionItem>
-
-            {/* Existing Past Events Section */}
-            <AccordionItem>
-              <h2>
-                <AccordionButton>
-                  <Box as='span' flex='1' textAlign='left'>
-                  {t('past')}
-                  </Box>
-                  <AccordionIcon />
-                </AccordionButton>
-              </h2>
-              <AccordionPanel pb={4}>
-                {ads.filter(ad => new Date(ad.date) < new Date()).map(ad => (
-                  <Box key={ad.id} borderWidth="1px" borderRadius="lg" p={4} mb={4}>
-                    <Heading size="md" mb={2}>{ad.title}</Heading>
-                    <Text mb={2}>{ad.description}</Text>
-                    <Text color="gray.500">
-                      {t('date')}: {new Date(ad.date).toLocaleDateString()} {ad.time}
-                    </Text>
-                    <Text color="gray.500">{t('availability')}: {ad.available}</Text>
-                    <Text 
-        fontWeight="bold" 
-        color={
-          ad.verified === true ? 'green.500' : 
-          ad.verified === false ? 'red.500' : 
-          'yellow.500'
-        }
-      >
-        {ad.verified === true ? 'Accepted' : 
-         ad.verified === false ? 'Rejected' : 
-         'Pending'}
-      </Text>
-                  </Box>
-                ))}
-              </AccordionPanel>
-            </AccordionItem>
-
-            {/* New Requests Section */}
-            <AccordionItem>
-  <h2>
-    <AccordionButton>
-      <Box as='span' flex='1' textAlign='left'>
-      {t('myrequests')}
-      </Box>
-      <AccordionIcon />
-    </AccordionButton>
-  </h2>
-  <AccordionPanel pb={4}>
-    {requests.length > 0 ? (
-      requests.map((request) => (
-        <Box key={request.requestId} borderWidth="1px" borderRadius="lg" p={4} mb={4}>
-          <Heading size="md" mb={2}>{request.title}</Heading>
-          <Text mb={2}>{request.description}</Text>
-          <Text color="gray.500">
-            {t('date')}: {new Date(request.date).toLocaleDateString()} {request.time}
-          </Text>
-          <Text color="gray.500">{t('availability')}: {request.available}</Text>
-          <Text 
-  fontWeight="bold" 
-  color={
-    request.answer === 1 ? 'green.500' : 
-    request.answer === 0 ? 'red.500' : 
-    'yellow.500'
-  }
->
-  {request.answer === 1 ? t('accepted') : 
-   request.answer === 0 ? t('rejected') : 
-   t('pending')}
-</Text>
-
-        </Box>
-      ))
-    ) : (
-      <Text>{t('norequests')}</Text>
-    )}
-  </AccordionPanel>
-</AccordionItem>
-          </Accordion>
-        )}
-      </Box>
-
-      <AlertDialog isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose}>
+    {/* Alert Dialog for Confirming Deletion */}
+    <AlertDialog isOpen={isDeleteOpen} leastDestructiveRef={cancelRef} onClose={onDeleteClose}>
         <AlertDialogOverlay>
-          <AlertDialogContent>
-            <AlertDialogHeader fontSize="lg" fontWeight="bold">
-              Confirm Action
-            </AlertDialogHeader>
-            <AlertDialogCloseButton />
-            <AlertDialogBody>
-              Are you sure you want to {selectedRequest?.action} this request?
-            </AlertDialogBody>
-            <AlertDialogFooter>
-              <Button ref={cancelRef} onClick={onClose}>
-                Cancel
-              </Button>
-              <Button colorScheme="red" onClick={handleConfirm} ml={3}>
-                {selectedRequest?.action === 'accept' ? 'Accept' : 'Reject'}
-              </Button>
-            </AlertDialogFooter>
-          </AlertDialogContent>
+            <AlertDialogContent>
+                <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                    {t('deletead')}
+                </AlertDialogHeader>
+                <AlertDialogCloseButton />
+                <AlertDialogBody>
+                    {t('areyousuredelete')}
+                </AlertDialogBody>
+                <AlertDialogFooter>
+                    <Button ref={cancelRef} onClick={onDeleteClose}>
+                        {t('cancel')}
+                    </Button>
+                    <Button colorScheme="red" onClick={handleDelete} ml={3}>
+                        {t('delete')}
+                    </Button>
+                </AlertDialogFooter>
+            </AlertDialogContent>
         </AlertDialogOverlay>
-      </AlertDialog>
-    </Layout>
+    </AlertDialog>
+
+    {/* Alert Dialog for Confirming Action */}
+    <AlertDialog isOpen={isOpen} leastDestructiveRef={cancelRef} onClose={onClose}>
+        <AlertDialogOverlay>
+            <AlertDialogContent>
+                <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                    Confirm Action
+                </AlertDialogHeader>
+                <AlertDialogCloseButton />
+                <AlertDialogBody>
+                    Are you sure you want to {selectedRequest?.action} this request?
+                </AlertDialogBody>
+                <AlertDialogFooter>
+                    <Button ref={cancelRef} onClick={onClose}>
+                        Cancel
+                    </Button>
+                    <Button colorScheme="red" onClick={handleConfirm} ml={3}>
+                        {selectedRequest?.action === 'accept' ? 'Accept' : 'Reject'}
+                    </Button>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialogOverlay>
+    </AlertDialog>
+</Layout>
+
   );
 };
 
