@@ -232,6 +232,13 @@ const MyEvents: React.FC = () => {
       if (response.ok) {
         // Remove the deleted request from the state
         setRequests(prevRequests => prevRequests.filter(request => request.id !== requestId));
+        toast({
+          title: t('success'), // Use translation for the success title
+          description: t('requestDeleted'), // Provide translation for successful deletion
+          status: 'success',
+          duration: 5000,
+          isClosable: true,
+        });
       }
     } catch (error) {
       console.error("Error deleting request:", error);

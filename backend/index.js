@@ -209,14 +209,13 @@ app.get('/api/requests/:userId', async (req, res) => {
   }
 });
 
-// Assuming you have a function to get the ad ID from the request
 app.delete('/api/requests/:id', async (req, res) => {
   const requestId = req.params.id;
 
   try {
       // First, fetch the request to check its answer and get the associated ad_id
-      const requestResult = await pool.query('SELECT * FROM requests WHERE id = ?', [requestId]);
-      const request = requestResult[0];
+      const requestResult = await pool.query('SELECT * FROM requests WHERE id = $1', [requestId]);
+      const request = requestResult.rows[0]; // Use .rows to access the data
 
       if (!request) {
           return res.status(404).send('Request not found');
@@ -224,12 +223,14 @@ app.delete('/api/requests/:id', async (req, res) => {
 
       // If request.answer is 1, increase the availability of the ad
       if (request.answer === 1) {
-          await pool.query('UPDATE ads SET available = available + 1 WHERE id = ?', [request.ad_id]);
+          await pool.query('UPDATE ads SET available = available + 1 WHERE id = $1', [request.ad_id]);
       }
 
       // Delete the request
-      const result = await pool.query('DELETE FROM requests WHERE id = ?', [requestId]);
-      if (result.affectedRows > 0) {
+      const result = await pool.query('DELETE FROM requests WHERE id = $1', [requestId]);
+      
+      // Check if any rows were affected by the delete operation
+      if (result.rowCount > 0) {
           res.status(204).send(); // No content, successful deletion
       } else {
           res.status(404).send('Request not found');
@@ -654,7 +655,36 @@ app.get('/users/:id', async (req, res) => {
   }
 });
 
-// Start the server
+app.get('/ads/:id', async (req, res) => {
+  const adId = req.params.id;
+
+  // Validate adId
+  if (isNaN(adId) || adId <= 0) {
+    return res.status(400).json({ message: 'Invalid ad ID' });
+  }
+
+
+  try {
+    const query = 'SELECT * FROM ads WHERE id = $1'; // Use $1 for PostgreSQL
+    
+    // Execute the query
+    const result = await pool.query(query, [adId]);
+
+    // Check if any rows were returned
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Ad not found' });
+    }
+
+    // Return the first ad found
+    res.json(result.rows[0]); 
+  } catch (error) {
+    console.error('Error fetching ad:', error);
+    console.error('Error details:', error.message); // Log the error message
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
