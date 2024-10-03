@@ -10,6 +10,8 @@ import SignUp from './SignUp';
 import Create from './create'; 
 import Profile from './profile';
 import Team from './team'; 
+import Chat from './ChatList'; 
+import MessagePage from './messagepage';
 import EventDetail from './eventdetail';
 import './i18n';
 import MyEvents from './myevents';
@@ -59,6 +61,9 @@ const App: React.FC = () => {
               <Route path="/signin" element={<SignIn1 />} />
               <Route path="/contactus" element={<ContactUs />} />
               <Route path="/team" element={<Team />} />
+              <Route path="/chat" element={<Chat />} />
+              <Route path="/messages/:slug" element={<MessagePage />} />
+
             </Routes>
           </Router>
         </div>

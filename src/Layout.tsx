@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Box, Flex, Icon, Link, Text, Modal, ModalOverlay, ModalContent, ModalHeader, ModalCloseButton, ModalBody } from '@chakra-ui/react';
 import { FaHome, FaClipboardList, FaUser, FaPlus } from 'react-icons/fa';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { ChatIcon } from '@chakra-ui/icons'
 import Cookies from 'js-cookie';
 import SignIn from './SignIn';
 import { useTranslation } from 'react-i18next';
@@ -71,6 +72,17 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           >
             <Icon as={FaPlus} boxSize={6} color="teal.500" />
             <Text fontSize="xs" mt={1}>{t('create')}</Text>
+          </Box>
+
+          <Box 
+            display="flex" 
+            flexDirection="column" 
+            alignItems="center" 
+            cursor="pointer" 
+            onClick={() => checkUserAndNavigate('/chat')}
+          >
+            <Icon as={ChatIcon} boxSize={6} color="teal.500" />
+            <Text fontSize="xs" mt={1}>{t('Chat')}</Text>
           </Box>
 
           <Box 

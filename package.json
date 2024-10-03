@@ -23,6 +23,7 @@
     "framer-motion": "^7.10.3",
     "i18next": "^23.15.1",
     "js-cookie": "^3.0.5",
+    "moment": "^2.30.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-flags-select": "^2.2.3",
@@ -30,6 +31,7 @@
     "react-icons": "^5.3.0",
     "react-router-dom": "^6.26.2",
     "react-scripts": "5.0.1",
+    "socket.io-client": "^4.8.0",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
   },
