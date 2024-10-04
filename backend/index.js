@@ -909,10 +909,10 @@ io.on('connection', (socket) => {
       // Broadcast the message to the group (excluding the sender)
       socket.to(slug).emit('newMessage', newMessage);
 
-      // Fetch group members (excluding the sender)
+      // Fetch subscriptions for all group members except the sender
       const membersResult = await pool.query(
-        `SELECT user_id, endpoint, keys FROM subscriptions WHERE group_id = $1 AND user_id <> $2`,
-        [groupId, senderId]
+        `SELECT user_id, endpoint, keys FROM subscriptions WHERE user_id <> $1`,
+        [senderId]
       );
 
       // Prepare notification payload
@@ -945,6 +945,7 @@ io.on('connection', (socket) => {
   // Handle user disconnect
   socket.on('disconnect', () => {});
 });
+
 
 
 
