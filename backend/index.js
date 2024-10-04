@@ -862,7 +862,6 @@ io.on('connection', (socket) => {
     socket.join(slug);
   });
 
-  // Handle sending messages
   socket.on('sendMessage', async ({ slug, message, senderId }) => {
     try {
       // Fetch the group ID from the slug
@@ -918,6 +917,7 @@ io.on('connection', (socket) => {
         [groupId]
       );
   
+      // Get member IDs as an array
       const memberIds = membersResult.rows.map(member => member.user_id);
   
       // Fetch subscriptions for group members except the sender
@@ -934,7 +934,8 @@ io.on('connection', (socket) => {
   
       // Send notifications to all subscribed group members except the sender
       for (const subscription of subscriptionsResult.rows) {
-        if (subscription.user_id !== senderId) { // Exclude the sender
+        // Only send notifications to members other than the sender
+        if (subscription.user_id !== senderId) {
           if (subscription.endpoint) {
             let keys;
             try {
@@ -969,7 +970,7 @@ io.on('connection', (socket) => {
   });
   
   
-
+  
   // Handle user disconnect
   socket.on('disconnect', () => {
     console.log('User disconnected');

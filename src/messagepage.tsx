@@ -156,18 +156,16 @@ const Messages: React.FC = () => {
   // Send new message function
   const handleSendMessage = async () => {
     if (!newMessage || !userInfo) return; // Do nothing if message is empty or user info is not available
-
+  
     const newMsg = {
       slug,
       message: newMessage,
-      senderId: userId,
-      first_name: userInfo.first_name, // Use actual sender's first name
-      last_name: userInfo.last_name, // Use actual sender's last name
+      senderId: userId, // Ensure this is the correct sender ID
     };
-
+  
     // Emit the message through Socket.IO
     socket.emit('sendMessage', newMsg);
-
+  
     // Immediately update the local state with the new message
     setMessages((prevMessages) => [
       ...prevMessages,
@@ -179,9 +177,10 @@ const Messages: React.FC = () => {
         last_name: userInfo.last_name,
       },
     ]);
-
+  
     setNewMessage(''); // Clear input field after sending
   };
+  
 
   // Format message date
   const formatDate = (dateString: string) => {
