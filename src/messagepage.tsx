@@ -37,7 +37,10 @@ const Messages: React.FC = () => {
   const userId = Cookies.get('userId'); // Store userId globally for comparison
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId) {
+      navigate('/signin'); // If userId is null, redirect to sign-in page
+      return;
+    }
 
     const fetchGroupName = async () => {
       try {
@@ -51,7 +54,7 @@ const Messages: React.FC = () => {
 
         if (!response.ok) throw new Error('Failed to fetch group name');
         const data = await response.json();
-        setGroupName(data.group_name); // Set the group name state
+        setGroupName(data.group_name);
       } catch (error) {
         console.error('Error fetching group name:', error);
       }
@@ -86,49 +89,66 @@ const Messages: React.FC = () => {
             userid: userId,
           },
         });
-
+    
+        if (response.status === 403) {
+          // If the user is not a member, redirect to /team
+          navigate('/team');
+          return;
+        }
+    
         if (!response.ok) throw new Error('Failed to fetch group members');
+    
         const data = await response.json();
-        setGroupMembers(data); // Set the group members state
+        setGroupMembers(data);
+    
       } catch (error) {
         console.error('Error fetching group members:', error);
       }
     };
+    
 
-    fetchGroupName(); // Fetch group name first
-    fetchMessages(); // Then fetch messages
-    fetchGroupMembers(); // Fetch group members
+    fetchGroupName();  // Fetch group name first
+    fetchMessages();   // Then fetch messages
+    fetchGroupMembers(); // Check if user is a member of the group
 
+    // Join the group room
+    socket.emit('joinGroup', { slug, userId });
+
+    // Listen for new messages from Socket.IO
     socket.on('newMessage', (newMsg) => {
       setMessages((prevMessages) => [...prevMessages, newMsg]);
     });
 
     return () => {
+      // Leave the group room when component unmounts
+      socket.emit('leaveGroup', { slug, userId });
       socket.off('newMessage');
     };
-  }, [slug, userId]);
+  }, [slug, userId, navigate]);
 
   const handleSendMessage = async () => {
-    if (!newMessage || !userId) return;
+    if (!newMessage) return;
 
+    // Emit the message through Socket.IO
     socket.emit('sendMessage', {
       slug,
       message: newMessage,
       senderId: userId,
     });
 
+    // Immediately update the local state with the new message
     setMessages((prevMessages) => [
       ...prevMessages,
       {
         message_text: newMessage,
         sender_id: userId,
         created_at: moment().format('YYYY-MM-DD HH:mm:ss'),
-        first_name: 'YourFirstName', // Replace with actual sender's first name
-        last_name: 'YourLastName', // Replace with actual sender's last name
+        first_name: 'YourFirstName', // You may fetch actual sender's first name from cookies or context
+        last_name: 'YourLastName', // You may fetch actual sender's last name from cookies or context
       },
     ]);
 
-    setNewMessage('');
+    setNewMessage(''); // Clear input field after sending
   };
 
   const formatDate = (dateString: string) => {
@@ -192,9 +212,9 @@ const Messages: React.FC = () => {
       {/* Messages container */}
       <Box p={4} overflowY="auto" flex="1" bg="gray.50">
         <VStack spacing={4} align="stretch"> {/* Changed align to stretch */}
-          {messages.map((message) => (
+          {messages.map((message, index) => (
             <Flex
-              key={message.message_id}
+              key={index}
               justify={message.sender_id === userId ? 'flex-end' : 'flex-start'} // Align messages
               width="100%"
             >

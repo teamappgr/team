@@ -750,7 +750,6 @@ app.get('/chats', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch group chats' });
   }
 });
-const moment = require('moment'); // CommonJS syntax
 
 
 app.get('/messages/:slug', async (req, res) => {
@@ -853,26 +852,76 @@ app.get('/groups/members/:slug', async (req, res) => {
   }
 });
 
+const moment = require('moment');
+
+// Insert the message into the database and broadcast it
 io.on('connection', (socket) => {
-  // Listen for new messages from the client
-  socket.on('sendMessage', (data) => {
-    const { slug, message, senderId } = data;
 
-    // Broadcast the new message to the group
-    socket.to(slug).emit('newMessage', {
-      message_text: message,
-      sender_id: senderId,
-      created_at: moment().format('YYYY-MM-DD HH:mm:ss'), // Include created_at here
-      // You might want to include user info as well
-      first_name: 'UserFirstName', // Replace with actual sender's first name
-      last_name: 'UserLastName',   // Replace with actual sender's last name
-    });
+  // Join a group (room)
+  socket.on('joinGroup', ({ slug, userId }) => {
+    socket.join(slug);
+  });
 
-    console.log(`New message in group ${slug}: ${message}`);
+  // Handle new message
+  socket.on('sendMessage', async ({ slug, message, senderId }) => {
+    try {
+      // Fetch the group ID from the slug
+      const groupResult = await pool.query(
+        `SELECT group_id FROM Groups WHERE slug = $1`,
+        [slug]
+      );
+
+      if (groupResult.rowCount === 0) {
+        return console.error('Group not found');
+      }
+
+      const groupId = groupResult.rows[0].group_id;
+
+      // Insert the message into the database
+      const insertResult = await pool.query(
+        `INSERT INTO Messages (message_text, sender_id, group_id, sent_at)
+         VALUES ($1, $2, $3, NOW()) RETURNING message_id, sent_at`,
+        [message, senderId, groupId]
+      );
+
+      const newMessageId = insertResult.rows[0].message_id;
+      const sentAt = insertResult.rows[0].sent_at;
+
+      // Fetch the sender's first name and last name
+      const userResult = await pool.query(
+        `SELECT first_name, last_name FROM Users WHERE id = $1`,
+        [senderId]
+      );
+
+      if (userResult.rowCount === 0) {
+        return console.error('User not found');
+      }
+
+      const { first_name, last_name } = userResult.rows[0];
+
+      // Create the message object to broadcast
+      const newMessage = {
+        message_id: newMessageId,
+        message_text: message,
+        sender_id: senderId,
+        first_name,
+        last_name,
+        created_at: moment(sentAt).format('YYYY-MM-DD HH:mm:ss'),
+      };
+
+      // Broadcast the message to the group (excluding the sender)
+      socket.to(slug).emit('newMessage', newMessage);
+
+      console.log(`New message in group ${slug}: ${message}`);
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  });
+
+  // Handle user disconnect
+  socket.on('disconnect', () => {
   });
 });
-
-
 
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
