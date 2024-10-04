@@ -856,13 +856,8 @@ app.get('/groups/members/:slug', async (req, res) => {
 
 const moment = require('moment');
 
-// Insert the message into the database and broadcast it
 io.on('connection', (socket) => {
-
-  // Join a group (room)
-  socket.on('joinGroup', ({ slug, userId }) => {
-    socket.join(slug);
-  });
+  // Other code...
 
   // Handle new message
   socket.on('sendMessage', async ({ slug, message, senderId }) => {
@@ -914,6 +909,33 @@ io.on('connection', (socket) => {
       // Broadcast the message to the group (excluding the sender)
       socket.to(slug).emit('newMessage', newMessage);
 
+      // Fetch group members (excluding the sender)
+      const membersResult = await pool.query(
+        `SELECT user_id, endpoint, keys FROM subscriptions WHERE group_id = $1 AND user_id <> $2`,
+        [groupId, senderId]
+      );
+
+      // Prepare notification payload
+      const payload = JSON.stringify({
+        title: 'New Message',
+        message: `${first_name} ${last_name} sent a new message: ${message}`,
+      });
+
+      // Send notifications to all group members except the sender
+      for (const member of membersResult.rows) {
+        const subscription = {
+          endpoint: member.endpoint,
+          keys: JSON.parse(member.keys),
+        };
+
+        try {
+          await webpush.sendNotification(subscription, payload);
+          console.log('Notification sent to:', member.user_id);
+        } catch (error) {
+          console.error('Error sending notification:', error);
+        }
+      }
+
       console.log(`New message in group ${slug}: ${message}`);
     } catch (error) {
       console.error('Error sending message:', error);
@@ -921,9 +943,10 @@ io.on('connection', (socket) => {
   });
 
   // Handle user disconnect
-  socket.on('disconnect', () => {
-  });
+  socket.on('disconnect', () => {});
 });
+
+
 
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
