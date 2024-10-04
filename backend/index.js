@@ -935,7 +935,7 @@ io.on('connection', (socket) => {
       // Send notifications to all subscribed group members except the sender
       for (const subscription of subscriptionsResult.rows) {
         // Only send notifications to members other than the sender
-        if (subscription.user_id !== senderId) {
+        if (parseInt(subscription.user_id, 10) !== parseInt(senderId, 10)) {
           if (subscription.endpoint) {
             let keys;
             try {
