@@ -951,7 +951,6 @@ io.on('connection', (socket) => {
   
               // Send the notification
               await webpush.sendNotification(subscriptionPayload, payload);
-              console.log('Notification sent to:', subscription.user_id);
             } catch (error) {
               console.error('Error processing subscription or sending notification:', error);
             }
@@ -959,11 +958,9 @@ io.on('connection', (socket) => {
             console.error('No valid endpoint for user:', subscription.user_id);
           }
         } else {
-          console.log('Sender is excluded from notifications:', senderId);
         }
       }
   
-      console.log(`New message in group ${slug}: ${message}`);
     } catch (error) {
       console.error('Error sending message:', error);
     }
