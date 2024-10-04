@@ -973,7 +973,6 @@ io.on('connection', (socket) => {
   
   // Handle user disconnect
   socket.on('disconnect', () => {
-    console.log('User disconnected');
   });
 });
 
