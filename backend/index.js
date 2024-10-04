@@ -856,7 +856,9 @@ app.get('/groups/members/:slug', async (req, res) => {
 
 const moment = require('moment');
 
+// Insert the message into the database and broadcast it
 io.on('connection', (socket) => {
+
   // Join a group (room)
   socket.on('joinGroup', ({ slug, userId }) => {
     socket.join(slug);
@@ -919,9 +921,9 @@ io.on('connection', (socket) => {
   });
 
   // Handle user disconnect
-  socket.on('disconnect', () => {});
+  socket.on('disconnect', () => {
+  });
 });
-
 
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
