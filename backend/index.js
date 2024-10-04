@@ -774,7 +774,7 @@ app.get('/messages/:slug', async (req, res) => {
 
       // Fetch messages for the group
       const messagesResult = await pool.query(
-          `SELECT m.message_id, m.message_text, m.sent_at, u.first_name, u.last_name 
+          `SELECT m.message_id, m.message_text, m.sent_at, u.id as sender_id, u.first_name, u.last_name 
            FROM Messages m
            JOIN Users u ON m.sender_id = u.id 
            WHERE m.group_id = $1 
@@ -786,6 +786,7 @@ app.get('/messages/:slug', async (req, res) => {
           message_id: msg.message_id,
           message_text: msg.message_text,
           created_at: moment(msg.sent_at).format('YYYY-MM-DD HH:mm:ss'),
+          sender_id: msg.sender_id, // Include sender_id here
           first_name: msg.first_name,
           last_name: msg.last_name,
       }));
@@ -796,6 +797,7 @@ app.get('/messages/:slug', async (req, res) => {
       res.status(500).json({ error: 'Failed to fetch messages' });
   }
 });
+
 
 
 app.get('/groups/:slug', async (req, res) => {
@@ -854,9 +856,7 @@ app.get('/groups/members/:slug', async (req, res) => {
 
 const moment = require('moment');
 
-// Insert the message into the database and broadcast it
 io.on('connection', (socket) => {
-
   // Join a group (room)
   socket.on('joinGroup', ({ slug, userId }) => {
     socket.join(slug);
@@ -919,9 +919,9 @@ io.on('connection', (socket) => {
   });
 
   // Handle user disconnect
-  socket.on('disconnect', () => {
-  });
+  socket.on('disconnect', () => {});
 });
+
 
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Box,
   Text,
@@ -21,27 +21,47 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import moment from 'moment';
 import { io } from 'socket.io-client';
-import { ArrowBackIcon, InfoIcon } from '@chakra-ui/icons'; // Import InfoIcon
+import { ArrowBackIcon, InfoIcon } from '@chakra-ui/icons';
 
-const socket = io(process.env.REACT_APP_API);
+const socket = io(process.env.REACT_APP_API); // Connect to the Socket.IO server
 
 const Messages: React.FC = () => {
-  const { slug } = useParams<{ slug: string }>();
+  const { slug } = useParams<{ slug: string }>(); // Get group slug from URL
   const navigate = useNavigate();
-  const [messages, setMessages] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [newMessage, setNewMessage] = useState('');
-  const [groupName, setGroupName] = useState('');
-  const [groupMembers, setGroupMembers] = useState<any[]>([]); // State for group members
-
-  const userId = Cookies.get('userId'); // Store userId globally for comparison
+  const [messages, setMessages] = useState<any[]>([]); // Store messages
+  const [loading, setLoading] = useState(true); // Loading state
+  const [newMessage, setNewMessage] = useState(''); // New message input
+  const [groupName, setGroupName] = useState(''); // Group name
+  const [groupMembers, setGroupMembers] = useState<any[]>([]); // Group members
+  const [userInfo, setUserInfo] = useState<{ first_name: string; last_name: string } | null>(null); // User info
+  const userId = Cookies.get('userId'); // Get user ID from cookies
+  const messagesEndRef = useRef<HTMLDivElement | null>(null); // Reference for scrolling to the bottom
 
   useEffect(() => {
     if (!userId) {
-      navigate('/signin'); // If userId is null, redirect to sign-in page
+      navigate('/signin'); // Redirect if user is not logged in
       return;
     }
 
+    // Fetch user info
+    const fetchUserInfo = async () => {
+      try {
+        const response = await fetch(`${process.env.REACT_APP_API}users/${userId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) throw new Error('Failed to fetch user info');
+        const data = await response.json();
+        setUserInfo(data);
+      } catch (error) {
+        console.error('Error fetching user info:', error);
+      }
+    };
+
+    // Fetch group name
     const fetchGroupName = async () => {
       try {
         const response = await fetch(`${process.env.REACT_APP_API}groups/${slug}`, {
@@ -60,6 +80,7 @@ const Messages: React.FC = () => {
       }
     };
 
+    // Fetch messages
     const fetchMessages = async () => {
       try {
         const response = await fetch(`${process.env.REACT_APP_API}messages/${slug}`, {
@@ -72,7 +93,7 @@ const Messages: React.FC = () => {
 
         if (!response.ok) throw new Error('Failed to fetch messages');
         const data = await response.json();
-        setMessages(data);
+        setMessages(data); // Set messages state
       } catch (error) {
         console.error('Error fetching messages:', error);
       } finally {
@@ -80,6 +101,7 @@ const Messages: React.FC = () => {
       }
     };
 
+    // Fetch group members
     const fetchGroupMembers = async () => {
       try {
         const response = await fetch(`${process.env.REACT_APP_API}groups/members/${slug}`, {
@@ -89,52 +111,62 @@ const Messages: React.FC = () => {
             userid: userId,
           },
         });
-    
+
         if (response.status === 403) {
-          // If the user is not a member, redirect to /team
           navigate('/team');
           return;
         }
-    
+
         if (!response.ok) throw new Error('Failed to fetch group members');
-    
+
         const data = await response.json();
         setGroupMembers(data);
-    
       } catch (error) {
         console.error('Error fetching group members:', error);
       }
     };
-    
 
-    fetchGroupName();  // Fetch group name first
-    fetchMessages();   // Then fetch messages
-    fetchGroupMembers(); // Check if user is a member of the group
+    fetchUserInfo();
+    fetchGroupName();
+    fetchMessages();
+    fetchGroupMembers();
 
-    // Join the group room
+    // Join the group on socket connection
     socket.emit('joinGroup', { slug, userId });
 
-    // Listen for new messages from Socket.IO
+    // Listen for new messages and update state
     socket.on('newMessage', (newMsg) => {
-      setMessages((prevMessages) => [...prevMessages, newMsg]);
+      console.log('New message received:', newMsg); // Log the new message
+      setMessages((prevMessages) => [...prevMessages, newMsg]); // Update messages state
     });
 
     return () => {
-      // Leave the group room when component unmounts
       socket.emit('leaveGroup', { slug, userId });
-      socket.off('newMessage');
+      socket.off('newMessage'); // Clean up listener on component unmount
     };
   }, [slug, userId, navigate]);
 
-  const handleSendMessage = async () => {
-    if (!newMessage) return;
+  // Scroll to the bottom of the messages container when new messages arrive
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages]);
 
-    // Emit the message through Socket.IO
-    socket.emit('sendMessage', {
+  // Send new message function
+  const handleSendMessage = async () => {
+    if (!newMessage || !userInfo) return; // Do nothing if message is empty or user info is not available
+
+    const newMsg = {
       slug,
       message: newMessage,
       senderId: userId,
-    });
+      first_name: userInfo.first_name, // Use actual sender's first name
+      last_name: userInfo.last_name, // Use actual sender's last name
+    };
+
+    // Emit the message through Socket.IO
+    socket.emit('sendMessage', newMsg);
 
     // Immediately update the local state with the new message
     setMessages((prevMessages) => [
@@ -143,14 +175,15 @@ const Messages: React.FC = () => {
         message_text: newMessage,
         sender_id: userId,
         created_at: moment().format('YYYY-MM-DD HH:mm:ss'),
-        first_name: 'YourFirstName', // You may fetch actual sender's first name from cookies or context
-        last_name: 'YourLastName', // You may fetch actual sender's last name from cookies or context
+        first_name: userInfo.first_name,
+        last_name: userInfo.last_name,
       },
     ]);
 
     setNewMessage(''); // Clear input field after sending
   };
 
+  // Format message date
   const formatDate = (dateString: string) => {
     const date = moment(dateString);
     if (date.isSame(new Date(), 'day')) {
@@ -161,11 +194,11 @@ const Messages: React.FC = () => {
   };
 
   const handleBackClick = () => {
-    navigate(-1);
+    navigate(-1); // Go back to the previous page
   };
 
   if (loading) {
-    return <Spinner size="xl" />;
+    return <Spinner size="xl" />; // Show loading spinner while fetching data
   }
 
   return (
@@ -178,7 +211,6 @@ const Messages: React.FC = () => {
           onClick={handleBackClick}
         />
         <Text fontSize="2xl">{groupName}</Text>
-        {/* InfoIcon for showing popover */}
         <Popover>
           <PopoverTrigger>
             <IconButton
@@ -202,52 +234,49 @@ const Messages: React.FC = () => {
                   ))}
                 </VStack>
               ) : (
-                <Text>No members in this group.</Text>
+                <Text>No members found</Text>
               )}
             </PopoverBody>
           </PopoverContent>
         </Popover>
       </HStack>
-
-      {/* Messages container */}
-      <Box p={4} overflowY="auto" flex="1" bg="gray.50">
-        <VStack spacing={4} align="stretch"> {/* Changed align to stretch */}
-          {messages.map((message, index) => (
-            <Flex
-              key={index}
-              justify={message.sender_id === userId ? 'flex-end' : 'flex-start'} // Align messages
-              width="100%"
+      {/* Messages Container */}
+      <Box flex="1" overflowY="auto" p={4}>
+        {messages.map((message, index) => (
+          <Flex
+            key={index}
+            justify={message.sender_id === userId ? 'flex-end' : 'flex-start'} // Align messages
+            width="100%"
+          >
+            <Box
+              bg={message.sender_id === userId ? 'blue.500' : 'gray.200'}
+              color={message.sender_id === userId ? 'white' : 'black'}
+              p={3}
+              borderRadius="md"
+              maxWidth="70%"
+              mb={2}
             >
-              <Box
-                p={4}
-                shadow="md"
-                borderWidth="1px"
-                borderRadius="md"
-                bg={message.sender_id === userId ? 'teal.100' : 'white'} // Change background color
-                maxW="70%"
-                wordBreak="break-word" // Allow long messages to break
-              >
-                <Text fontWeight="bold">
-                  {message.first_name} {message.last_name}
-                </Text>
-                <Text>{message.message_text}</Text>
-                <Text fontSize="sm" color="gray.500">
-                  {formatDate(message.created_at)}
-                </Text>
-              </Box>
-            </Flex>
-          ))}
-        </VStack>
+              <Text fontWeight="bold">
+                {message.first_name} {message.last_name}
+              </Text>
+              <Text>{message.message_text}</Text>
+              <Text fontSize="sm" color="gray.500">
+                {formatDate(message.created_at)}
+              </Text>
+            </Box>
+          </Flex>
+        ))}
+        {/* Div to scroll to */}
+        <div ref={messagesEndRef} />
       </Box>
-
-      {/* Input box fixed at the bottom */}
-      <HStack p={4} spacing={4} bg="white" borderTop="1px solid #e2e8f0">
+      {/* Message Input */}
+      <HStack p={4}>
         <Input
           placeholder="Type your message..."
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
         />
-        <Button colorScheme="teal" onClick={handleSendMessage}>
+        <Button onClick={handleSendMessage} colorScheme="blue">
           Send
         </Button>
       </HStack>
