@@ -857,9 +857,12 @@ app.get('/groups/members/:slug', async (req, res) => {
 const moment = require('moment');
 
 io.on('connection', (socket) => {
-  // Other code...
+  // Join a group (room)
+  socket.on('joinGroup', ({ slug, userId }) => {
+    socket.join(slug);
+  });
 
-  // Handle new message
+  // Handle sending messages
   socket.on('sendMessage', async ({ slug, message, senderId }) => {
     try {
       // Fetch the group ID from the slug
@@ -867,35 +870,35 @@ io.on('connection', (socket) => {
         `SELECT group_id FROM Groups WHERE slug = $1`,
         [slug]
       );
-
+  
       if (groupResult.rowCount === 0) {
         return console.error('Group not found');
       }
-
+  
       const groupId = groupResult.rows[0].group_id;
-
+  
       // Insert the message into the database
       const insertResult = await pool.query(
         `INSERT INTO Messages (message_text, sender_id, group_id, sent_at)
          VALUES ($1, $2, $3, NOW()) RETURNING message_id, sent_at`,
         [message, senderId, groupId]
       );
-
+  
       const newMessageId = insertResult.rows[0].message_id;
       const sentAt = insertResult.rows[0].sent_at;
-
+  
       // Fetch the sender's first name and last name
       const userResult = await pool.query(
         `SELECT first_name, last_name FROM Users WHERE id = $1`,
         [senderId]
       );
-
+  
       if (userResult.rowCount === 0) {
         return console.error('User not found');
       }
-
+  
       const { first_name, last_name } = userResult.rows[0];
-
+  
       // Create the message object to broadcast
       const newMessage = {
         message_id: newMessageId,
@@ -905,47 +908,73 @@ io.on('connection', (socket) => {
         last_name,
         created_at: moment(sentAt).format('YYYY-MM-DD HH:mm:ss'),
       };
-
+  
       // Broadcast the message to the group (excluding the sender)
       socket.to(slug).emit('newMessage', newMessage);
-
-      // Fetch subscriptions for all group members except the sender
+  
+      // Fetch the members of the group
       const membersResult = await pool.query(
-        `SELECT user_id, endpoint, keys FROM subscriptions WHERE user_id <> $1`,
-        [senderId]
+        `SELECT user_id FROM GroupMembers WHERE group_id = $1`,
+        [groupId]
       );
-
+  
+      const memberIds = membersResult.rows.map(member => member.user_id);
+  
+      // Fetch subscriptions for group members except the sender
+      const subscriptionsResult = await pool.query(
+        `SELECT user_id, endpoint, keys FROM subscriptions WHERE user_id = ANY($1::int[])`,
+        [memberIds]
+      );
+  
       // Prepare notification payload
       const payload = JSON.stringify({
         title: 'New Message',
         message: `${first_name} ${last_name} sent a new message: ${message}`,
       });
-
-      // Send notifications to all group members except the sender
-      for (const member of membersResult.rows) {
-        const subscription = {
-          endpoint: member.endpoint,
-          keys: JSON.parse(member.keys),
-        };
-
-        try {
-          await webpush.sendNotification(subscription, payload);
-          console.log('Notification sent to:', member.user_id);
-        } catch (error) {
-          console.error('Error sending notification:', error);
+  
+      // Send notifications to all subscribed group members except the sender
+      for (const subscription of subscriptionsResult.rows) {
+        if (subscription.user_id !== senderId) { // Exclude the sender
+          if (subscription.endpoint) {
+            let keys;
+            try {
+              // Ensure keys are parsed correctly
+              keys = typeof subscription.keys === 'string'
+                ? JSON.parse(subscription.keys) // Parse keys if they're stored as a string
+                : subscription.keys; // Use it directly if it's already an object
+  
+              const subscriptionPayload = {
+                endpoint: subscription.endpoint,
+                keys: keys,
+              };
+  
+              // Send the notification
+              await webpush.sendNotification(subscriptionPayload, payload);
+              console.log('Notification sent to:', subscription.user_id);
+            } catch (error) {
+              console.error('Error processing subscription or sending notification:', error);
+            }
+          } else {
+            console.error('No valid endpoint for user:', subscription.user_id);
+          }
+        } else {
+          console.log('Sender is excluded from notifications:', senderId);
         }
       }
-
+  
       console.log(`New message in group ${slug}: ${message}`);
     } catch (error) {
       console.error('Error sending message:', error);
     }
   });
+  
+  
 
   // Handle user disconnect
-  socket.on('disconnect', () => {});
+  socket.on('disconnect', () => {
+    console.log('User disconnected');
+  });
 });
-
 
 
 
