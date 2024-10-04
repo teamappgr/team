@@ -136,7 +136,6 @@ const Messages: React.FC = () => {
 
     // Listen for new messages and update state
     socket.on('newMessage', (newMsg) => {
-      console.log('New message received:', newMsg); // Log the new message
       setMessages((prevMessages) => [...prevMessages, newMsg]); // Update messages state
     });
 

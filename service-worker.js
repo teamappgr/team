@@ -15,19 +15,19 @@ self.addEventListener('push', function(event) {
 self.addEventListener('notificationclick', function(event) {
     event.notification.close(); // Close the notification when clicked
 
-    // Example action: Open a specific URL
+    // Open the specific URL defined by PUBLIC_URL
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function(clientList) {
             // Check if any of the client tabs (open windows) are already open with the target URL
             for (var i = 0; i < clientList.length; i++) {
                 var client = clientList[i];
-                if (client.url === process.env.PUBLIC_URL && 'focus' in client) {
-                    return client.focus();
+                if (client.url === PUBLIC_URL && 'focus' in client) {
+                    return client.focus(); // Focus the existing tab if it's already open
                 }
             }
             // If the page isn't open, open a new tab/window
             if (clients.openWindow) {
-                return clients.openWindow(process.env.PUBLIC_URL);
+                return clients.openWindow(PUBLIC_URL);
             }
         })
     );
