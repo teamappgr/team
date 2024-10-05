@@ -225,11 +225,16 @@ const MyEvents: React.FC = () => {
     fetchMyEvents();
   }, [toast],);
   const handleDeleteRequest = async (requestId: number) => {
+    const userId = Cookies.get('userId');
+
     try {
       const response = await fetch(`${process.env.REACT_APP_API}api/requests/${requestId}`, {
         method: 'DELETE',
       credentials: 'include', // This ensures cookies are sent with the request
-
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${userId}`, // Include user ID in Authorization header
+      },
       });
       
       if (response.ok) {

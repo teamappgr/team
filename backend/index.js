@@ -74,14 +74,7 @@ app.post('/signin', async (req, res) => {
       const match = await argon2.verify(user.password, password);
 
       if (match) {
-        // Set the user ID cookie
-        res.cookie('userId', user.id, {
-          httpOnly: true, // Ensures the cookie is not accessible via JavaScript (good for security)
-          secure: process.env.NODE_ENV === 'production', // Set to true in production
-          sameSite: 'None', // Required for cross-site cookies
-          maxAge: 14 * 24 * 60 * 60 * 1000 // Cookie expires in 14 days
-        });
-        console.log('Cookies:', req.cookies);
+
 
         // If the user subscribes, insert into subscriptions table
         if (subscribe) {
@@ -129,13 +122,6 @@ app.post('/signup', upload.single('image'), async (req, res) => {
 
     const userId = result.rows[0].id;
 
-    // Set the user ID cookie
-    res.cookie('userId', userId, {
-      httpOnly: true, // Ensures the cookie is not accessible via JavaScript (good for security)
-      secure: process.env.NODE_ENV === 'production', // Set to true in production
-      sameSite: 'None', // Required for cross-site cookies
-      maxAge: 14 * 24 * 60 * 60 * 1000 // Cookie expires in 14 days
-    });
 
     // If the user subscribes, insert into subscriptions table
     if (subscribe) {
@@ -296,7 +282,7 @@ app.get('/api/requests/:userId', async (req, res) => {
 });
 app.delete('/api/requests/:id', async (req, res) => {
   const requestId = parseInt(req.params.id); // Parse request ID from URL parameters
-  const userId = parseInt(req.cookies.userId); // Get user ID from cookies
+  const userId = parseInt(req.headers.authorization.split(' ')[1]); // Get user ID from Authorization header
   console.log(`Request ID: ${requestId}, User ID: ${userId}`); // Log request and user IDs
 
   if (isNaN(requestId) || isNaN(userId)) {
