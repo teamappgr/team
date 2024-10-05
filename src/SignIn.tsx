@@ -38,6 +38,7 @@ export default function SignIn({ onClose }: { onClose: () => void }) {
 
   useEffect(() => {
     const userId = Cookies.get('userId');
+    
     if (userId) {
       navigate('/team');
     }

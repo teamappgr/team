@@ -89,6 +89,12 @@ app.post('/signin', async (req, res) => {
             );
           }
         }
+        res.cookie('userId', userId, {
+          httpOnly: true, // Ensures the cookie is not accessible via JavaScript (good for security)
+          secure: process.env.NODE_ENV === 'production', // Set to true in production
+          sameSite: 'None', // Required for cross-site cookies
+          maxAge: 14 * 24 * 60 * 60 * 1000 // Cookie expires in 14 days
+      });
 
         res.status(200).json({ userId: user.id, message: 'Sign-in successful' });
       } else {
@@ -118,6 +124,12 @@ app.post('/signup', upload.single('image'), async (req, res) => {
     );
 
     const userId = result.rows[0].id;
+    res.cookie('userId', userId, {
+      httpOnly: true, // Ensures the cookie is not accessible via JavaScript (good for security)
+      secure: process.env.NODE_ENV === 'production', // Set to true in production
+      sameSite: 'None', // Required for cross-site cookies
+      maxAge: 14 * 24 * 60 * 60 * 1000 // Cookie expires in 14 days
+  });
 
     // If the user subscribes, insert into subscriptions table
     if (subscribe) {
