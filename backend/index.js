@@ -81,6 +81,7 @@ app.post('/signin', async (req, res) => {
           sameSite: 'None', // Required for cross-site cookies
           maxAge: 14 * 24 * 60 * 60 * 1000 // Cookie expires in 14 days
         });
+        console.log('Cookies:', req.cookies);
 
         // If the user subscribes, insert into subscriptions table
         if (subscribe) {
