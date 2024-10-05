@@ -283,7 +283,6 @@ app.get('/api/requests/:userId', async (req, res) => {
 app.delete('/api/requests/:id', async (req, res) => {
   const requestId = parseInt(req.params.id); // Parse request ID from URL parameters
   const userId = parseInt(req.headers.authorization.split(' ')[1]); // Get user ID from Authorization header
-  console.log(`Request ID: ${requestId}, User ID: ${userId}`); // Log request and user IDs
 
   if (isNaN(requestId) || isNaN(userId)) {
     return res.status(400).send('Invalid request ID or user ID');
@@ -315,7 +314,6 @@ app.delete('/api/requests/:id', async (req, res) => {
       const deleteMemberResult = await pool.query('DELETE FROM groupmembers WHERE user_id = $1 AND group_id = $2', [userId, group.group_id]);
 
       // Log how many rows were deleted
-      console.log(`${deleteMemberResult.rowCount} group member(s) deleted for user ID: ${userId}, group ID: ${group.group_id}`);
     } else {
       console.warn(`Group not found for Ad ID: ${request.ad_id}`);
     }
