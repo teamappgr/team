@@ -48,6 +48,8 @@ const CreateAd: React.FC = () => {
   const [showName, setShowName] = useState(false);
   const [showLastName, setShowLastName] = useState(false);
   const [showInstagramAccount, setShowInstagramAccount] = useState(false);
+  const [autoreserve, setAutoReserve] = useState(true);
+
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef<HTMLButtonElement>(null);
@@ -101,7 +103,7 @@ const CreateAd: React.FC = () => {
 
   const confirmSubmission = async () => {
     setIsSubmitting(true);
-
+  
     if (!date || !time || minCount <= 0 || (maxCount < minCount && maxCount !== 0)) {
       toast({
         title: t('invalidInput'),
@@ -113,9 +115,9 @@ const CreateAd: React.FC = () => {
       setIsSubmitting(false);
       return;
     }
-
+  
     const userId = Cookies.get('userId');
-
+  
     if (!userData) {
       toast({
         title: t('userDataError'),
@@ -127,13 +129,13 @@ const CreateAd: React.FC = () => {
       setIsSubmitting(false);
       return;
     }
-
+  
     // Construct the info string based on the toggles
     let constructedInfo = '';
     if (showName) constructedInfo += userData.first_name; // Include first name if toggle is on
     if (showLastName) constructedInfo += ` ${userData.last_name}`; // Append last name
-    if (showInstagramAccount) constructedInfo += ` ${userData.instagram_account}`; // Append Instagram account
-
+    if (showInstagramAccount) constructedInfo += ` Instagram: ${userData.instagram_account}`; // Append Instagram account
+    
     const requestData = {
       title,
       description,
@@ -144,8 +146,9 @@ const CreateAd: React.FC = () => {
       userId,
       emailAlerts,
       info: constructedInfo.trim() || null, // Only include if constructedInfo is not empty
+      autoreserve, // Add this line for autoreserve
     };
-
+  
     try {
       const response = await fetch(`${process.env.REACT_APP_API}ads`, {
         method: 'POST',
@@ -154,7 +157,7 @@ const CreateAd: React.FC = () => {
         },
         body: JSON.stringify(requestData),
       });
-
+  
       const result = await response.json();
       if (response.ok) {
         setAlertStatus('success');
@@ -188,6 +191,7 @@ const CreateAd: React.FC = () => {
       onClose();
     }
   };
+  
 
   const handleLanguageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     i18n.changeLanguage(event.target.value);
@@ -346,7 +350,16 @@ const CreateAd: React.FC = () => {
                 onChange={(e) => setShowInstagramAccount(e.target.checked)}
               />
             </FormControl>
-
+            <FormControl display="flex" alignItems="center">
+              <FormLabel htmlFor="autoreserve" mb="0">
+                {t('autoreserve')}
+              </FormLabel>
+              <Switch
+                id="autoreserve"
+                isChecked={autoreserve}
+                onChange={(e) => setAutoReserve(e.target.checked)}
+              />
+            </FormControl>
             <Button type="submit" isLoading={isSubmitting} colorScheme="teal" width="full">
               {t('submit')}
             </Button>

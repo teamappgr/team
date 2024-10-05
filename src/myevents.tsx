@@ -224,11 +224,14 @@ const MyEvents: React.FC = () => {
     fetchRequests();
     fetchMyEvents();
   }, [toast],);
-  const handleDeleteRequest = async (requestId:number) => {
+  const handleDeleteRequest = async (requestId: number) => {
     try {
       const response = await fetch(`${process.env.REACT_APP_API}api/requests/${requestId}`, {
         method: 'DELETE',
+      credentials: 'include', // This ensures cookies are sent with the request
+
       });
+      
       if (response.ok) {
         // Remove the deleted request from the state
         setRequests(prevRequests => prevRequests.filter(request => request.id !== requestId));
@@ -239,11 +242,23 @@ const MyEvents: React.FC = () => {
           duration: 5000,
           isClosable: true,
         });
+      } else {
+        // Handle error response
+        const errorMessage = await response.text();
+        console.error('Error deleting request:', errorMessage);
+        toast({
+          title: t('error'),
+          description: errorMessage,
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
       }
     } catch (error) {
       console.error("Error deleting request:", error);
     }
   };
+  
   return (
 <Layout>
     <Box maxW="800px" mx="auto" p={6}>

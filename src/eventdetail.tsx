@@ -49,8 +49,10 @@ const AdDetail: React.FC = () => {
   useEffect(() => {
     const fetchAdDetail = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API}ads/${id}`);
-        if (!response.ok) {
+        const response = await fetch(`${process.env.REACT_APP_API}ads/${id}`, {
+          method: 'GET',
+          credentials: 'include', // Include credentials (cookies)
+        });        if (!response.ok) {
           throw new Error('Failed to fetch ad detail');
         }
         const data = await response.json();

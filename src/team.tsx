@@ -33,12 +33,14 @@ const Team: React.FC = () => {
   useEffect(() => {
     const fetchAds = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API}ads`);
-        const data = await response.json();
+        const response = await fetch(`${process.env.REACT_APP_API}ads`, {
+          method: 'GET', // Specify the request method (GET is default but good to specify)
+          credentials: 'include', // Include cookies with the request (if needed)
+        });        const data = await response.json();
         if (response.ok) {
           const filteredAds = data
             .filter((ad: Ad) => ad.verified && new Date(ad.date) >= new Date())
-            .sort((b: Ad, a: Ad) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Added type annotations for a and b
+            .sort((a: Ad, b: Ad) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
           setAds(filteredAds);
         } else {

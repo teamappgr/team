@@ -61,7 +61,9 @@ const resources = {
       yes: "Yes",
       verified: "Verified", // Added translation for Verified
       notVerified: "Not Verified", // Added translation for Not Verified
-      showname:"Show Name",
+      showname:"Show My Name",
+      showinstagram:"Show My Instagram",
+      showlastname:"Show My Last Name",
       showevents:"Available Events",
       showmyevents:"My Events",
       norequests:"No requests found for this event.",
@@ -107,7 +109,9 @@ const resources = {
       subscribe:"Now Reiciving Notifications",
       unsbscribe:"Now You Are Not Receiving Notifications",
       getnotifications:"Get Notifications",
-      enablebrowser:"Give Access"
+      enablebrowser:"Give Access",
+      autoreserve:"Auto Reservetion For Table(by team)",
+
     },
   },
   el: { // Greek translations
@@ -166,6 +170,8 @@ const resources = {
       verified: "Επαληθευμένος", // Added translation for Verified
       notVerified: "Μη Επαληθευμένος" ,// Added translation for Not Verified
       showname:"Δείξε όνομα",
+      showinstagram:"Δείξε Το Instagram",
+      showlastname:"Δείξε το επίθετο",
       showevents:"Διαθέσημες Εκδηλώσεις",
       showmyevents:"Οι Εκδηλώσεις Μου",
       norequests:"Δεν υπάρχουν αιτήσεις για αύτο το συμβάν.",
@@ -199,7 +205,7 @@ const resources = {
       expressedInterest: "Έχετε εκφράσει το ενδιαφέρον σας να παρακολουθήσετε αυτό το γεγονός.",
       alreadyRequested: "Έχετε ήδη υποβάλει αίτηση για αυτό το γεγονός.",
       noAdFound: "Δεν βρέθηκε διαφήμιση",
-
+      autoreserve:"Αυτόματη Κράτηση Στο Μαγαζί(by team)",
       progress: "Πρόοδος",
       peopleNeeded: "άτομα που απαιτούνται για να φτάσουν στον ελάχιστο αριθμό για αυτό το γεγονός.",
       lastAvailablePositions: "Τελευταίες διαθέσιμες θέσεις",
