@@ -36,7 +36,6 @@ webpush.setVapidDetails(
 );
 
 // Log the VAPID keys to verify they're correctly loaded (remove this in production)
-console.log('VAPID Keys from .env:', { publicKey: VAPID_PUBLIC_KEY, privateKey: VAPID_PRIVATE_KEY });
 
 
 app.use(express.json());
@@ -437,46 +436,140 @@ app.put('/profile/:userId', async (req, res) => {
     res.status(500).json({ message: 'Error updating profile' });
   }
 });
+app.get('/subscriptions/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    // Check if a subscription exists for the given userId
+    const result = await pool.query('SELECT * FROM subscriptions WHERE user_id = $1', [userId]);
+
+    // If no subscription exists for this user, return 404
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'User not found or not subscribed' });
+    }
+
+    // If a subscription exists, we can infer that the user is subscribed
+    res.status(200).json({ subscribed: true });
+  } catch (error) {
+    console.error('Error fetching subscription: ', error);
+    res.status(500).json({ message: 'Error fetching subscription' });
+  }
+});
+
+app.post('/subscriptions/toggle', async (req, res) => {
+  const { userId, subscribe, endpoint, keys } = req.body;
+
+  try {
+    if (subscribe) {
+      // Subscribe the user: Add to subscriptions table
+      const existingSubscription = await pool.query(
+        'SELECT * FROM subscriptions WHERE user_id = $1',
+        [userId]
+      );
+
+      // Check if the user is already subscribed
+      if (existingSubscription.rowCount > 0) {
+        return res.status(200).json({ message: 'User already subscribed.' });
+      }
+
+      // Insert new subscription into the database
+      const result = await pool.query(
+        'INSERT INTO subscriptions (user_id, endpoint, keys) VALUES ($1, $2, $3)',
+        [userId, endpoint, JSON.stringify(keys)] // Ensure keys are JSON stringified
+      );
+
+      if (result.rowCount > 0) {
+        return res.status(201).json({ message: 'Subscription added successfully.' });
+      } else {
+        return res.status(400).json({ message: 'Failed to add subscription.' });
+      }
+    } else {
+      // Unsubscribe the user: Remove from subscriptions table
+      const result = await pool.query(
+        'DELETE FROM subscriptions WHERE user_id = $1',
+        [userId]
+      );
+
+      if (result.rowCount > 0) {
+        return res.status(200).json({ message: 'Unsubscribed successfully.' });
+      } else {
+        return res.status(404).json({ message: 'Subscription not found.' });
+      }
+    }
+  } catch (error) {
+    console.error('Error toggling subscription: ', error);
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+app.delete('/subscriptions/:userId', async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const result = await pool.query('DELETE FROM subscriptions WHERE user_id = $1', [userId]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(200).json({ message: 'Subscription deleted successfully', subscribed: false });
+  } catch (error) {
+    console.error('Error deleting subscription: ', error);
+    res.status(500).json({ message: 'Error deleting subscription' });
+  }
+});
+
+
+// Subscribe to Push Notifications Endpoint
 app.post('/subscribe', async (req, res) => {
   const { userId, endpoint, keys } = req.body;
 
   // Log the received subscription data for debugging
-  console.log('Received subscription:', { userId, endpoint, keys });
 
-  // Check if all required fields are provided
+  // Validate the incoming data
   if (!userId || !endpoint || !keys) {
-      return res.status(400).json({ message: 'Invalid subscription data.' });
+    return res.status(400).json({ message: 'Invalid subscription data.' });
   }
 
   try {
-      // Check if a subscription already exists for the given userId
-      const existingSubscription = await pool.query(
-          'SELECT * FROM subscriptions WHERE user_id = $1',
-          [userId]
-      );
+    // Check if the user already has a subscription
+    const existingSubscription = await pool.query(
+      'SELECT * FROM subscriptions WHERE user_id = $1',
+      [userId]
+    );
 
-      if (existingSubscription.rowCount > 0) {
-          // If subscription exists, no need to insert a new one
-          console.log('User is already subscribed.');
-          return res.status(200).json({ message: 'User already subscribed.' });
-      }
-
-      // Save the new subscription to the database if no existing subscription is found
+    if (existingSubscription.rowCount > 0) {
+      // If subscription exists, update the existing subscription with new data
       const result = await pool.query(
-          'INSERT INTO subscriptions (user_id, endpoint, keys) VALUES ($1, $2, $3)',
-          [userId, endpoint, JSON.stringify(keys)]
+        'UPDATE subscriptions SET endpoint = $1, keys = $2 WHERE user_id = $3',
+        [endpoint, JSON.stringify(keys), userId]
       );
 
-      if (result.rowCount === 0) {
-          return res.status(400).json({ message: 'Failed to subscribe user.' });
+      if (result.rowCount > 0) {
+        console.log('Subscription updated successfully.');
+        return res.status(200).json({ message: 'Subscription updated successfully.' });
+      } else {
+        return res.status(400).json({ message: 'Failed to update subscription.' });
       }
+    }
 
+    // If no subscription exists, insert a new one
+    const result = await pool.query(
+      'INSERT INTO subscriptions (user_id, endpoint, keys) VALUES ($1, $2, $3)',
+      [userId, endpoint, JSON.stringify(keys)]
+    );
+
+    if (result.rowCount > 0) {
       res.status(201).json({ message: 'Subscribed successfully!' });
+    } else {
+      res.status(400).json({ message: 'Failed to subscribe user.' });
+    }
   } catch (error) {
-      console.error('Error saving subscription:', error);
-      res.status(500).json({ message: 'Internal Server Error' });
+    console.error('Error handling subscription:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 });
+
 
 
 app.post('/send-notification', async (req, res) => {
@@ -664,25 +757,31 @@ app.post('/send-email', async (req, res) => {
     res.status(500).send('Error sending email');
 }
 });
-app.delete('/subscriptions/:userId', async (req, res) => {
-  const { userId } = req.params;
+// Unsubscribe from Push Notifications
+app.post('/unsubscribe', async (req, res) => {
+  const { userId } = req.body;
+
+  // Validate the incoming data
+  if (!userId) {
+    return res.status(400).json({ message: 'Invalid user ID.' });
+  }
 
   try {
-      // Attempt to delete the subscription associated with the userId
-      const result = await pool.query('DELETE FROM subscriptions WHERE user_id = $1', [userId]);
+    // Delete the subscription for the user from the subscriptions table
+    const result = await pool.query('DELETE FROM subscriptions WHERE user_id = $1', [userId]);
 
-      // Check if any rows were affected by the delete operation
-      if (result.rowCount === 0) {
-          return res.status(404).json({ message: 'Subscription not found' });
-      }
-
-      // Successfully deleted the subscription
-      res.status(200).json({ message: 'Subscription deleted successfully' });
+    if (result.rowCount > 0) {
+      console.log('Subscription deleted successfully for user:', userId);
+      return res.status(200).json({ message: 'Unsubscribed successfully.' });
+    } else {
+      return res.status(404).json({ message: 'Subscription not found.' });
+    }
   } catch (error) {
-      console.error('Error deleting subscription:', error);
-      res.status(500).json({ message: 'Error deleting subscription' });
+    console.error('Error unsubscribing:', error);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 });
+
 app.get('/users/:id', async (req, res) => {
   const { id } = req.params;
 

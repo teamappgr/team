@@ -5,6 +5,7 @@ self.addEventListener('push', function(event) {
     const options = {
         body: data.message || 'You have a new notification!',
         icon: 'origin.png', // Path to an icon
+        // Add any other options you want (e.g., actions)
     };
 
     event.waitUntil(

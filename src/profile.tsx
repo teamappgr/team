@@ -17,6 +17,7 @@ import {
   PopoverCloseButton,
   PopoverHeader,
   PopoverBody,
+  Switch,  // Import Chakra's Switch component
 } from '@chakra-ui/react';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
@@ -37,11 +38,35 @@ const Profile = () => {
     verified: false,
   });
   const [loading, setLoading] = useState(true); 
+  const [isSubscribed, setIsSubscribed] = useState<boolean>(false); // Subscription state
   const toast = useToast();
   const navigate = useNavigate();
 
   const userId = Cookies.get('userId');
-
+  const requestNotificationPermission = async () => {
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        toast({
+          title: 'Notifications Enabled',
+          description: 'You will now receive notifications.',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } else if (permission === 'denied') {
+        toast({
+          title: 'Notifications Blocked',
+          description: 'You have blocked notifications. Please enable them in your browser settings.',
+          status: 'warning',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } catch (error) {
+      console.error('Error requesting notification permission:', error);
+    }
+  };
   useEffect(() => {
     const fetchUserData = async () => {
       if (!userId) {
@@ -62,6 +87,23 @@ const Profile = () => {
         }
         const data = await response.json();
         setProfileData(data);
+
+        // Fetch subscription status
+        const subscriptionResponse = await fetch(`${process.env.REACT_APP_API}subscriptions/${userId}`);
+        if (subscriptionResponse.ok) {
+          const subscriptionData = await subscriptionResponse.json();
+          setIsSubscribed(subscriptionData.subscribed || false); // Updated here
+        } else {
+          // Handle cases where the user is not found or other errors
+          const errorData = await subscriptionResponse.json();
+          toast({
+            title: t('networkError'),
+            description: errorData.message || t('userIdError'),
+            status: 'error',
+            duration: 3000,
+            isClosable: true,
+          });
+        }
       } catch (error) {
         toast({
           title: t('networkError'),
@@ -71,17 +113,115 @@ const Profile = () => {
           isClosable: true,
         });
       } finally {
-        setLoading(false); 
+        setLoading(false);
       }
     };
-
+  
     fetchUserData();
-  }, [userId, toast, navigate, t]);
+  }, [userId, toast, t]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setProfileData(prevState => ({ ...prevState, [name]: value }));
   };
+  const urlB64ToUint8Array = (base64String: string): Uint8Array => {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
+  };
+  const handleSubscriptionToggle = async (checked: boolean) => {
+    try {
+      if (checked) {
+        // Request notification permission
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') {
+          setIsSubscribed(false);
+          toast({
+            title: t('permissionDenied'),
+            description: t('notificationsAreDisabled'),
+            status: 'warning',
+            duration: 3000,
+            isClosable: true,
+          });
+          return;
+        }
+  
+        // Check for existing service worker registration
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
+          const registration = await navigator.serviceWorker.getRegistration();
+          if (!registration) {
+            throw new Error('Service worker not registered');
+          }
+  
+          // Ensure VAPID key is defined
+          const applicationServerKey = process.env.REACT_APP_VAPID_PUBLIC_KEY;
+          if (!applicationServerKey) {
+            throw new Error('VAPID public key is not defined');
+          }
+  
+          // Convert VAPID key to Uint8Array
+          const convertedVapidKey = urlB64ToUint8Array(applicationServerKey);
+  
+          // Subscribe to push notifications
+          const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: convertedVapidKey, // This should now be guaranteed to be a string
+          });
+  
+          // Send subscription data to backend
+          const response = await fetch(`${process.env.REACT_APP_API}subscriptions/toggle`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId,
+              subscribe: checked,
+              endpoint: subscription.endpoint,
+              keys: subscription.toJSON().keys,
+            }),
+          });
+  
+          if (!response.ok) {
+            throw new Error('Failed to update subscription');
+          }
+        } else {
+          throw new Error('Push notifications are not supported in this browser');
+        }
+      } else {
+        // Unsubscribe
+        const response = await fetch(`${process.env.REACT_APP_API}subscriptions/toggle`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userId, subscribe: checked }),
+        });
+  
+        if (!response.ok) {
+          throw new Error('Failed to update subscription');
+        }
+      }
+  
+      setIsSubscribed(checked);
+      toast({
+        title: checked ? t('subscribed') : t('unsubscribed'),
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: t('networkError'),
+        description: t('subscriptionToggleFailed'),
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+  
   
 
   const handleSubmit = async () => {
@@ -121,10 +261,8 @@ const Profile = () => {
 
   const handleSignOut = async () => {
     try {
-        // Get the userId from cookies
         const userId = Cookies.get('userId');
 
-        // Ensure userId is defined
         if (!userId) {
             toast({
                 title: 'Error',
@@ -137,9 +275,9 @@ const Profile = () => {
         }
 
         Cookies.remove('userId');
+        navigate('/signin');
 
-        // Navigate to sign-in page
-        navigate('/signin');        const response = await fetch(`${process.env.REACT_APP_API}subscriptions/${userId}`, {
+        const response = await fetch(`${process.env.REACT_APP_API}subscriptions/${userId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -151,7 +289,6 @@ const Profile = () => {
             throw new Error(errorData.message || 'Failed to delete subscription');
         }
 
-        // Successfully deleted the subscription
         toast({
             title: 'Success',
             description: 'Subscription deleted successfully.',
@@ -160,21 +297,10 @@ const Profile = () => {
             isClosable: true,
         });
 
-        // Remove user ID cookie
-
-
     } catch (error) {
-
+        // Error handling
     }
-};
-
-// In your component render:
-<Button 
-    colorScheme="red" 
-    onClick={handleSignOut}
->
-    {t('signout')}
-</Button>
+  };
 
   return (
     <Layout>
@@ -239,6 +365,19 @@ const Profile = () => {
               </Stack>
             </Box>
 
+            <FormControl display="flex" alignItems="center">
+              <FormLabel htmlFor="subscription-switch" mb="0">
+                {t('getnotifications')}
+              </FormLabel>
+              <Switch
+                id="subscription-switch"
+                isChecked={isSubscribed}
+                onChange={(e) => handleSubscriptionToggle(e.target.checked)}
+              />
+                          <Button onClick={requestNotificationPermission} colorScheme="teal">
+                {t('enablebrowser')}
+            </Button>
+            </FormControl>
             <Button 
               colorScheme="teal" 
               onClick={handleSubmit} 
@@ -259,7 +398,7 @@ const Profile = () => {
           <Popover>
             <PopoverTrigger>
               <Button leftIcon={<MdBuild />} colorScheme='pink' variant='solid'>
-              {t('language')}
+                {t('language')}
               </Button>
             </PopoverTrigger>
             <PopoverContent>
@@ -267,7 +406,6 @@ const Profile = () => {
               <PopoverCloseButton />
               <PopoverHeader>{t('changelanguage')}</PopoverHeader>
               <PopoverBody>
-                
                 <LanguageSelector />
               </PopoverBody>
             </PopoverContent>

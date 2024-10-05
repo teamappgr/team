@@ -3,6 +3,7 @@ import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
 import Cookies from 'js-cookie'; // Import Cookies
 import { Language, Upcoming } from '@mui/icons-material';
+import { subscribe } from 'diagnostics_channel';
 
 const resources = {
   en: {
@@ -102,7 +103,11 @@ const resources = {
       forEvent: "for this event",
       iWantToGo: "I Want to Go",
       noAdDetailsFound: "No ad details found.",
-      deletead:"Delete Event"
+      deletead:"Delete Event",
+      subscribe:"Now Reiciving Notifications",
+      unsbscribe:"Now You Are Not Receiving Notifications",
+      getnotifications:"Get Notifications",
+      enablebrowser:"Give Access"
     },
   },
   el: { // Greek translations
@@ -201,11 +206,15 @@ const resources = {
       confirmYourAttendance: "Επιβεβαιώστε την Παρουσία σας",
       sureInterest: "Είστε σίγουροι ότι θέλετε να εκφράσετε το ενδιαφέρον σας;",
       deletead:"Διαγραφή Εκδήλωσης",
-
+      subscribe:"Λαμβάνεις Ειδοποιήσεις",
+      unsbscribe:"Δεν Λαμβάνεις Ειδοποιήσεις",
       from: "Από",
       forEvent: "για αυτό το γεγονός",
       iWantToGo: "Θέλω να πάω",
-      noAdDetailsFound: "Δεν βρέθηκαν λεπτομέρειες διαφήμισης."
+      noAdDetailsFound: "Δεν βρέθηκαν λεπτομέρειες διαφήμισης.",
+      getnotifications:"Λαμβάνω Ειδοποιήσεις",
+      enablebrowser:"Δώσε Πρόσβαση"
+
     },
   },
   
