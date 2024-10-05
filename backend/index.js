@@ -69,10 +69,19 @@ app.post('/signin', async (req, res) => {
 
     if (result.rows.length > 0) {
       const user = result.rows[0];
+      
       // Compare the hashed password with the provided password using argon2
       const match = await argon2.verify(user.password, password);
 
       if (match) {
+        // Set the user ID cookie
+        res.cookie('userId', user.id, {
+          httpOnly: true, // Ensures the cookie is not accessible via JavaScript (good for security)
+          secure: process.env.NODE_ENV === 'production', // Set to true in production
+          sameSite: 'None', // Required for cross-site cookies
+          maxAge: 14 * 24 * 60 * 60 * 1000 // Cookie expires in 14 days
+        });
+
         // If the user subscribes, insert into subscriptions table
         if (subscribe) {
           const existingSubscription = await pool.query(
@@ -89,23 +98,17 @@ app.post('/signin', async (req, res) => {
             );
           }
         }
-        res.cookie('userId', userId, {
-          httpOnly: true, // Ensures the cookie is not accessible via JavaScript (good for security)
-          secure: process.env.NODE_ENV === 'production', // Set to true in production
-          sameSite: 'None', // Required for cross-site cookies
-          maxAge: 14 * 24 * 60 * 60 * 1000 // Cookie expires in 14 days
-      });
 
-        res.status(200).json({ userId: user.id, message: 'Sign-in successful' });
+        return res.status(200).json({ userId: user.id, message: 'Sign-in successful' });
       } else {
-        res.status(401).json({ message: 'Invalid email or password' });
+        return res.status(401).json({ message: 'Invalid email or password' });
       }
     } else {
-      res.status(401).json({ message: 'Invalid email or password' });
+      return res.status(401).json({ message: 'Invalid email or password' });
     }
   } catch (error) {
     console.error('Error during sign-in: ', error);
-    res.status(500).json({ message: 'Error during sign-in' });
+    return res.status(500).json({ message: 'Error during sign-in' });
   }
 });
 
@@ -124,12 +127,14 @@ app.post('/signup', upload.single('image'), async (req, res) => {
     );
 
     const userId = result.rows[0].id;
+
+    // Set the user ID cookie
     res.cookie('userId', userId, {
       httpOnly: true, // Ensures the cookie is not accessible via JavaScript (good for security)
       secure: process.env.NODE_ENV === 'production', // Set to true in production
       sameSite: 'None', // Required for cross-site cookies
       maxAge: 14 * 24 * 60 * 60 * 1000 // Cookie expires in 14 days
-  });
+    });
 
     // If the user subscribes, insert into subscriptions table
     if (subscribe) {
@@ -148,10 +153,10 @@ app.post('/signup', upload.single('image'), async (req, res) => {
       }
     }
 
-    res.status(201).json({ userId, message: 'User created successfully' });
+    return res.status(201).json({ userId, message: 'User created successfully' });
   } catch (error) {
     console.error('Error during sign-up: ', error);
-    res.status(500).json({ message: 'Error during sign-up' });
+    return res.status(500).json({ message: 'Error during sign-up' });
   }
 });
 
