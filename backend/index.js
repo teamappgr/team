@@ -58,9 +58,8 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
-// Sign-in Endpoint
 app.post('/signin', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, subscribe, endpoint, keys } = req.body;
 
   try {
     const result = await pool.query(
@@ -74,6 +73,23 @@ app.post('/signin', async (req, res) => {
       const match = await argon2.verify(user.password, password);
 
       if (match) {
+        // If the user subscribes, insert into subscriptions table
+        if (subscribe) {
+          const existingSubscription = await pool.query(
+            'SELECT * FROM subscriptions WHERE user_id = $1',
+            [user.id]
+          );
+
+          // Check if the user is already subscribed
+          if (existingSubscription.rowCount === 0) {
+            // Insert new subscription into the database
+            await pool.query(
+              'INSERT INTO subscriptions (user_id, endpoint, keys) VALUES ($1, $2, $3)',
+              [user.id, endpoint, JSON.stringify(keys)] // Ensure keys are JSON stringified
+            );
+          }
+        }
+
         res.status(200).json({ userId: user.id, message: 'Sign-in successful' });
       } else {
         res.status(401).json({ message: 'Invalid email or password' });
@@ -89,7 +105,7 @@ app.post('/signin', async (req, res) => {
 
 // Sign-Up Endpoint
 app.post('/signup', upload.single('image'), async (req, res) => {
-  const { firstName, lastName, email, phone, instagramAccount, password, university, gender } = req.body;
+  const { firstName, lastName, email, phone, instagramAccount, password, university, gender, subscribe, endpoint, keys } = req.body;
   const imageUrl = req.file.path; // The URL of the uploaded image from Cloudinary
 
   try {
@@ -102,12 +118,31 @@ app.post('/signup', upload.single('image'), async (req, res) => {
     );
 
     const userId = result.rows[0].id;
+
+    // If the user subscribes, insert into subscriptions table
+    if (subscribe) {
+      const existingSubscription = await pool.query(
+        'SELECT * FROM subscriptions WHERE user_id = $1',
+        [userId]
+      );
+
+      // Check if the user is already subscribed
+      if (existingSubscription.rowCount === 0) {
+        // Insert new subscription into the database
+        await pool.query(
+          'INSERT INTO subscriptions (user_id, endpoint, keys) VALUES ($1, $2, $3)',
+          [userId, endpoint, JSON.stringify(keys)] // Ensure keys are JSON stringified
+        );
+      }
+    }
+
     res.status(201).json({ userId, message: 'User created successfully' });
   } catch (error) {
     console.error('Error during sign-up: ', error);
     res.status(500).json({ message: 'Error during sign-up' });
   }
 });
+
 
 const slugify = require('slugify'); // Install slugify using npm
 
@@ -245,10 +280,11 @@ app.delete('/api/requests/:id', async (req, res) => {
   const requestId = parseInt(req.params.id); // Parse request ID from URL parameters
   const userId = parseInt(req.cookies.userId); // Get user ID from cookies
 
+  if (isNaN(requestId) || isNaN(userId)) {
+    return res.status(400).send('Invalid request ID or user ID');
+  }
 
   try {
-    // Log the incoming request
-
     // Fetch the request to check its answer and get the associated ad_id
     const requestResult = await pool.query('SELECT * FROM requests WHERE id = $1', [requestId]);
     const request = requestResult.rows[0];
@@ -257,10 +293,12 @@ app.delete('/api/requests/:id', async (req, res) => {
       return res.status(404).send('Request not found');
     }
 
-
     // If request.answer is 1, increase the availability of the ad
     if (request.answer === 1) {
-      await pool.query('UPDATE ads SET available = available + 1 WHERE id = $1', [request.ad_id]);
+      const updateResult = await pool.query('UPDATE ads SET available = available + 1 WHERE id = $1', [request.ad_id]);
+      if (updateResult.rowCount === 0) {
+        console.warn(`No ads updated for ad_id: ${request.ad_id}`);
+      }
     }
 
     // Find the group_id from the groups table using ad_id
@@ -268,14 +306,11 @@ app.delete('/api/requests/:id', async (req, res) => {
     const group = groupResult.rows[0];
 
     if (group) {
-
       // Delete from groupmembers where user_id matches and group_id matches
       const deleteMemberResult = await pool.query('DELETE FROM groupmembers WHERE user_id = $1 AND group_id = $2', [userId, group.group_id]);
 
-      // Check how many rows were deleted
-      if (deleteMemberResult.rowCount > 0) {
-      } else {
-      }
+      // Log how many rows were deleted
+      console.log(`${deleteMemberResult.rowCount} group member(s) deleted for user ID: ${userId}, group ID: ${group.group_id}`);
     } else {
       console.warn(`Group not found for Ad ID: ${request.ad_id}`);
     }
@@ -294,7 +329,6 @@ app.delete('/api/requests/:id', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-
 
 
 
