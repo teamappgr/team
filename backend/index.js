@@ -344,7 +344,7 @@ app.post('/requests/:id/accept', async (req, res) => {
 
     // Update the requests table to set the answer to 1 (accepted)
     const updateRequestResult = await pool.query(
-      'UPDATE requests SET answer = 1 WHERE id = $1 RETURNING ad_id, user_id', // Fetch user_id along with ad_id
+      'UPDATE requests SET answer = 1 WHERE id = $1 RETURNING ad_id, user_id',
       [id]
     );
 
@@ -381,53 +381,48 @@ app.post('/requests/:id/accept', async (req, res) => {
     // Commit the transaction
     await pool.query('COMMIT');
 
+    // Prepare to send the notification after successful request acceptance
+    const subscriptionResult = await pool.query('SELECT * FROM subscriptions WHERE user_id = $1', [userId]);
+    const userSubscription = subscriptionResult.rows[0];
+
+    // Check if the subscription exists and is valid
+    if (userSubscription && userSubscription.endpoint) {
+      let keys;
+      try {
+        keys = typeof userSubscription.keys === 'string' 
+          ? JSON.parse(userSubscription.keys) 
+          : userSubscription.keys; 
+      } catch (error) {
+        console.error('Error parsing keys:', error);
+        return res.status(500).json({ message: 'Failed to parse subscription keys' });
+      }
+
+      const subscription = {
+        endpoint: userSubscription.endpoint,
+        keys: keys,
+      };
+
+      // Prepare the payload with notification details
+      const payload = JSON.stringify({
+        title: 'New Request',
+        message: `User accepted your request`, // Changed to be more clear
+      });
+
+      // Send the push notification
+      await webpush.sendNotification(subscription, payload);
+    } else {
+      console.error('No subscription found for user:', userId);
+      return res.status(404).json({ message: 'No subscription found' });
+    }
+
+    // Send a response indicating success
     res.status(200).json({ message: 'Request accepted successfully and user added to group' });
+
   } catch (error) {
     await pool.query('ROLLBACK'); // Rollback the transaction in case of an error
     console.error('Error accepting request:', error);
     res.status(500).json({ message: 'Error accepting request' });
   }
-
-  const subscriptionResult = await pool.query('SELECT * FROM subscriptions WHERE user_id = $1', [userId]);
-  const userSubscription = subscriptionResult.rows[0];
-
-
-  // Check if the subscription exists and is valid
-  if (userSubscription && userSubscription.endpoint) {
-      let keys;
-      try {
-          keys = typeof userSubscription.keys === 'string' 
-              ? JSON.parse(userSubscription.keys) 
-              : userSubscription.keys; 
-      } catch (error) {
-          console.error('Error parsing keys:', error);
-          return res.status(500).json({ message: 'Failed to parse subscription keys' });
-      }
-
-      const subscription = {
-          endpoint: userSubscription.endpoint,
-          keys: keys,
-      };
-
-
-      // Prepare the payload with user's first name
-      const payload = JSON.stringify({
-          title: 'New Request',
-          message: `User Accept Your Request`,
-      });
-
-
-
-
-      // Send the push notification
-      await webpush.sendNotification(subscription, payload);
-  } else {
-      console.error('No subscription found for user:', adOwnerId);
-      return res.status(404).json({ message: 'No subscription found' });
-  }
-
-  res.status(201).json({ message: 'Request created successfully' });
-  
 });
 
 
