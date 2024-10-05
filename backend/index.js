@@ -279,6 +279,7 @@ app.get('/api/requests/:userId', async (req, res) => {
 app.delete('/api/requests/:id', async (req, res) => {
   const requestId = parseInt(req.params.id); // Parse request ID from URL parameters
   const userId = parseInt(req.cookies.userId); // Get user ID from cookies
+  console.log(`Request ID: ${requestId}, User ID: ${userId}`); // Log request and user IDs
 
   if (isNaN(requestId) || isNaN(userId)) {
     return res.status(400).send('Invalid request ID or user ID');
@@ -385,7 +386,7 @@ app.post('/requests/:id/accept', async (req, res) => {
     res.status(500).json({ message: 'Error accepting request' });
   }
 
-  const subscriptionResult = await pool.query('SELECT * FROM subscriptions WHERE user_id = $1', [id]);
+  const subscriptionResult = await pool.query('SELECT * FROM subscriptions WHERE user_id = $1', [userId]);
   const userSubscription = subscriptionResult.rows[0];
 
 
