@@ -254,7 +254,6 @@ app.delete('/api/requests/:id', async (req, res) => {
     const request = requestResult.rows[0];
 
     if (!request) {
-      console.log('Request not found for ID:', requestId);
       return res.status(404).send('Request not found');
     }
 
@@ -564,7 +563,6 @@ app.post('/subscribe', async (req, res) => {
   const { userId, endpoint, keys } = req.body;
 
   // Log the received subscription data for debugging
-  console.log('Received subscription:', { userId, endpoint, keys });
 
   // Validate the incoming data
   if (!userId || !endpoint || !keys) {
@@ -586,7 +584,6 @@ app.post('/subscribe', async (req, res) => {
       );
 
       if (result.rowCount > 0) {
-        console.log('Subscription updated successfully.');
         return res.status(200).json({ message: 'Subscription updated successfully.' });
       } else {
         return res.status(400).json({ message: 'Failed to update subscription.' });
@@ -615,7 +612,6 @@ app.post('/subscribe', async (req, res) => {
 app.post('/send-notification', async (req, res) => {
   const { title, message, userSubscription } = req.body;
 
-  console.log('Received subscription:', userSubscription); // Log subscription details
 
   if (!userSubscription || !userSubscription.endpoint) {
     return res.status(400).json({ message: 'Invalid subscription data' });
@@ -802,7 +798,6 @@ app.post('/unsubscribe', async (req, res) => {
     const result = await pool.query('DELETE FROM subscriptions WHERE user_id = $1', [userId]);
 
     if (result.rowCount > 0) {
-      console.log('Subscription deleted successfully for user:', userId);
       return res.status(200).json({ message: 'Unsubscribed successfully.' });
     } else {
       return res.status(404).json({ message: 'Subscription not found.' });
