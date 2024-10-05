@@ -10,7 +10,7 @@ const cookieParser = require('cookie-parser');
 
 const PORT = process.env.PORT || 5000;
 const webpush = require('web-push'); // Add this line to import web-push
-const bcrypt = require('bcrypt');
+const argon2 = require('argon2');
 
 const app = express();
 const server = http.createServer(app);
@@ -58,7 +58,7 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
-// Signin Endpoint
+// Sign-in Endpoint
 app.post('/signin', async (req, res) => {
   const { email, password } = req.body;
 
@@ -70,8 +70,8 @@ app.post('/signin', async (req, res) => {
 
     if (result.rows.length > 0) {
       const user = result.rows[0];
-      // Compare the hashed password with the provided password
-      const match = await bcrypt.compare(password, user.password);
+      // Compare the hashed password with the provided password using argon2
+      const match = await argon2.verify(user.password, password);
 
       if (match) {
         res.status(200).json({ userId: user.id, message: 'Sign-in successful' });
@@ -87,15 +87,14 @@ app.post('/signin', async (req, res) => {
   }
 });
 
-
 // Sign-Up Endpoint
 app.post('/signup', upload.single('image'), async (req, res) => {
   const { firstName, lastName, email, phone, instagramAccount, password, university, gender } = req.body;
   const imageUrl = req.file.path; // The URL of the uploaded image from Cloudinary
 
   try {
-    // Hash the password before storing it
-    const hashedPassword = await bcrypt.hash(password, 10); // 10 is the salt rounds
+    // Hash the password before storing it using argon2
+    const hashedPassword = await argon2.hash(password);
 
     const result = await pool.query(
       'INSERT INTO users (first_name, last_name, email, phone, instagram_account, password, image_url, university, gender) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id',
