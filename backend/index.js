@@ -4,9 +4,12 @@ const cors = require('cors');
 const { Pool } = require('pg'); // Import PostgreSQL Pool
 const http = require('http');
 const { Server } = require('socket.io');
+const fs = require('fs'); // Make sure to include this line
 const bodyParser = require('body-parser');
 const upload = require('./cloudinary'); // Multer configuration for cloudinary
 const cookieParser = require('cookie-parser');
+const https = require('https');
+
 
 const PORT = process.env.PORT || 5000;
 const webpush = require('web-push'); // Add this line to import web-push
@@ -1174,7 +1177,12 @@ io.on('connection', (socket) => {
 app.get('/', (req, res) => {
   res.send('Hello World! The server is working!');
 });
+const options = {
+  key: fs.readFileSync('C:/Program Files/OpenSSL-Win64/bin/PEM/privkey.pem'), // Replace with your private key path
+    cert: fs.readFileSync('C:/Program Files/OpenSSL-Win64/bin/PEM/cert.pem'),
+  
+};
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server is running on http://0.0.0.0:${PORT}`);
+https.createServer(options, app).listen(PORT, () => {
+  console.log(`HTTPS Server is running on https://localhost:${PORT}`);
 });
