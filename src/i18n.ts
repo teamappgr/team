@@ -230,7 +230,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    lng: Cookies.get('language'), // Default language set to Greek
+    lng: Cookies.get('language') || 'el', // Default language set to Greek
     fallbackLng: 'en', // Use English as a fallback
     interpolation: {
       escapeValue: false, // React already safeguards against XSS
