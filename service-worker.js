@@ -1,7 +1,3 @@
-
-
-
-// Define your constants directly in the service worker
 const VAPID_PUBLIC_KEY = BBNR2P3xPR7stkE7U12C_JBH4RDHY0LOb4Tgp2596qNShGNjxa0XNvyFwwPBoFx4ZmhIA2dkqwc84crdR1C__nw; // Replace with your actual VAPID public key
 const PUBLIC_URL = 'https://teamappgr.github.io/team'; // Replace with your actual public URL
 
