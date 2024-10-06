@@ -469,7 +469,7 @@ const switchCamera = () => {
                   onChange={handleUniversityChange}
                   required
                 >
-                  <option value="Pan. Pireos">Παπει</option>
+                  <option value="Pan. Pireos">Πανεπηστήμειο Πειραιώς</option>
                 </Select>
 
                 <canvas ref={canvasRef} style={{ display: 'none' }} width="400" height="300" />
@@ -520,7 +520,7 @@ const switchCamera = () => {
   colorScheme="blue" // You can set a color scheme if needed
   style={{ textTransform: 'none', fontSize: 'inherit', padding: 0, minWidth: 'auto', marginTop: '1rem' }} // Optional: add margin for spacing
 >
-  {t('SignIn')}
+  {t('signIn')}
 </Button>
           <Text mt={4} textAlign="center">
             {t('step')} {activeStep + 1} {t('of')} {steps.length}

@@ -111,7 +111,18 @@ const resources = {
       getnotifications:"Get Notifications",
       enablebrowser:"Give Access",
       autoreserve:"Auto Reservetion For Table(by team)",
-
+      noevents:"No current events available.",
+      cameraError:"Camera Error",
+      cameraErrorDescription:"Problem With Your Camera",
+      openCamera:"Open Camera",
+      captureImage:"Capture 📷",
+      switchCamera:"Switch Camera(may should click twice",
+      closeCamera:"Close Camea",
+      retakeImage:"Retake Image",
+      removeImage:"Remove Image",
+      selectGender:"Slect Gender",
+      male:"Male",
+      female:"Female"
     },
   },
   el: { // Greek translations
@@ -132,9 +143,9 @@ const resources = {
       signUp: "Εγγραφή",
       signout: "Αποσύνδεση",
       contactInfo: "Στοιχεία Επικοινωνίας",
-      fillContactInfo: "Συμπληρώστε το όνομα, το email και τηλεφώνο",
+      fillContactInfo: "Συμπληρώστε όνομα, email και τηλεφώνο",
       uploadImage: "Ανέβασμα Εικόνας",
-      uploadImageDescription: "Ανεβάστε φωτογραφία το πάσου για επαλήθευση",
+      uploadImageDescription: "Ανεβάστε φωτογραφία του πάσου για επαλήθευση",
       instagramInfo: "Πληροφορίες Instagram",
       enterInstagramInfo: "Εισάγετε το Instagram σας και κωδικό.",
       missingFields: "Συμπληρώστε όλα τα απαιτούμενα πεδία πριν προχωρήσετε.",
@@ -219,7 +230,8 @@ const resources = {
       iWantToGo: "Θέλω να πάω",
       noAdDetailsFound: "Δεν βρέθηκαν λεπτομέρειες διαφήμισης.",
       getnotifications:"Λαμβάνω Ειδοποιήσεις",
-      enablebrowser:"Δώσε Πρόσβαση"
+      enablebrowser:"Δώσε Πρόσβαση",
+      noevents:"Δεν υπάρχουν διαθέσημες εκδηλώσεις",
 
     },
   },

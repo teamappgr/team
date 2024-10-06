@@ -102,7 +102,7 @@ const Team: React.FC = () => {
               ))
             ) : (
               <Text textAlign="center" width="100%">
-                No current ads available.
+                {t('noevents')}
               </Text>
             )}
           </SimpleGrid>
