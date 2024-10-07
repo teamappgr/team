@@ -49,7 +49,7 @@ export default function SignIn() {
       email: data.get('email') as string,
       password: data.get('password') as string,
     };
-
+  
     try {
       const response = await fetch(process.env.REACT_APP_API + 'signin', {
         method: 'POST',
@@ -58,16 +58,12 @@ export default function SignIn() {
         },
         body: JSON.stringify(credentials),
       });
-
+  
       if (response.ok) {
         const result = await response.json();
-        const userId: string = result.userId; // Explicitly define userId type
-        Cookies.set('userId', userId, { expires: 14 }); // The cookie will expire in 7 days
+        const userId: string = result.userId; 
+        Cookies.set('userId', userId, { expires: 14 });
         console.log('User signed up successfully:', result);
-
-        // Proceed to subscribe to push notifications
-        await subscribeUserToPushNotifications(userId);
-
         navigate('/profile');
       } else {
         alert(t('userIdError'));
@@ -77,6 +73,7 @@ export default function SignIn() {
       alert(t('networkError'));
     }
   };
+  
   const urlB64ToUint8Array = (base64String: string): Uint8Array => {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
