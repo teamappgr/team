@@ -42,7 +42,7 @@ webpush.setVapidDetails(
 console.log('VAPID Keys from .env:', { publicKey: VAPID_PUBLIC_KEY, privateKey: VAPID_PRIVATE_KEY });
 
 app.use(cookieParser()); // Use cookie-parser middleware
-
+app.use(cors());
 app.use(express.json());
 app.use(cors({
   origin: FRONTEND_URL, // Specify the frontend URL
@@ -1171,8 +1171,13 @@ io.on('connection', (socket) => {
   });
 });
 
+const https = require('https');
+const fs = require('fs');
+const options = {
+  key: fs.readFileSync('C:\\Users\\Giorgos Panis\\privkey.pem'),
+  cert: fs.readFileSync('C:\\Users\\Giorgos Panis\\cert.pem')
+};
 
-
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server is running on http://0.0.0.0:${PORT}`);
+https.createServer(options, app).listen(5000, () => {
+  console.log('HTTPS Server is running on port 5000');
 });
