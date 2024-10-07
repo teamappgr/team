@@ -42,7 +42,7 @@ webpush.setVapidDetails(
 console.log('VAPID Keys from .env:', { publicKey: VAPID_PUBLIC_KEY, privateKey: VAPID_PRIVATE_KEY });
 
 app.use(cookieParser()); // Use cookie-parser middleware
-app.use(cors());
+
 app.use(express.json());
 app.use(cors({
   origin: FRONTEND_URL, // Specify the frontend URL
@@ -1170,9 +1170,10 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
   });
 });
+const https = require('https');
+const fs = require('fs');
 
 
-
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server is running on http://0.0.0.0:${PORT}`);
+server.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
