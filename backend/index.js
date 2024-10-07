@@ -1171,13 +1171,8 @@ io.on('connection', (socket) => {
   });
 });
 
-const https = require('https');
-const fs = require('fs');
-const options = {
-  key: fs.readFileSync('C:\\Users\\Giorgos Panis\\privkey.pem'),
-  cert: fs.readFileSync('C:\\Users\\Giorgos Panis\\cert.pem')
-};
 
-https.createServer(options, app).listen(5000, () => {
-  console.log('HTTPS Server is running on port 5000');
+
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server is running on http://0.0.0.0:${PORT}`);
 });
