@@ -1,7 +1,5 @@
 require('dotenv').config(); // Load environment variables
 const express = require('express');
-const https = require('https');
-const fs = require('fs');
 const cors = require('cors');
 const { Pool } = require('pg'); // Import PostgreSQL Pool
 const http = require('http');
