@@ -11,6 +11,7 @@ import {
   Checkbox,
   useToast,
   VStack,
+  Spinner,
 } from '@chakra-ui/react';
 import {
   Step,
@@ -40,6 +41,7 @@ const SignUp: React.FC = () => {
 
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null); // For camera-captured image
@@ -510,8 +512,13 @@ const switchCamera = () => {
             <Button onClick={handlePrevious} isDisabled={activeStep === 0}>
               {t('previous')}
             </Button>
-            <Button onClick={handleNext}>
-              {activeStep === steps.length - 1 ? t('submit') : t('next')}
+            <Button
+            onClick={handleNext}
+            isLoading={isLoading} // Show spinner while submitting
+            spinner={<Spinner />} // Optional: Custom spinner
+            isDisabled={isLoading} // Disable button while loading
+            >
+             {activeStep === steps.length - 1 ? t('submit') : t('next')}
             </Button>
           </Flex>
           <Button
