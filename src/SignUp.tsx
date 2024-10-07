@@ -132,7 +132,7 @@ const SignUp: React.FC = () => {
     return false;
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!validateFields()) {
       toast({
         title: t('missingFields'),
@@ -143,11 +143,35 @@ const SignUp: React.FC = () => {
       });
       return;
     }
-
+  
+    // If not on the last step, move to the next step
     if (activeStep < steps.length - 1) {
       setActiveStep((prev) => prev + 1);
-    } else {
-      handleSubmit();
+    } 
+    // Handle form submission when it's the last step
+    else {
+      setIsLoading(true); // Start loading spinner
+  
+      try {
+        await handleSubmit(); // Make sure handleSubmit is an async function
+        toast({
+          title: t('submitSuccess'),
+          description: t('formSubmitted'),
+          status: 'success',
+          duration: 4000,
+          isClosable: true,
+        });
+      } catch (error) {
+        toast({
+          title: t('submitError'),
+          description:  t('submissionFailed'),
+          status: 'error',
+          duration: 4000,
+          isClosable: true,
+        });
+      } finally {
+        setIsLoading(false); // Stop loading spinner after submission is complete
+      }
     }
   };
 
