@@ -1,5 +1,7 @@
 require('dotenv').config(); // Load environment variables
 const express = require('express');
+const https = require('https');
+const fs = require('fs');
 const cors = require('cors');
 const { Pool } = require('pg'); // Import PostgreSQL Pool
 const http = require('http');
@@ -1173,6 +1175,6 @@ io.on('connection', (socket) => {
 
 
 
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server is running on http://0.0.0.0:${PORT}`);
+server.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
