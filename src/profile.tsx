@@ -81,7 +81,10 @@ const Profile = () => {
       }
 
       try {
-        const response = await fetch(`${process.env.REACT_APP_API}profile/${userId}`);
+        const response = await fetch(`${process.env.REACT_APP_API}profile`, {
+          method: 'GET',
+          credentials: 'include', // Include cookies with request
+        });
         if (!response.ok) {
           throw new Error('Failed to fetch user data');
         }
@@ -89,7 +92,15 @@ const Profile = () => {
         setProfileData(data);
 
         // Fetch subscription status
-        const subscriptionResponse = await fetch(`${process.env.REACT_APP_API}subscriptions/${userId}`);
+        const subscriptionResponse = await fetch(`${process.env.REACT_APP_API}subscriptions`, {
+          method: 'GET',
+          credentials: 'include', // Include cookies in the request
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        
         if (subscriptionResponse.ok) {
           const subscriptionData = await subscriptionResponse.json();
           setIsSubscribed(subscriptionData.subscribed || false); // Updated here
@@ -227,8 +238,9 @@ const Profile = () => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_API}profile/${userId}`, {
+      const response = await fetch(`${process.env.REACT_APP_API}profile`, {
         method: 'PUT',
+        credentials: 'include', // Include cookies in the request
         headers: {
           'Content-Type': 'application/json',
         },

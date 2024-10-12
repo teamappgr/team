@@ -22,6 +22,7 @@ interface Ad {
   time: string;
   verified: boolean; // Add verified property
 }
+const apiUrl = process.env.REACT_APP_API_URL;
 
 const Team: React.FC = () => {
   const [ads, setAds] = useState<Ad[]>([]);

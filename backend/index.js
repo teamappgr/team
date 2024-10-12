@@ -7,6 +7,7 @@ const { Server } = require('socket.io');
 const bodyParser = require('body-parser');
 const upload = require('./cloudinary'); // Multer configuration for cloudinary
 const cookieParser = require('cookie-parser');
+const CryptoJS = require('crypto-js'); // Ensure this line is present
 
 const PORT = process.env.PORT || 5000;
 const webpush = require('web-push'); // Add this line to import web-push
@@ -16,16 +17,17 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: '*',
-    methods: ['GET', 'POST','DELETE'],
-    credentials: true,
+    origin: process.env.PUBLIC_URL || 'http://localhost:3000', // Allow requests from your frontend
+    methods: ['GET', 'POST', 'DELETE', 'PUT'], // Specify allowed methods
+    credentials: true, // Allow credentials (cookies)
   },
 });
+
 // Retrieve VAPID keys from environment variables
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
-const FRONTEND_URL = process.env.PUBLIC_URL; // e.g., 'http://localhost:3000'
 
+// Ensure keys are present
 if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
   console.error('VAPID keys are missing. Please check your environment variables.');
   process.exit(1); // Exit the application if keys are not set
@@ -41,14 +43,60 @@ webpush.setVapidDetails(
 // Log the VAPID keys to verify they're correctly loaded (remove this in production)
 console.log('VAPID Keys from .env:', { publicKey: VAPID_PUBLIC_KEY, privateKey: VAPID_PRIVATE_KEY });
 
+// Middleware for parsing cookies and JSON
 app.use(cookieParser()); // Use cookie-parser middleware
-
 app.use(express.json());
-app.use(cors({
-  origin: FRONTEND_URL, // Specify the frontend URL
-  credentials: true, // Allow credentials (cookies)
-}));app.use(bodyParser.json()); // For parsing application/json
+app.use(bodyParser.json()); // For parsing application/json
 
+// CORS middleware
+app.use(cors({
+  origin: process.env.PUBLIC_URL || 'http://localhost:3000', // Specify the frontend URL
+  credentials: true, // Allow credentials (cookies)
+}));
+
+// Middleware to decrypt userId from cookies or request body/params
+const decryptUserIdMiddleware = (req, res, next) => {
+  const secretKey = process.env.SECRET_KEY || 'your-secret-key'; // Use environment variable for secret key
+
+  let encryptedUserId;
+
+  // Check if encrypted userId exists in cookies or request params/body
+  if (req.cookies.userId) {
+    encryptedUserId = req.cookies.userId;
+  } else if (req.params.userId) {
+    encryptedUserId = req.params.userId;
+  } else if (req.body.userId) {
+    encryptedUserId = req.body.userId;
+  }
+
+  // If no encrypted userId is found, proceed to the next middleware/route
+  if (!encryptedUserId) {
+    return next();
+  }
+
+  try {
+    // Decrypt the userId
+    const bytes = CryptoJS.AES.decrypt(encryptedUserId, secretKey);
+    const decryptedUserId = bytes.toString(CryptoJS.enc.Utf8);
+
+    // Check if decryption was successful
+    if (!decryptedUserId) {
+      return res.status(400).json({ message: 'Invalid encrypted userId' });
+    }
+
+    // Attach the decrypted userId to the request object so it's available in subsequent routes
+    req.decryptedUserId = decryptedUserId;
+    next();
+  } catch (error) {
+    console.error('Error decrypting user ID:', error);
+    res.status(500).json({ message: 'Error decrypting user ID' });
+  }
+};
+
+// Apply the middleware globally
+app.use(decryptUserIdMiddleware);
+
+// Database connection pool
 const pool = new Pool({
   host: process.env.SUPABASE_HOST,
   user: process.env.SUPABASE_USER,
@@ -57,7 +105,6 @@ const pool = new Pool({
   port: process.env.SUPABASE_PORT || 5432,
   ssl: { rejectUnauthorized: false },
 });
-
 app.post('/signin', async (req, res) => {
   const { email, password, subscribe, endpoint, keys } = req.body;
 
@@ -151,8 +198,8 @@ app.post('/signup', upload.single('image'), async (req, res) => {
 const slugify = require('slugify'); // Install slugify using npm
 
 app.post('/ads', async (req, res) => {
-  const { title, description, min, max, date, time, userId, info, autoreserve } = req.body;
-
+  const { title, description, min, max, date, time,  info, autoreserve } = req.body;
+  const userId=req.decryptedUserId;
   // Check if min and max are valid integers
   if (!Number.isInteger(min) || !Number.isInteger(max)) {
     return res.status(400).json({ message: 'Min and Max must be integers.' });
@@ -197,10 +244,8 @@ app.post('/ads', async (req, res) => {
 });
 
 
-
-// Get ads by user ID
 app.get('/ads1', async (req, res) => {
-  const userId = req.query.user_id;
+  const userId = req.decryptedUserId; // Use decrypted userId from middleware
 
   if (!userId) {
     return res.status(400).json({ message: 'User ID is required' });
@@ -208,6 +253,12 @@ app.get('/ads1', async (req, res) => {
 
   try {
     const result = await pool.query('SELECT * FROM ads WHERE user_id = $1', [userId]);
+    
+    // Check if ads were found
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'No ads found for this user' });
+    }
+
     res.status(200).json(result.rows);
   } catch (error) {
     console.error('Error fetching ads:', error);
@@ -257,32 +308,36 @@ app.get('/ads/:id/requests', async (req, res) => {
   }
 });
 
-app.get('/api/requests/:userId', async (req, res) => {
-  const userId = parseInt(req.params.userId); // Ensure it's an integer
+app.get('/api/requests', async (req, res) => {
+  const userId = req.decryptedUserId// Use decrypted userId from middleware
+
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID not provided' });
+  }
 
   try {
-      // Query to fetch requests for the user
-      const requestResult = await pool.query('SELECT * FROM requests WHERE user_id = $1', [userId]);
-      const requests = requestResult.rows; // Access the rows property to get the actual data
+    // Query to fetch requests for the user
+    const requestResult = await pool.query('SELECT * FROM requests WHERE user_id = $1', [userId]);
+    const requests = requestResult.rows;
 
-      // For each request, join with ads to get the necessary fields
-      const requestsWithAds = await Promise.all(requests.map(async (request) => {
-          // Query to fetch ad details based on ad_id
-          const adResult = await pool.query('SELECT title, description, available, date, time FROM ads WHERE id = $1', [request.ad_id]);
-          const ad = adResult.rows[0]; // Access the first row of the result
+    // For each request, join with ads to get the necessary fields
+    const requestsWithAds = await Promise.all(requests.map(async (request) => {
+      const adResult = await pool.query('SELECT title, description, available, date, time FROM ads WHERE id = $1', [request.ad_id]);
+      const ad = adResult.rows[0]; // Access the first row of the result
 
-          return { ...request, ad }; // Combine request and ad data
-      }));
+      return { ...request, ad }; // Combine request and ad data
+    }));
 
-      res.json(requestsWithAds); // Send combined data as response
+    res.json(requestsWithAds); // Send combined data as response
   } catch (error) {
-      console.error('Error fetching requests:', error);
-      res.status(500).send('Internal Server Error');
+    console.error('Error fetching requests:', error);
+    res.status(500).send('Internal Server Error');
   }
 });
+
 app.delete('/api/requests/:id', async (req, res) => {
   const requestId = parseInt(req.params.id); // Parse request ID from URL parameters
-  const userId = parseInt(req.headers.authorization.split(' ')[1]); // Get user ID from Authorization header
+  const userId = parseInt(req.decryptedUserId); // Get user ID from Authorization header
 
   if (isNaN(requestId) || isNaN(userId)) {
     return res.status(400).send('Invalid request ID or user ID');
@@ -505,15 +560,15 @@ app.delete('/requests/:id', async (req, res) => {
   }
 });
 
-// Get user profile by ID
-app.get('/profile/:userId', async (req, res) => {
-  const { userId } = req.params;
+app.get('/profile', async (req, res) => {
+  const userId = req.decryptedUserId; // Use decrypted userId from the middleware
+
+  if (!userId) {
+    return res.status(400).json({ message: 'User ID not provided' });
+  }
 
   try {
-    const result = await pool.query(
-      'SELECT * FROM users WHERE id = $1',
-      [userId]
-    );
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'User not found' });
@@ -526,9 +581,9 @@ app.get('/profile/:userId', async (req, res) => {
   }
 });
 
-// Update user profile
-app.put('/profile/:userId', async (req, res) => {
-  const { userId } = req.params;
+
+app.put('/profile', async (req, res) => {
+  const userId = req.decryptedUserId; // Use decrypted userId
   const { first_name, last_name, email, phone, instagram_account } = req.body;
 
   try {
@@ -547,19 +602,17 @@ app.put('/profile/:userId', async (req, res) => {
     res.status(500).json({ message: 'Error updating profile' });
   }
 });
-app.get('/subscriptions/:userId', async (req, res) => {
-  const { userId } = req.params;
+
+app.get('/subscriptions', async (req, res) => {
+  const userId = req.decryptedUserId; // Use decrypted userId
 
   try {
-    // Check if a subscription exists for the given userId
     const result = await pool.query('SELECT * FROM subscriptions WHERE user_id = $1', [userId]);
 
-    // If no subscription exists for this user, return 404
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'User not found or not subscribed' });
     }
 
-    // If a subscription exists, we can infer that the user is subscribed
     res.status(200).json({ subscribed: true });
   } catch (error) {
     console.error('Error fetching subscription: ', error);
@@ -567,8 +620,11 @@ app.get('/subscriptions/:userId', async (req, res) => {
   }
 });
 
+
+// Toggle subscription
 app.post('/subscriptions/toggle', async (req, res) => {
-  const { userId, subscribe, endpoint, keys } = req.body;
+  const userId = req.decryptedUserId; // Use decrypted userId from the middleware
+  const { subscribe, endpoint, keys } = req.body;
 
   try {
     if (subscribe) {
@@ -613,14 +669,16 @@ app.post('/subscriptions/toggle', async (req, res) => {
   }
 });
 
+
+// Delete a subscription
 app.delete('/subscriptions/:userId', async (req, res) => {
-  const { userId } = req.params;
+  const userId = req.decryptedUserId; // Use decrypted userId from the middleware
 
   try {
     const result = await pool.query('DELETE FROM subscriptions WHERE user_id = $1', [userId]);
 
     if (result.rowCount === 0) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: 'User not found or no subscription exists' });
     }
 
     res.status(200).json({ message: 'Subscription deleted successfully', subscribed: false });
@@ -631,10 +689,9 @@ app.delete('/subscriptions/:userId', async (req, res) => {
 });
 
 
-// Subscribe to Push Notifications Endpoint
 app.post('/subscribe', async (req, res) => {
-  const { userId, endpoint, keys } = req.body;
-
+  const { endpoint, keys } = req.body;
+  const userId = parseInt(req.decryptedUserId); 
   // Log the received subscription data for debugging
 
   // Validate the incoming data
@@ -700,112 +757,100 @@ app.post('/send-notification', async (req, res) => {
 });
 
 app.post('/requests', async (req, res) => {
-  const { ad_id, user_id } = req.body;
+  const { ad_id } = req.body; // Get ad_id from the request body
+  const user_id = parseInt(req.decryptedUserId); // Use decrypted userId and parse it properly
 
+  if (!user_id || !ad_id) {
+    return res.status(400).json({ message: 'User ID or Ad ID not provided' });
+  }
 
   try {
-      // Check if the ad exists and get its owner
-      const adOwnerCheckResult = await pool.query(
-          'SELECT user_id FROM ads WHERE id = $1',
-          [ad_id]
-      );
+    // Check if the ad exists and get its owner
+    const adOwnerCheckResult = await pool.query('SELECT user_id FROM ads WHERE id = $1', [ad_id]);
 
-      if (adOwnerCheckResult.rowCount === 0) {
-          console.error('Ad not found.');
-          return res.status(404).json({ message: 'Ad not found' });
+    if (adOwnerCheckResult.rowCount === 0) {
+      console.error('Ad not found.');
+      return res.status(404).json({ message: 'Ad not found' });
+    }
+
+    const adOwnerId = adOwnerCheckResult.rows[0].user_id;
+
+    // Check if the user is trying to request their own ad
+    if (adOwnerId === user_id) {
+      console.error('User cannot request their own event.');
+      return res.status(400).json({ message: 'This is your event, you cannot request it.' });
+    }
+
+    // Check if the user has already requested the same ad
+    const existingRequestResult = await pool.query('SELECT * FROM requests WHERE ad_id = $1 AND user_id = $2', [ad_id, user_id]);
+
+    if (existingRequestResult.rowCount > 0) {
+      console.error('User has already requested this event.');
+      return res.status(400).json({ message: 'You have already requested this event.' });
+    }
+
+    // Insert into the requests table
+    const result = await pool.query('INSERT INTO requests (ad_id, user_id) VALUES ($1, $2)', [ad_id, user_id]);
+
+    if (result.rowCount === 0) {
+      console.error('Failed to create request in database.');
+      return res.status(400).json({ message: 'Failed to create request' });
+    }
+
+    // Fetch the ad's details, including the title and the user's first name
+    const adResult = await pool.query(
+      `SELECT ads.title, ads.user_id AS ad_owner_id, users.first_name 
+       FROM ads 
+       JOIN users ON ads.user_id = users.id 
+       WHERE ads.id = $1`,
+      [ad_id]
+    );
+    const ad = adResult.rows[0];
+
+    if (!ad) {
+      console.error('Ad not found.');
+      return res.status(404).json({ message: 'Ad not found' });
+    }
+
+    // Fetch the owner's subscription from the database
+    const subscriptionResult = await pool.query('SELECT * FROM subscriptions WHERE user_id = $1', [adOwnerId]);
+    const userSubscription = subscriptionResult.rows[0];
+
+    // Check if the subscription exists and is valid
+    if (userSubscription && userSubscription.endpoint) {
+      let keys;
+      try {
+        keys = typeof userSubscription.keys === 'string' ? JSON.parse(userSubscription.keys) : userSubscription.keys;
+      } catch (error) {
+        console.error('Error parsing keys:', error);
+        return res.status(500).json({ message: 'Failed to parse subscription keys' });
       }
 
-      const adOwnerId = adOwnerCheckResult.rows[0].user_id;
+      const subscription = {
+        endpoint: userSubscription.endpoint,
+        keys: keys,
+      };
 
-      // Check if the user is trying to request their own ad
-      if (adOwnerId === user_id) {
-          console.error('User cannot request their own event.');
-          return res.status(400).json({ message: 'This is your event, you cannot request it.' });
-      }
+      // Prepare the payload with user's first name
+      const payload = JSON.stringify({
+        title: 'New Request',
+        message: `A user has expressed interest in your ad: ${ad.title}`,
+      });
 
-      // Check if the user has already requested the same ad
-      const existingRequestResult = await pool.query(
-          'SELECT * FROM requests WHERE ad_id = $1 AND user_id = $2',
-          [ad_id, user_id]
-      );
+      // Send the push notification
+      await webpush.sendNotification(subscription, payload);
+    } else {
+      console.error('No subscription found for user:', adOwnerId);
+      return res.status(404).json({ message: 'No subscription found' });
+    }
 
-      if (existingRequestResult.rowCount > 0) {
-          console.error('User has already requested this event.');
-          return res.status(400).json({ message: 'You have already requested this event.' });
-      }
-
-      // Insert into requests table
-      const result = await pool.query(
-          'INSERT INTO requests (ad_id, user_id) VALUES ($1, $2)',
-          [ad_id, user_id]
-      );
-
-      if (result.rowCount === 0) {
-          console.error('Failed to create request in database.');
-          return res.status(400).json({ message: 'Failed to create request' });
-      }
-
-      // Fetch the ad's details including the title and the user’s first name
-      const adResult = await pool.query(
-          `SELECT ads.title, ads.user_id AS ad_owner_id, users.first_name 
-           FROM ads 
-           JOIN users ON ads.user_id = users.id 
-           WHERE ads.id = $1`, 
-          [ad_id]
-      );
-      const ad = adResult.rows[0];
-
-      if (!ad) {
-          console.error('Ad not found.');
-          return res.status(404).json({ message: 'Ad not found' });
-      }
-
-
-      // Fetch the owner's subscription from the database
-      const subscriptionResult = await pool.query('SELECT * FROM subscriptions WHERE user_id = $1', [adOwnerId]);
-      const userSubscription = subscriptionResult.rows[0];
-
-
-      // Check if the subscription exists and is valid
-      if (userSubscription && userSubscription.endpoint) {
-          let keys;
-          try {
-              keys = typeof userSubscription.keys === 'string' 
-                  ? JSON.parse(userSubscription.keys) 
-                  : userSubscription.keys; 
-          } catch (error) {
-              console.error('Error parsing keys:', error);
-              return res.status(500).json({ message: 'Failed to parse subscription keys' });
-          }
-
-          const subscription = {
-              endpoint: userSubscription.endpoint,
-              keys: keys,
-          };
-
-
-          // Prepare the payload with user's first name
-          const payload = JSON.stringify({
-              title: 'New Request',
-              message: `A user has expressed interest in your ad: ${ad.title}`,
-          });
-
-
-
-
-          // Send the push notification
-          await webpush.sendNotification(subscription, payload);
-      } else {
-          console.error('No subscription found for user:', adOwnerId);
-          return res.status(404).json({ message: 'No subscription found' });
-      }
-
-      res.status(201).json({ message: 'Request created successfully' });
+    res.status(201).json({ message: 'Request created successfully' });
   } catch (error) {
-      console.error('Error creating request:', error);
-      res.status(500).json({ message: 'Error creating request' });
+    console.error('Error creating request:', error);
+    res.status(500).json({ message: 'Error creating request' });
   }
 });
+
 
 
 // Get user requests
@@ -881,11 +926,11 @@ app.post('/unsubscribe', async (req, res) => {
   }
 });
 
-app.get('/users/:id', async (req, res) => {
-  const { id } = req.params;
+app.get('/users', async (req, res) => {
+  const user_id = parseInt(req.decryptedUserId); // Use decrypted userId and parse it properly
 
   try {
-    const result = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [user_id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'User not found' });
@@ -928,7 +973,7 @@ app.get('/ads/:id', async (req, res) => {
   }
 });
 app.get('/chats', async (req, res) => {
-  const userId = req.headers.userid; // Get userId from headers
+  const userId = req.decryptedUserId; // Extract userId from middleware
 
   if (!userId) {
     return res.status(401).json({ error: 'User not logged in' });
@@ -942,7 +987,12 @@ app.get('/chats', async (req, res) => {
        WHERE gm.user_id = $1`, 
       [userId]
     );
-    res.json(result.rows);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'No chats found' });
+    }
+
+    res.status(200).json(result.rows);
   } catch (error) {
     console.error('Error fetching chats:', error);
     res.status(500).json({ error: 'Failed to fetch group chats' });
@@ -950,9 +1000,10 @@ app.get('/chats', async (req, res) => {
 });
 
 
+
 app.get('/messages/:slug', async (req, res) => {
   const { slug } = req.params;
-  const userId = req.headers.userid;
+  const userId = req.decryptedUserId;
 
   try {
       // Check if the user is a member of the group
@@ -1016,7 +1067,7 @@ app.get('/groups/:slug', async (req, res) => {
 });
 app.get('/groups/members/:slug', async (req, res) => {
   const { slug } = req.params;
-  const userId = req.headers.userid;
+  const userId = req.decryptedUserId;
 
   try {
     // Check if the user is a member of the group
@@ -1055,119 +1106,100 @@ app.get('/groups/members/:slug', async (req, res) => {
 const moment = require('moment');
 
 io.on('connection', (socket) => {
-  // Join a group (room)
-  socket.on('joinGroup', ({ slug, userId }) => {
-    socket.join(slug);
-  });
+  console.log('A user connected:', socket.id);
 
-  socket.on('sendMessage', async ({ slug, message, senderId }) => {
+  // Handle joining a group
+  socket.on('joinGroup', async ({ slug, userId }) => {
     try {
+      // Log the received encrypted userId
+      console.log('Encrypted userId received for joinGroup:', userId);
+
+      const secretKey = process.env.SECRET_KEY || 'your-secret-key';
+      const bytes = CryptoJS.AES.decrypt(userId, secretKey);
+      const decryptedUserId = bytes.toString(CryptoJS.enc.Utf8);
+
+      // Log the decrypted userId
+      console.log('Decrypted userId for joinGroup:', decryptedUserId);
+
+      // Check if decryption was successful
+      if (!decryptedUserId) {
+        return console.error('Invalid encrypted userId for Socket.IO');
+      }
+
       // Fetch the group ID from the slug
-      const groupResult = await pool.query(
-        `SELECT group_id FROM Groups WHERE slug = $1`,
-        [slug]
-      );
-  
+      const groupResult = await pool.query(`SELECT group_id FROM Groups WHERE slug = $1`, [slug]);
       if (groupResult.rowCount === 0) {
         return console.error('Group not found');
       }
-  
+
+      // Join the user to the room
+      socket.join(slug);
+      console.log(`User ${decryptedUserId} joined group ${slug}`);
+
+    } catch (error) {
+      console.error('Error joining group:', error);
+    }
+  });
+
+  // Handle sending a message
+  socket.on('sendMessage', async ({ slug, message, senderId }) => {
+    try {
+      // Log the received encrypted senderId
+      console.log('Encrypted senderId received for sendMessage:', senderId);
+
+      const secretKey = process.env.SECRET_KEY || 'your-secret-key';
+      const bytes = CryptoJS.AES.decrypt(senderId, secretKey);
+      const decryptedSenderId = bytes.toString(CryptoJS.enc.Utf8);
+
+      // Log the decrypted senderId
+      console.log('Decrypted senderId for sendMessage:', decryptedSenderId);
+
+      // Check if decryption was successful
+      if (!decryptedSenderId) {
+        return console.error('Invalid encrypted senderId for Socket.IO');
+      }
+
+      // Fetch the group ID from the slug
+      const groupResult = await pool.query(`SELECT group_id FROM Groups WHERE slug = $1`, [slug]);
+      if (groupResult.rowCount === 0) {
+        return console.error('Group not found');
+      }
+
       const groupId = groupResult.rows[0].group_id;
-  
+
       // Insert the message into the database
       const insertResult = await pool.query(
         `INSERT INTO Messages (message_text, sender_id, group_id, sent_at)
          VALUES ($1, $2, $3, NOW()) RETURNING message_id, sent_at`,
-        [message, senderId, groupId]
+        [message, decryptedSenderId, groupId]
       );
-  
+
       const newMessageId = insertResult.rows[0].message_id;
       const sentAt = insertResult.rows[0].sent_at;
-  
+
       // Fetch the sender's first name and last name
-      const userResult = await pool.query(
-        `SELECT first_name, last_name FROM Users WHERE id = $1`,
-        [senderId]
-      );
-  
+      const userResult = await pool.query(`SELECT first_name, last_name FROM Users WHERE id = $1`, [decryptedSenderId]);
       if (userResult.rowCount === 0) {
         return console.error('User not found');
       }
-  
+
       const { first_name, last_name } = userResult.rows[0];
-  
+
       // Create the message object to broadcast
       const newMessage = {
         message_id: newMessageId,
         message_text: message,
-        sender_id: senderId,
+        sender_id: decryptedSenderId,
         first_name,
         last_name,
         created_at: moment(sentAt).format('YYYY-MM-DD HH:mm:ss'),
       };
-  
+
       // Broadcast the message to the group (excluding the sender)
       socket.to(slug).emit('newMessage', newMessage);
-  
-      // Fetch the members of the group
-      const membersResult = await pool.query(
-        `SELECT user_id FROM GroupMembers WHERE group_id = $1`,
-        [groupId]
-      );
-  
-      // Get member IDs as an array
-      const memberIds = membersResult.rows.map(member => member.user_id);
-  
-      // Fetch subscriptions for group members except the sender
-      const subscriptionsResult = await pool.query(
-        `SELECT user_id, endpoint, keys FROM subscriptions WHERE user_id = ANY($1::int[])`,
-        [memberIds]
-      );
-  
-      // Prepare notification payload
-      const payload = JSON.stringify({
-        title: 'New Message',
-        message: `${first_name} ${last_name} sent a new message: ${message}`,
-      });
-  
-      // Send notifications to all subscribed group members except the sender
-      for (const subscription of subscriptionsResult.rows) {
-        // Only send notifications to members other than the sender
-        if (parseInt(subscription.user_id, 10) !== parseInt(senderId, 10)) {
-          if (subscription.endpoint) {
-            let keys;
-            try {
-              // Ensure keys are parsed correctly
-              keys = typeof subscription.keys === 'string'
-                ? JSON.parse(subscription.keys) // Parse keys if they're stored as a string
-                : subscription.keys; // Use it directly if it's already an object
-  
-              const subscriptionPayload = {
-                endpoint: subscription.endpoint,
-                keys: keys,
-              };
-  
-              // Send the notification
-              await webpush.sendNotification(subscriptionPayload, payload);
-            } catch (error) {
-              console.error('Error processing subscription or sending notification:', error);
-            }
-          } else {
-            console.error('No valid endpoint for user:', subscription.user_id);
-          }
-        } else {
-        }
-      }
-  
     } catch (error) {
       console.error('Error sending message:', error);
     }
-  });
-  
-  
-  
-  // Handle user disconnect
-  socket.on('disconnect', () => {
   });
 });
 

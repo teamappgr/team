@@ -15,7 +15,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import Cookies from 'js-cookie';
 import { useTranslation } from 'react-i18next';
 import backround from './backimg.jpeg'; // Correct import
-
+import CryptoJS from 'crypto-js';
 function Copyright(props: any) {
   return (
     <Typography variant="body2" color="text.secondary" align="center" {...props}>
@@ -58,17 +58,23 @@ export default function SignIn() {
         },
         body: JSON.stringify(credentials),
       });
-  
+    
       if (response.ok) {
         const result = await response.json();
         const userId: string = result.userId; 
-        Cookies.set('userId', userId, { expires: 14 });
+        
+        // Encrypt userId before storing it in cookies
+        const encryptedUserId = CryptoJS.AES.encrypt(userId, 'your-secret-key').toString();
+        
+        // Set the encrypted userId in cookies
+        Cookies.set('userId', encryptedUserId, { expires: 14 });
+        
         console.log('User signed up successfully:', result);
         navigate('/profile');
       } else {
         alert(t('userIdError'));
       }
-    } catch (error) {
+    }catch (error) {
       console.error('Error:', error);
       alert(t('networkError'));
     }

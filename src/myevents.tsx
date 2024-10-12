@@ -183,7 +183,10 @@ const MyEvents: React.FC = () => {
       }
 
       try {
-        const response = await fetch(`${process.env.REACT_APP_API}ads1?user_id=${userId}`);
+        const response = await fetch(`${process.env.REACT_APP_API}ads1`, {
+          method: 'GET',
+          credentials: 'include', // Include cookies with request
+        });
         if (!response.ok) {
           throw new Error('Failed to fetch ads');
         }
@@ -213,7 +216,10 @@ const MyEvents: React.FC = () => {
     const fetchRequests = async () => {
       const userId = Cookies.get('userId');
       try {
-        const response = await fetch(`${process.env.REACT_APP_API}api/requests/${userId}`);
+        const response = await fetch(`${process.env.REACT_APP_API}api/requests`, {
+          method: 'GET',
+          credentials: 'include', // Include cookies with request
+        });
         const data = await response.json();
         setRequests(data);
       } catch (error) {

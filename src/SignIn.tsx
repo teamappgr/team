@@ -16,6 +16,7 @@ import Cookies from 'js-cookie';
 import { useTranslation } from 'react-i18next';
 import backround from './backimg.jpeg'; // Correct import
 import CloseIcon from '@mui/icons-material/Close'; // Import CloseIcon
+import CryptoJS from 'crypto-js';
 
 function Copyright(props: any) {
   return (
@@ -60,16 +61,18 @@ export default function SignIn({ onClose }: { onClose: () => void }) {
         },
         body: JSON.stringify(credentials),
       });
-
+    
       if (response.ok) {
         const result = await response.json();
-        const userId: string = result.userId; // Explicitly define userId type
-        Cookies.set('userId', userId, { expires: 14 }); // The cookie will expire in 7 days
+        const userId: string = result.userId; 
+        
+        // Encrypt userId before storing it in cookies
+        const encryptedUserId = CryptoJS.AES.encrypt(userId, 'your-secret-key').toString();
+        
+        // Set the encrypted userId in cookies
+        Cookies.set('userId', encryptedUserId, { expires: 14 });
+        
         console.log('User signed up successfully:', result);
-
-        // Proceed to subscribe to push notifications
-        await subscribeUserToPushNotifications(userId);
-
         navigate('/profile');
       } else {
         alert(t('userIdError'));

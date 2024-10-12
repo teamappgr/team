@@ -23,9 +23,9 @@ const Chat: React.FC = () => {
       try {
         const response = await fetch(`${process.env.REACT_APP_API}chats`, {
           method: 'GET',
+          credentials: 'include', // Include cookies in the request
           headers: {
             'Content-Type': 'application/json',
-            'userid': userId,
           },
         });
 

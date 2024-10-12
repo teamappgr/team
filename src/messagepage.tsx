@@ -22,6 +22,7 @@ import Cookies from 'js-cookie';
 import moment from 'moment';
 import { io } from 'socket.io-client';
 import { ArrowBackIcon, InfoIcon } from '@chakra-ui/icons';
+import CryptoJS from 'crypto-js';
 
 const socket = io(process.env.REACT_APP_API); // Connect to the Socket.IO server
 
@@ -34,20 +35,43 @@ const Messages: React.FC = () => {
   const [groupName, setGroupName] = useState(''); // Group name
   const [groupMembers, setGroupMembers] = useState<any[]>([]); // Group members
   const [userInfo, setUserInfo] = useState<{ first_name: string; last_name: string } | null>(null); // User info
-  const userId = Cookies.get('userId'); // Get user ID from cookies
+  const [decryptedUserId, setDecryptedUserId] = useState<string | null>(null); // Decrypted user ID state
   const messagesEndRef = useRef<HTMLDivElement | null>(null); // Reference for scrolling to the bottom
+  const secretKey = process.env.REACT_APP_SECRET_KEY || 'your-secret-key'; // Use your actual secret key
 
   useEffect(() => {
-    if (!userId) {
+    // Decrypt the userId cookie
+    const encryptedUserId = Cookies.get('userId');
+
+    const decryptUserId = (encryptedUserId: string) => {
+      try {
+        const bytes = CryptoJS.AES.decrypt(encryptedUserId, secretKey);
+        const decryptedId = bytes.toString(CryptoJS.enc.Utf8);
+        return decryptedId;
+      } catch (error) {
+        console.error('Error decrypting userId:', error);
+        return null; // Return null if decryption fails
+      }
+    };
+
+    if (encryptedUserId) {
+      const userId = decryptUserId(encryptedUserId);
+      setDecryptedUserId(userId); // Store the decrypted userId in state
+    } else {
       navigate('/signin'); // Redirect if user is not logged in
-      return;
     }
+  }, [navigate]);
+
+  useEffect(() => {
+    // Only fetch data if user ID is available
+    if (!decryptedUserId) return;
 
     // Fetch user info
     const fetchUserInfo = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API}users/${userId}`, {
+        const response = await fetch(`${process.env.REACT_APP_API}users`, {
           method: 'GET',
+          credentials: 'include', // Include cookies for authentication
           headers: {
             'Content-Type': 'application/json',
           },
@@ -66,9 +90,10 @@ const Messages: React.FC = () => {
       try {
         const response = await fetch(`${process.env.REACT_APP_API}groups/${slug}`, {
           method: 'GET',
+          credentials: 'include', // Include cookies for authentication
           headers: {
             'Content-Type': 'application/json',
-            userid: userId,
+            userid: decryptedUserId,
           },
         });
 
@@ -85,9 +110,10 @@ const Messages: React.FC = () => {
       try {
         const response = await fetch(`${process.env.REACT_APP_API}messages/${slug}`, {
           method: 'GET',
+          credentials: 'include', // Include cookies for authentication
           headers: {
             'Content-Type': 'application/json',
-            userid: userId,
+            userid: decryptedUserId,
           },
         });
 
@@ -106,9 +132,10 @@ const Messages: React.FC = () => {
       try {
         const response = await fetch(`${process.env.REACT_APP_API}groups/members/${slug}`, {
           method: 'GET',
+          credentials: 'include', // Include cookies for authentication
           headers: {
             'Content-Type': 'application/json',
-            userid: userId,
+            userid: decryptedUserId,
           },
         });
 
@@ -132,7 +159,7 @@ const Messages: React.FC = () => {
     fetchGroupMembers();
 
     // Join the group on socket connection
-    socket.emit('joinGroup', { slug, userId });
+    socket.emit('joinGroup', { slug, userId: decryptedUserId });
 
     // Listen for new messages and update state
     socket.on('newMessage', (newMsg) => {
@@ -140,10 +167,10 @@ const Messages: React.FC = () => {
     });
 
     return () => {
-      socket.emit('leaveGroup', { slug, userId });
+      socket.emit('leaveGroup', { slug, userId: decryptedUserId });
       socket.off('newMessage'); // Clean up listener on component unmount
     };
-  }, [slug, userId, navigate]);
+  }, [slug, decryptedUserId, navigate]);
 
   // Scroll to the bottom of the messages container when new messages arrive
   useEffect(() => {
@@ -152,14 +179,23 @@ const Messages: React.FC = () => {
     }
   }, [messages]);
 
+  // Encrypt the userId when sending messages
+  const encryptUserId = (userId: string) => {
+    const encryptedUserId = CryptoJS.AES.encrypt(userId, secretKey).toString();
+    return encryptedUserId;
+  };
+
   // Send new message function
   const handleSendMessage = async () => {
     if (!newMessage || !userInfo) return; // Do nothing if message is empty or user info is not available
   
+    // Encrypt the senderId (userId)
+    const encryptedUserId = encryptUserId(decryptedUserId || ''); // Use decrypted user ID to encrypt it before sending
+  
     const newMsg = {
       slug,
       message: newMessage,
-      senderId: userId, // Ensure this is the correct sender ID
+      senderId: encryptedUserId, // Send the encrypted user ID
     };
   
     // Emit the message through Socket.IO
@@ -170,7 +206,7 @@ const Messages: React.FC = () => {
       ...prevMessages,
       {
         message_text: newMessage,
-        sender_id: userId,
+        sender_id: decryptedUserId, // Use the decrypted user ID internally
         created_at: moment().format('YYYY-MM-DD HH:mm:ss'),
         first_name: userInfo.first_name,
         last_name: userInfo.last_name,
@@ -179,7 +215,6 @@ const Messages: React.FC = () => {
   
     setNewMessage(''); // Clear input field after sending
   };
-  
 
   // Format message date
   const formatDate = (dateString: string) => {
@@ -213,9 +248,8 @@ const Messages: React.FC = () => {
           <PopoverTrigger>
             <IconButton
               icon={<InfoIcon />}
-              aria-label="Group Members Info"
-              variant="outline"
-              ml={2}
+              aria-label="Group Info"
+              ml="auto"
             />
           </PopoverTrigger>
           <PopoverContent>
@@ -223,56 +257,41 @@ const Messages: React.FC = () => {
             <PopoverCloseButton />
             <PopoverHeader>Group Members</PopoverHeader>
             <PopoverBody>
-              {groupMembers.length > 0 ? (
-                <VStack align="start">
-                  {groupMembers.map((member, index) => (
-                    <Text key={index}>
-                      {member.first_name} {member.last_name}
-                    </Text>
-                  ))}
-                </VStack>
-              ) : (
-                <Text>No members found</Text>
-              )}
+              <VStack align="start">
+                {groupMembers.map((member) => (
+                  <Text key={member.user_id}>
+                    {member.first_name} {member.last_name}
+                  </Text>
+                ))}
+              </VStack>
             </PopoverBody>
           </PopoverContent>
         </Popover>
       </HStack>
-      {/* Messages Container */}
-      <Box flex="1" overflowY="auto" p={4}>
-        {messages.map((message, index) => (
-          <Flex
-            key={index}
-            justify={message.sender_id === userId ? 'flex-end' : 'flex-start'} // Align messages
-            width="100%"
-          >
-            <Box
-              bg={message.sender_id === userId ? 'blue.500' : 'gray.200'}
-              color={message.sender_id === userId ? 'white' : 'black'}
-              p={3}
-              borderRadius="md"
-              maxWidth="70%"
-              mb={2}
-            >
-              <Text fontWeight="bold">
-                {message.first_name} {message.last_name}
-              </Text>
-              <Text>{message.message_text}</Text>
+
+      {/* Messages Display */}
+      <Box flex="1" overflowY="auto" px={4} py={2}>
+        <VStack align="start" spacing={4}>
+          {messages.map((msg, idx) => (
+            <Box key={idx} alignSelf={msg.sender_id === decryptedUserId ? 'flex-end' : 'flex-start'}>
               <Text fontSize="sm" color="gray.500">
-                {formatDate(message.created_at)}
+                {msg.first_name} {msg.last_name} - {formatDate(msg.created_at)}
+              </Text>
+              <Text bg={msg.sender_id === decryptedUserId ? 'blue.200' : 'gray.200'} p={2} borderRadius="md">
+                {msg.message_text}
               </Text>
             </Box>
-          </Flex>
-        ))}
-        {/* Div to scroll to */}
-        <div ref={messagesEndRef} />
+          ))}
+        </VStack>
+        <div ref={messagesEndRef} /> {/* Element to scroll to */}
       </Box>
+
       {/* Message Input */}
-      <HStack p={4}>
+      <HStack p={4} spacing={2}>
         <Input
-          placeholder="Type your message..."
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
+          placeholder="Type a message..."
         />
         <Button onClick={handleSendMessage} colorScheme="blue">
           Send
