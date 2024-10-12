@@ -54,17 +54,13 @@ app.use(cors({
   credentials: true, // Allow credentials (cookies)
 }));
 
+// Middleware to decrypt userId from cookies or request body/params
 const decryptUserIdMiddleware = (req, res, next) => {
-  // Log specific parts of the request to avoid crashing
-  console.log('Request Headers:', req.headers);
-  console.log('Request Cookies:', req.cookies);
-  console.log('Request Params:', req.params);
-  console.log('Request Body:', req.body);
+  const secretKey = process.env.SECRET_KEY || 'your-secret-key'; // Use environment variable for secret key
 
-  const secretKey = process.env.SECRET_KEY || 'your-secret-key';
-  
   let encryptedUserId;
 
+  // Check if encrypted userId exists in cookies or request params/body
   if (req.cookies.userId) {
     encryptedUserId = req.cookies.userId;
   } else if (req.params.userId) {
@@ -73,8 +69,8 @@ const decryptUserIdMiddleware = (req, res, next) => {
     encryptedUserId = req.body.userId;
   }
 
+  // If no encrypted userId is found, proceed to the next middleware/route
   if (!encryptedUserId) {
-    console.warn('No encrypted userId found in request.');
     return next();
   }
 
@@ -83,10 +79,12 @@ const decryptUserIdMiddleware = (req, res, next) => {
     const bytes = CryptoJS.AES.decrypt(encryptedUserId, secretKey);
     const decryptedUserId = bytes.toString(CryptoJS.enc.Utf8);
 
+    // Check if decryption was successful
     if (!decryptedUserId) {
       return res.status(400).json({ message: 'Invalid encrypted userId' });
     }
 
+    // Attach the decrypted userId to the request object so it's available in subsequent routes
     req.decryptedUserId = decryptedUserId;
     next();
   } catch (error) {
@@ -97,6 +95,7 @@ const decryptUserIdMiddleware = (req, res, next) => {
 
 // Apply the middleware globally
 app.use(decryptUserIdMiddleware);
+
 // Database connection pool
 const pool = new Pool({
   host: process.env.SUPABASE_HOST,
