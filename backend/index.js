@@ -54,13 +54,13 @@ app.use(cors({
   credentials: true, // Allow credentials (cookies)
 }));
 
-// Middleware to decrypt userId from cookies or request body/params
 const decryptUserIdMiddleware = (req, res, next) => {
-  const secretKey = process.env.SECRET_KEY || 'your-secret-key'; // Use environment variable for secret key
+  // Use environment variable for secret key or default to 'your-secret-key'
+  const secretKey = process.env.SECRET_KEY || 'your-secret-key';
 
   let encryptedUserId;
 
-  // Check if encrypted userId exists in cookies or request params/body
+  // Check if encrypted userId exists in cookies, request params, or request body
   if (req.cookies.userId) {
     encryptedUserId = req.cookies.userId;
   } else if (req.params.userId) {
@@ -69,8 +69,9 @@ const decryptUserIdMiddleware = (req, res, next) => {
     encryptedUserId = req.body.userId;
   }
 
-  // If no encrypted userId is found, proceed to the next middleware/route
+  // If no encrypted userId is found, log a warning and proceed to the next middleware/route
   if (!encryptedUserId) {
+    console.warn('No encrypted userId found in request.');
     return next();
   }
 
@@ -81,21 +82,22 @@ const decryptUserIdMiddleware = (req, res, next) => {
 
     // Check if decryption was successful
     if (!decryptedUserId) {
+      console.warn('Decryption failed: Invalid encrypted userId.');
       return res.status(400).json({ message: 'Invalid encrypted userId' });
     }
 
-    // Attach the decrypted userId to the request object so it's available in subsequent routes
+    // Attach the decrypted userId to the request object for subsequent routes
     req.decryptedUserId = decryptedUserId;
-    next();
+    next(); // Move to the next middleware/route
   } catch (error) {
+    // Log the error and send a 500 response
     console.error('Error decrypting user ID:', error);
-    res.status(500).json({ message: 'Error decrypting user ID' });
+    return res.status(500).json({ message: 'Error decrypting user ID' });
   }
 };
 
 // Apply the middleware globally
 app.use(decryptUserIdMiddleware);
-
 // Database connection pool
 const pool = new Pool({
   host: process.env.SUPABASE_HOST,
