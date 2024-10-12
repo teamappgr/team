@@ -57,7 +57,10 @@ app.use(cors({
 // Middleware to decrypt userId from cookies or request body/params
 const decryptUserIdMiddleware = (req, res, next) => {
   const secretKey = process.env.SECRET_KEY || 'your-secret-key'; // Use environment variable for secret key
-
+  console.log('Incoming request:', req.method, req.url);
+  console.log('Cookies:', req.cookies);
+  console.log('Request Params:', req.params);
+  console.log('Request Body:', req.body);
   let encryptedUserId;
 
   // Check if encrypted userId exists in cookies or request params/body
@@ -561,39 +564,23 @@ app.delete('/requests/:id', async (req, res) => {
 });
 
 app.get('/profile', async (req, res) => {
-  let encryptedUserId;
+  const userId = req.decryptedUserId; // Use decrypted userId from the middleware
 
-  // Check for encrypted userId in cookies, params, or body
-  if (req.cookies.userId) {
-    encryptedUserId = req.cookies.userId;
-  } else if (req.params.userId) {
-    encryptedUserId = req.params.userId;
-  } else if (req.body.userId) {
-    encryptedUserId = req.body.userId;
-  }
-
-  // If no encrypted userId is found, respond with a warning
-  if (!encryptedUserId) {
-    console.warn('No encrypted userId found in request.');
+  if (!userId) {
     return res.status(400).json({ message: 'User ID not provided' });
   }
 
   try {
-    // Call the decryption function
-    const decryptedUserId = decryptUserId(encryptedUserId);
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
 
-    // Fetch user profile from the database using decrypted userId
-    const userProfile = await fetchUserProfile(decryptedUserId);
-
-    if (!userProfile) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Respond with the user profile
-    res.status(200).json(userProfile);
+    res.status(200).json(result.rows[0]);
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ message: error.message });
+    console.error('Error fetching profile: ', error);
+    res.status(500).json({ message: 'Error fetching profile' });
   }
 });
 
