@@ -56,7 +56,7 @@ app.use(cors({
 
 // Middleware to decrypt userId from cookies or request body/params
 const decryptUserIdMiddleware = (req, res, next) => {
-  const secretKey = 'your-secret-key'; // Use environment variable for secret key
+  const secretKey = process.env.SECRET_KEY || 'your-secret-key'; // Use environment variable for secret key
 
   let encryptedUserId;
 
