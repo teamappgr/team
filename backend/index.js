@@ -55,8 +55,7 @@ app.use(cors({
 }));
 
 const decryptUserIdMiddleware = (req, res, next) => {
-  console.log('Incoming Request:', req); // Log the whole request object
-
+  
   // Use environment variable for secret key or default to 'your-secret-key'
   const secretKey = process.env.SECRET_KEY || 'your-secret-key';
 
