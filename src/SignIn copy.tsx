@@ -67,8 +67,12 @@ export default function SignIn() {
         const encryptedUserId = CryptoJS.AES.encrypt(userId, 'your-secret-key').toString();
         
         // Set the encrypted userId in cookies
-        Cookies.set('userId', encryptedUserId, { expires: 14 });
-        
+        Cookies.set('userId', encryptedUserId, {
+          expires: 14, // cookie expires in 14 days
+          secure: true, // Use only if served over HTTPS
+          sameSite: 'None', // Required if the frontend and backend are on different domains
+          path: '/', // Ensure it's available for all routes
+      });        
         console.log('User signed up successfully:', result);
         navigate('/profile');
       } else {

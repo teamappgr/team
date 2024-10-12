@@ -563,7 +563,7 @@ app.delete('/requests/:id', async (req, res) => {
   }
 });
 
-app.get('/profile',decryptUserIdMiddleware, async (req, res) => {
+app.get('/profile', async (req, res) => {
   const userId = req.decryptedUserId; // Use decrypted userId from the middleware
 
   if (!userId) {
