@@ -55,13 +55,10 @@ app.use(cors({
 }));
 
 const decryptUserIdMiddleware = (req, res, next) => {
-  
-  // Use environment variable for secret key or default to 'your-secret-key'
   const secretKey = process.env.SECRET_KEY || 'your-secret-key';
 
   let encryptedUserId;
 
-  // Check if encrypted userId exists in cookies, request params, or request body
   if (req.cookies.userId) {
     encryptedUserId = req.cookies.userId;
   } else if (req.params.userId) {
@@ -70,32 +67,27 @@ const decryptUserIdMiddleware = (req, res, next) => {
     encryptedUserId = req.body.userId;
   }
 
-  // If no encrypted userId is found, log a warning and proceed to the next middleware/route
   if (!encryptedUserId) {
     console.warn('No encrypted userId found in request.');
     return next();
   }
 
   try {
-    // Decrypt the userId
-    const bytes = CryptoJS.AES.decrypt(encryptedUserId, secretKey);
-    const decryptedUserId = bytes.toString(CryptoJS.enc.Utf8);
+    // Basic Base64 Decode for testing purposes
+    const decryptedUserId = Buffer.from(encryptedUserId, 'base64').toString('utf8');
 
-    // Check if decryption was successful
     if (!decryptedUserId) {
-      console.warn('Decryption failed: Invalid encrypted userId.');
       return res.status(400).json({ message: 'Invalid encrypted userId' });
     }
 
-    // Attach the decrypted userId to the request object for subsequent routes
     req.decryptedUserId = decryptedUserId;
-    next(); // Move to the next middleware/route
+    next();
   } catch (error) {
-    // Log the error and send a 500 response
     console.error('Error decrypting user ID:', error);
-    return res.status(500).json({ message: 'Error decrypting user ID' });
+    res.status(500).json({ message: 'Error decrypting user ID' });
   }
 };
+
 
 // Apply the middleware globally
 app.use(decryptUserIdMiddleware);
