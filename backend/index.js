@@ -55,8 +55,14 @@ app.use(cors({
 }));
 
 const decryptUserIdMiddleware = (req, res, next) => {
-  const secretKey = process.env.SECRET_KEY || 'your-secret-key';
+  // Log specific parts of the request to avoid crashing
+  console.log('Request Headers:', req.headers);
+  console.log('Request Cookies:', req.cookies);
+  console.log('Request Params:', req.params);
+  console.log('Request Body:', req.body);
 
+  const secretKey = process.env.SECRET_KEY || 'your-secret-key';
+  
   let encryptedUserId;
 
   if (req.cookies.userId) {
@@ -73,8 +79,9 @@ const decryptUserIdMiddleware = (req, res, next) => {
   }
 
   try {
-    // Basic Base64 Decode for testing purposes
-    const decryptedUserId = Buffer.from(encryptedUserId, 'base64').toString('utf8');
+    // Decrypt the userId
+    const bytes = CryptoJS.AES.decrypt(encryptedUserId, secretKey);
+    const decryptedUserId = bytes.toString(CryptoJS.enc.Utf8);
 
     if (!decryptedUserId) {
       return res.status(400).json({ message: 'Invalid encrypted userId' });
@@ -87,7 +94,6 @@ const decryptUserIdMiddleware = (req, res, next) => {
     res.status(500).json({ message: 'Error decrypting user ID' });
   }
 };
-
 
 // Apply the middleware globally
 app.use(decryptUserIdMiddleware);
