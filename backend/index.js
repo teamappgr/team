@@ -8,6 +8,7 @@ const bodyParser = require('body-parser');
 const upload = require('./cloudinary'); // Multer configuration for cloudinary
 const cookieParser = require('cookie-parser');
 const CryptoJS = require('crypto-js'); // Ensure this line is present
+const crypto = require('crypto');
 
 const PORT = process.env.PORT || 5000;
 const webpush = require('web-push'); // Add this line to import web-push
@@ -55,50 +56,7 @@ app.use(cors({
   credentials: true, // Allow credentials (cookies)
 }));
 
-// Middleware to decrypt userId from cookies or request body/params
-const decryptUserIdMiddleware = (req, res, next) => {
-  const secretKey = process.env.SECRET_KEY || 'your-secret-key'; // Use environment variable for secret key
-  console.log('Incoming request:', req.method, req.url);
-  console.log('Cookies:', req.cookies);
-  console.log('Request Params:', req.params);
-  console.log('Request Body:', req.body);
-  let encryptedUserId;
 
-  // Check if encrypted userId exists in cookies or request params/body
-  if (req.cookies.userId) {
-    encryptedUserId = req.cookies.userId;
-  } else if (req.params.userId) {
-    encryptedUserId = req.params.userId;
-  } else if (req.body.userId) {
-    encryptedUserId = req.body.userId;
-  }
-
-  // If no encrypted userId is found, proceed to the next middleware/route
-  if (!encryptedUserId) {
-    return next();
-  }
-
-  try {
-    // Decrypt the userId
-    const bytes = CryptoJS.AES.decrypt(encryptedUserId, secretKey);
-    const decryptedUserId = bytes.toString(CryptoJS.enc.Utf8);
-
-    // Check if decryption was successful
-    if (!decryptedUserId) {
-      return res.status(400).json({ message: 'Invalid encrypted userId' });
-    }
-
-    // Attach the decrypted userId to the request object so it's available in subsequent routes
-    req.decryptedUserId = decryptedUserId;
-    next();
-  } catch (error) {
-    console.error('Error decrypting user ID:', error);
-    res.status(500).json({ message: 'Error decrypting user ID' });
-  }
-};
-
-// Apply the middleware globally
-app.use(decryptUserIdMiddleware);
 
 // Database connection pool
 const pool = new Pool({
@@ -114,7 +72,7 @@ app.post('/signin', async (req, res) => {
 
   try {
     const result = await pool.query(
-      'SELECT id, password FROM users WHERE email = $1',
+      'SELECT id, password, encrypted_code FROM users WHERE email = $1', // Select encrypted_code
       [email]
     );
 
@@ -125,8 +83,6 @@ app.post('/signin', async (req, res) => {
       const match = await argon2.verify(user.password, password);
 
       if (match) {
-
-
         // If the user subscribes, insert into subscriptions table
         if (subscribe) {
           const existingSubscription = await pool.query(
@@ -144,7 +100,12 @@ app.post('/signin', async (req, res) => {
           }
         }
 
-        return res.status(200).json({ userId: user.id, message: 'Sign-in successful' });
+        // Return user ID and encrypted code (plain text)
+        return res.status(200).json({
+          userId: user.id,
+          encryptedCode: user.encrypted_code, // Send plain text of encrypted_code
+          message: 'Sign-in successful',
+        });
       } else {
         return res.status(401).json({ message: 'Invalid email or password' });
       }
@@ -157,7 +118,7 @@ app.post('/signin', async (req, res) => {
   }
 });
 
-// Sign-Up Endpoint
+
 app.post('/signup', upload.single('image'), async (req, res) => {
   const { firstName, lastName, email, phone, instagramAccount, password, university, gender, subscribe, endpoint, keys } = req.body;
   const imageUrl = req.file.path; // The URL of the uploaded image from Cloudinary
@@ -166,13 +127,16 @@ app.post('/signup', upload.single('image'), async (req, res) => {
     // Hash the password before storing it using argon2
     const hashedPassword = await argon2.hash(password);
 
+    // Generate a random string and encrypt it using a suitable algorithm
+    const randomCode = crypto.randomBytes(16).toString('hex'); // Generate a 16-byte random code
+    const encryptedCode = crypto.createHash('sha256').update(randomCode).digest('hex'); // Encrypt the code
+
     const result = await pool.query(
-      'INSERT INTO users (first_name, last_name, email, phone, instagram_account, password, image_url, university, gender) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id',
-      [firstName, lastName, email, phone, instagramAccount, hashedPassword, imageUrl, university, gender]
+      'INSERT INTO users (first_name, last_name, email, phone, instagram_account, password, image_url, university, gender, encrypted_code) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id',
+      [firstName, lastName, email, phone, instagramAccount, hashedPassword, imageUrl, university, gender, encryptedCode]
     );
 
-    const userId = result.rows[0].id;
-
+    const userId = result.rows[0].encrypted_code;
 
     // If the user subscribes, insert into subscriptions table
     if (subscribe) {
@@ -191,12 +155,33 @@ app.post('/signup', upload.single('image'), async (req, res) => {
       }
     }
 
-    return res.status(201).json({ userId, message: 'User created successfully' });
+    // Return the encrypted code instead of random code
+    return res.status(201).json({ userId, encryptedCode, message: 'User created successfully' });
   } catch (error) {
     console.error('Error during sign-up: ', error);
     return res.status(500).json({ message: 'Error during sign-up' });
   }
 });
+app.post('/check-email', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const result = await pool.query(
+      'SELECT id FROM users WHERE email = $1',
+      [email]
+    );
+
+    if (result.rowCount > 0) {
+      return res.status(200).json({ exists: true });
+    } else {
+      return res.status(200).json({ exists: false });
+    }
+  } catch (error) {
+    console.error('Error checking email:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 
 
 const slugify = require('slugify'); // Install slugify using npm
@@ -565,14 +550,15 @@ app.delete('/requests/:id', async (req, res) => {
 });
 
 app.get('/profile', async (req, res) => {
-  const userId = req.decryptedUserId; // Use decrypted userId from the middleware
+  const userId = req.cookies.userId; // Extract userId from cookies
 
   if (!userId) {
     return res.status(400).json({ message: 'User ID not provided' });
   }
 
   try {
-    const result = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
+    // Assuming you are looking for an encrypted user ID
+    const result = await pool.query('SELECT * FROM users WHERE encrypted_code = $1', [userId]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'User not found' });
@@ -586,13 +572,13 @@ app.get('/profile', async (req, res) => {
 });
 
 
-app.put('/profile', async (req, res) => {
-  const userId = req.decryptedUserId; // Use decrypted userId
+app.put('/profile/:userId', async (req, res) => {
+  const userId = req.params; // Use decrypted userId
   const { first_name, last_name, email, phone, instagram_account } = req.body;
 
   try {
     const result = await pool.query(
-      'UPDATE users SET first_name = $1, last_name = $2, email = $3, phone = $4, instagram_account = $5 WHERE id = $6',
+      'UPDATE users SET first_name = $1, last_name = $2, email = $3, phone = $4, instagram_account = $5 WHERE encrypted_code = $6',
       [first_name, last_name, email, phone, instagram_account, userId]
     );
 
@@ -693,51 +679,54 @@ app.delete('/subscriptions/:userId', async (req, res) => {
 });
 
 
-app.post('/subscribe', async (req, res) => {
+app.post('/subscribe/:userId', async (req, res) => {
+  const { userId } = req.params;
   const { endpoint, keys } = req.body;
-  const userId = parseInt(req.decryptedUserId); 
-  // Log the received subscription data for debugging
+
+  // Log the received data for debugging
+  console.log("Received data:", { userId, endpoint, keys });
 
   // Validate the incoming data
   if (!userId || !endpoint || !keys) {
-    return res.status(400).json({ message: 'Invalid subscription data.' });
+      console.log("Validation failed: Missing data", { userId, endpoint, keys });
+      return res.status(400).json({ message: 'Invalid subscription data.' });
   }
 
   try {
-    // Check if the user already has a subscription
-    const existingSubscription = await pool.query(
-      'SELECT * FROM subscriptions WHERE user_id = $1',
-      [userId]
-    );
+      // Check if the user already has a subscription
+      const existingSubscription = await pool.query(
+          'SELECT * FROM subscriptions WHERE user_id = $1',
+          [userId]
+      );
 
-    if (existingSubscription.rowCount > 0) {
-      // If subscription exists, update the existing subscription with new data
+      if (existingSubscription.rowCount > 0) {
+          // If subscription exists, update the existing subscription with new data
+          const result = await pool.query(
+              'UPDATE subscriptions SET endpoint = $1, keys = $2 WHERE user_id = $3',
+              [endpoint, JSON.stringify(keys), userId]
+          );
+
+          if (result.rowCount > 0) {
+              return res.status(200).json({ message: 'Subscription updated successfully.' });
+          } else {
+              return res.status(400).json({ message: 'Failed to update subscription.' });
+          }
+      }
+
+      // If no subscription exists, insert a new one
       const result = await pool.query(
-        'UPDATE subscriptions SET endpoint = $1, keys = $2 WHERE user_id = $3',
-        [endpoint, JSON.stringify(keys), userId]
+          'INSERT INTO subscriptions (user_id, endpoint, keys) VALUES ($1, $2, $3)',
+          [userId, endpoint, JSON.stringify(keys)]
       );
 
       if (result.rowCount > 0) {
-        return res.status(200).json({ message: 'Subscription updated successfully.' });
+          return res.status(201).json({ message: 'Subscribed successfully!' });
       } else {
-        return res.status(400).json({ message: 'Failed to update subscription.' });
+          return res.status(400).json({ message: 'Failed to subscribe user.' });
       }
-    }
-
-    // If no subscription exists, insert a new one
-    const result = await pool.query(
-      'INSERT INTO subscriptions (user_id, endpoint, keys) VALUES ($1, $2, $3)',
-      [userId, endpoint, JSON.stringify(keys)]
-    );
-
-    if (result.rowCount > 0) {
-      res.status(201).json({ message: 'Subscribed successfully!' });
-    } else {
-      res.status(400).json({ message: 'Failed to subscribe user.' });
-    }
   } catch (error) {
-    console.error('Error handling subscription:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
+      console.error('Error handling subscription:', error);
+      res.status(500).json({ message: 'Internal Server Error' });
   }
 });
 

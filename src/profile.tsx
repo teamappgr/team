@@ -241,7 +241,9 @@ const Profile = () => {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${process.env.REACT_APP_API}profile`, {
+      const userId = Cookies.get('userId'); // Get the userId from the cookies
+
+      const response = await fetch(`${process.env.REACT_APP_API}profile/${userId}`, {
         method: 'PUT',
         credentials: 'include', // Include cookies in the request
         headers: {

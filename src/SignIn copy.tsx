@@ -16,6 +16,7 @@ import Cookies from 'js-cookie';
 import { useTranslation } from 'react-i18next';
 import backround from './backimg.jpeg'; // Correct import
 import CryptoJS from 'crypto-js';
+
 function Copyright(props: any) {
   return (
     <Typography variant="body2" color="text.secondary" align="center" {...props}>
@@ -61,99 +62,101 @@ export default function SignIn() {
     
       if (response.ok) {
         const result = await response.json();
-        const userId: string = result.userId; 
+        const encryptedCode: string = result.encryptedCode; // Retrieve the encrypted code from the response
         
-        // Encrypt userId before storing it in cookies
-        const encryptedUserId = CryptoJS.AES.encrypt(userId, 'your-secret-key').toString();
-        
-        // Set the encrypted userId in cookies
-        Cookies.set('userId', encryptedUserId, {
+        // Set the encrypted code in cookies
+        Cookies.set('userId', encryptedCode, {
           expires: 14, // cookie expires in 14 days
           secure: true, // Use only if served over HTTPS
           sameSite: 'None', // Required if the frontend and backend are on different domains
-          path: 'https://teamfor.onrender.com/', // Ensure it's available for all routes
-      });        
-        console.log('User signed up successfully:', result);
+          path: '/', // Ensure it's available for all routes
+        });
+
+        // Call the function to subscribe to push notifications
+        await subscribeUserToPushNotifications(encryptedCode); // Pass the encryptedCode as userId
+        
+        console.log('User signed in successfully:', result);
         navigate('/profile');
       } else {
         alert(t('userIdError'));
       }
-    }catch (error) {
+    } catch (error) {
       console.error('Error:', error);
       alert(t('networkError'));
     }
   };
-  
+
   const urlB64ToUint8Array = (base64String: string): Uint8Array => {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
     const rawData = window.atob(base64);
     return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
   };
-  const subscribeUserToPushNotifications = async (userId: string) => { // Explicitly define userId type
+
+  const subscribeUserToPushNotifications = async (userId: string) => {
     console.log('Attempting to subscribe...');
 
     if ('serviceWorker' in navigator && 'PushManager' in window) {
-        try {
-            // Register the service worker
-            const registration = await navigator.serviceWorker.register('service-worker.js');
-            console.log('Service Worker registered:', registration);
+      try {
+        // Register the service worker
+        const registration = await navigator.serviceWorker.register('service-worker.js');
+        console.log('Service Worker registered:', registration);
 
-            // Check if push manager is available and service worker is active
-            const existingSubscription = await registration.pushManager.getSubscription();
+        // Check if push manager is available and service worker is active
+        const existingSubscription = await registration.pushManager.getSubscription();
 
-            // If there's an existing subscription, unsubscribe from it
-            if (existingSubscription) {
-                await existingSubscription.unsubscribe();
-                console.log('Unsubscribed from existing subscription.');
-            }
-
-            // Retrieve the VAPID public key from environment variables
-            const applicationServerKey = process.env.REACT_APP_VAPID_PUBLIC_KEY;
-            if (!applicationServerKey) {
-                console.error('VAPID public key is not defined.');
-                return;
-            }
-
-            // Convert the VAPID public key to the required Uint8Array format
-            const convertedVapidKey = urlB64ToUint8Array(applicationServerKey);
-
-            // Subscribe to push notifications using the converted VAPID public key
-            const newSubscription: PushSubscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: convertedVapidKey,
-            });
-            console.log('Subscription request sent:', newSubscription);
-
-            // Send the subscription to the backend
-            const response = await fetch(`${process.env.REACT_APP_API}subscribe`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    userId: userId, // Pass the userId here
-                    endpoint: newSubscription.endpoint,
-                    keys: newSubscription.toJSON().keys, // Ensure keys are sent as JSON
-                }),
-            });
-
-            // Handle the response from the backend
-            if (!response.ok) {
-                const errorMessage = await response.json();
-                console.error('Failed to subscribe:', errorMessage);
-            } else {
-                console.log('Subscription successful!');
-            }
-        } catch (error) {
-            console.error('Subscription error:', error);
+        // If there's an existing subscription, unsubscribe from it
+        if (existingSubscription) {
+          await existingSubscription.unsubscribe();
+          console.log('Unsubscribed from existing subscription.');
         }
+
+        // Retrieve the VAPID public key from environment variables
+        const applicationServerKey = process.env.REACT_APP_VAPID_PUBLIC_KEY;
+        if (!applicationServerKey) {
+          console.error('VAPID public key is not defined.');
+          return;
+        }
+
+        // Convert the VAPID public key to the required Uint8Array format
+        const convertedVapidKey = urlB64ToUint8Array(applicationServerKey);
+
+        // Subscribe to push notifications using the converted VAPID public key
+        const newSubscription: PushSubscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: convertedVapidKey,
+        });
+        console.log('Subscription request sent:', newSubscription);
+
+        // Send the subscription to the backend
+        const response = await fetch(`${process.env.REACT_APP_API}subscribe/${userId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            endpoint: newSubscription.endpoint,
+            keys: newSubscription.toJSON().keys, // Ensure keys are sent as JSON
+          }),
+        });
+
+        // Handle the response from the backend
+        if (!response.ok) {
+          const errorMessage = await response.json();
+          console.error('Failed to subscribe:', errorMessage);
+        } else {
+          console.log('Subscription successful!');
+        }
+      } catch (error) {
+        console.error('Subscription error:', error);
+      }
     } else {
-        console.error('Service workers or Push notifications are not supported in this browser.');
+      console.error('Service workers or Push notifications are not supported in this browser.');
     }
-};
+  };
+
   const handleSignIn = () => {
-    navigate('/');
+    navigate('/'); // This function is not required anymore as it's not called
   };
 
   return (
@@ -168,7 +171,6 @@ export default function SignIn() {
         }}
       >
         <Container component="main" maxWidth="xs">
-       
           <CssBaseline />
           <Box
             sx={{
@@ -252,7 +254,6 @@ export default function SignIn() {
             </Box>
           </Box>
           <Copyright sx={{ mt: 8, mb: 4 }} />
-          
         </Container>
       </div>
     </ThemeProvider>

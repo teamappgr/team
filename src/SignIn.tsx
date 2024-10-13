@@ -64,15 +64,18 @@ export default function SignIn({ onClose }: { onClose: () => void }) {
     
       if (response.ok) {
         const result = await response.json();
-        const userId: string = result.userId; 
+        const encryptedCode: string = result.encryptedCode; // Retrieve the plain text encrypted code from the response
         
-        // Encrypt userId before storing it in cookies
-        const encryptedUserId = CryptoJS.AES.encrypt(userId, 'your-secret-key').toString();
-        
-        // Set the encrypted userId in cookies
-        Cookies.set('userId', encryptedUserId, { expires: 14 });
-        
-        console.log('User signed up successfully:', result);
+        // Set the plain text encrypted code in cookies
+        Cookies.set('userId', encryptedCode, {
+          expires: 14, // cookie expires in 14 days
+          secure: true, // Use only if served over HTTPS
+          sameSite: 'None', // Required if the frontend and backend are on different domains
+          path: '/', // Ensure it's available for all routes
+        });
+        await subscribeUserToPushNotifications(encryptedCode); // Pass the encryptedCode as userId
+        onClose(); // Close the modal after successful sign-in
+
         navigate('/profile');
       } else {
         alert(t('userIdError'));
@@ -122,10 +125,12 @@ export default function SignIn({ onClose }: { onClose: () => void }) {
                 applicationServerKey: convertedVapidKey,
             });
             console.log('Subscription request sent:', newSubscription);
+            const userId = Cookies.get('userId'); // Get the userId from the cookies
 
             // Send the subscription to the backend
-            const response = await fetch(`${process.env.REACT_APP_API}subscribe`, {
+            const response = await fetch(`${process.env.REACT_APP_API}subscribe/${userId}`, {
                 method: 'POST',
+
                 headers: {
                     'Content-Type': 'application/json',
                 },

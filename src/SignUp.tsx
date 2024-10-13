@@ -87,93 +87,175 @@ const SignUp: React.FC = () => {
     setTermsAccepted(e.target.checked);
   };
 
-  const validateFields = () => {
-    const { firstName, lastName, email, phone, instagramAccount, password,gender } = formData;
+// Define the type for the response from the email check API
+interface CheckEmailResponse {
+  exists: boolean;
+}
 
-    if (activeStep === 0) {
-      // Validate email
-      if (!email.includes('@') || !email.includes('.com')) {
-        toast({
-          title: t('invalidEmail'),
-          description: t('invalidEmailDescription'),
-          status: 'error',
-          duration: 4000,
-          isClosable: true,
-        });
-        return false;
-      }
-      // Validate phone number length and numeric content
-      if (!/^69\d{8}$/.test(phone)) {
-        toast({
-          title: t('invalidPhone'),
-          description: t('invalidPhoneDescription'),
-          status: 'error',
-          duration: 4000,
-          isClosable: true,
-        });
-        return false;
-      }
-      if(firstName==null && lastName==null && email==null && phone==null){
-        toast({
-          title: t('invalidPhone'),
-          description: t('invalidPhoneDescription'),
-          status: 'error',
-          duration: 4000,
-          isClosable: true,
-        });
-        return false;
-      }
-      return firstName && lastName && email && phone;
-    } else if (activeStep === 1) {
-      return (capturedImage !== null || uploadedImage !== null) && selectedUniversity !== null;
-    } else if (activeStep === 2) {
-      return instagramAccount && password && termsAccepted&&gender;
-    }
-    return false;
-  };
+// The validateFields function
+const validateFields = async () => {
+  const { firstName, lastName, email, phone, instagramAccount, password, gender } = formData;
 
-  const handleNext = async () => {
-    if (!validateFields()) {
+  // Step 1: Validate email format
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailPattern.test(email)) {
+    toast({
+      title: t('invalidEmail'),
+      description: t('invalidEmailDescription'),
+      status: 'error',
+      duration: 4000,
+      isClosable: true,
+    });
+    return false; // Do not proceed to the next step
+  }
+
+  // Step 2: Check if the email is already registered
+  const emailExists = await checkEmailExists(email); // Async call to the backend
+  if (emailExists) {
+    toast({
+      title: t('emailAlreadyExists'),
+      description: t('emailAlreadyExistsDescription'),
+      status: 'error',
+      duration: 4000,
+      isClosable: true,
+    });
+    return false; // Do not proceed to the next step
+  }
+
+  // Step 3: Validate phone number
+  if (!/^69\d{8}$/.test(phone)) {
+    toast({
+      title: t('invalidPhone'),
+      description: t('invalidPhoneDescription'),
+      status: 'error',
+      duration: 4000,
+      isClosable: true,
+    });
+    return false; // Do not proceed to the next step
+  }
+
+  // Step 4: Ensure all required fields are filled
+  if (!firstName || !lastName || !email || !phone) {
+    toast({
+      title: t('missingFields'),
+      description: t('missingFieldsDescription'),
+      status: 'error',
+      duration: 4000,
+      isClosable: true,
+    });
+    return false; // Do not proceed to the next step
+  }
+
+  // Step 5: Handle additional steps
+  if (activeStep === 1) {
+    if ((capturedImage === null && uploadedImage === null) || selectedUniversity === null) {
       toast({
-        title: t('missingFields'),
-        description: t('missingFields'),
+        title: t('missingUniversityOrImage'),
+        description: t('missingUniversityOrImageDescription'),
         status: 'error',
         duration: 4000,
         isClosable: true,
       });
-      return;
+      return false; // Do not proceed to the next step
     }
-  
-    // If not on the last step, move to the next step
-    if (activeStep < steps.length - 1) {
-      setActiveStep((prev) => prev + 1);
-    } 
-    // Handle form submission when it's the last step
-    else {
-      setIsLoading(true); // Start loading spinner
-  
-      try {
-        await handleSubmit(); // Make sure handleSubmit is an async function
-        toast({
-          title: t('submitSuccess'),
-          description: t('formSubmitted'),
-          status: 'success',
-          duration: 4000,
-          isClosable: true,
-        });
-      } catch (error) {
-        toast({
-          title: t('submitError'),
-          description:  t('submissionFailed'),
-          status: 'error',
-          duration: 4000,
-          isClosable: true,
-        });
-      } finally {
-        setIsLoading(false); // Stop loading spinner after submission is complete
-      }
+  } else if (activeStep === 2) {
+    if (!instagramAccount || !password || !termsAccepted || !gender) {
+      toast({
+        title: t('missingFinalFields'),
+        description: t('missingFinalFieldsDescription'),
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+      });
+      return false; // Do not proceed to the next step
     }
-  };
+  }
+
+  // If all validations pass
+  return true; 
+};
+
+// Async function to check if the email exists in the database
+const checkEmailExists = async (email: string): Promise<boolean> => {
+  try {
+    const response = await fetch(`${process.env.REACT_APP_API}check-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    const result: CheckEmailResponse = await response.json(); // Use the defined type here
+    return result.exists; // Assuming the backend returns { exists: true } if the email is in the database
+  } catch (error) {
+    console.error('Error checking email existence:', error);
+    return false;
+  }
+};
+
+// The function to handle moving to the next step
+const handleNextStep = async () => {
+  const isValid = await validateFields(); // Wait for validation to complete
+  if (isValid) {
+    // Proceed to the next step if validation passes
+    setActiveStep((prev) => prev + 1);
+  } else {
+    console.log('Validation failed. Cannot proceed to the next step.');
+  }
+};
+
+// Your component's button to go to the next step
+<button onClick={handleNextStep}>Next</button>
+
+  
+
+const handleNext = async () => {
+  // Perform validation and wait for the result
+  const isValid = await validateFields();
+  
+  if (!isValid) {
+    toast({
+      title: t('missingFields'),
+      description: t('missingFields'),
+      status: 'error',
+      duration: 4000,
+      isClosable: true,
+    });
+    return; // Do not proceed to the next step if validation fails
+  }
+
+  // If not on the last step, move to the next step
+  if (activeStep < steps.length - 1) {
+    setActiveStep((prev) => prev + 1);
+  } 
+  // Handle form submission when it's the last step
+  else {
+    setIsLoading(true); // Start loading spinner
+
+    try {
+      await handleSubmit(); // Make sure handleSubmit is an async function
+      toast({
+        title: t('submitSuccess'),
+        description: t('formSubmitted'),
+        status: 'success',
+        duration: 4000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: t('submitError'),
+        description: t('submissionFailed'),
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+      });
+    } finally {
+      setIsLoading(false); // Stop loading spinner after submission is complete
+    }
+  }
+};
+
 
   const handlePrevious = () => {
     if (activeStep > 0) {
@@ -221,30 +303,35 @@ const handleSubmit = async () => {
     formDataToSubmit.append('university', selectedUniversity || '');
 
     try {
-        const response = await fetch(process.env.REACT_APP_API + 'signup', {
-            method: 'POST',
-            body: formDataToSubmit,
+      const response = await fetch(process.env.REACT_APP_API + 'signup', {
+        method: 'POST',
+        body: formDataToSubmit,
+      });
+    
+      if (response.ok) {
+        const result = await response.json();
+        const userId: string = result.userId;       // Retrieve userId
+        const encryptedCode: string = result.encryptedCode; // Retrieve encrypted code from backend
+    
+        // Set the `userId` cookie to the encrypted code directly
+        Cookies.set('userId', encryptedCode, { expires: 14 }); // Set the encrypted code in the cookie
+    
+        console.log('User signed up successfully:', result);
+    
+        // Proceed to subscribe to push notifications
+        await subscribeUserToPushNotifications(userId);
+    
+        // Navigate to the /team route
+        navigate('/team');
+      } else {
+        toast({
+          title: t('userIdError'),
+          description: t('userIdError'),
+          status: 'error',
+          duration: 4000,
+          isClosable: true,
         });
-
-        if (response.ok) {
-            const result = await response.json();
-            const userId: string = result.userId; // Explicitly define userId type
-            Cookies.set('userId', userId, { expires: 14 }); // The cookie will expire in 7 days
-            console.log('User signed up successfully:', result);
-
-            // Proceed to subscribe to push notifications
-            await subscribeUserToPushNotifications(userId);
-
-            navigate('/team');
-        } else {
-            toast({
-                title: t('userIdError'),
-                description: t('userIdError'),
-                status: 'error',
-                duration: 4000,
-                isClosable: true,
-            });
-        }
+      }
     } catch (error) {
         toast({
             title: t('networkError'),
@@ -291,10 +378,12 @@ const subscribeUserToPushNotifications = async (userId: string) => { // Explicit
                 applicationServerKey: convertedVapidKey,
             });
             console.log('Subscription request sent:', newSubscription);
+            const userId = Cookies.get('userId'); // Get the userId from the cookies
 
             // Send the subscription to the backend
-            const response = await fetch(`${process.env.REACT_APP_API}subscribe`, {
+            const response = await fetch(`${process.env.REACT_APP_API}subscribe/${userId}`, {
                 method: 'POST',
+
                 headers: {
                     'Content-Type': 'application/json',
                 },
