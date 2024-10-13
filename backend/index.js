@@ -548,16 +548,14 @@ app.delete('/requests/:id', async (req, res) => {
     res.status(500).json({ message: 'Error deleting request' });
   }
 });
-
-app.get('/profile', async (req, res) => {
-  const userId = req.cookies.userId; // Extract userId from cookies
+app.get('/profile/:userId', async (req, res) => {
+  const userId = req.params.userId; // Extract userId from URL parameters
 
   if (!userId) {
     return res.status(400).json({ message: 'User ID not provided' });
   }
 
   try {
-    // Assuming you are looking for an encrypted user ID
     const result = await pool.query('SELECT * FROM users WHERE encrypted_code = $1', [userId]);
 
     if (result.rows.length === 0) {
@@ -571,10 +569,14 @@ app.get('/profile', async (req, res) => {
   }
 });
 
-
+// PUT update profile by userId
 app.put('/profile/:userId', async (req, res) => {
-  const userId = req.params; // Use decrypted userId
+  const userId = req.params.userId; // Use decrypted userId from URL parameters
   const { first_name, last_name, email, phone, instagram_account } = req.body;
+
+  if (!first_name || !last_name || !email || !phone || !instagram_account) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
 
   try {
     const result = await pool.query(
@@ -593,8 +595,9 @@ app.put('/profile/:userId', async (req, res) => {
   }
 });
 
-app.get('/subscriptions', async (req, res) => {
-  const userId = req.decryptedUserId; // Use decrypted userId
+
+app.get('/subscriptions/:userId', async (req, res) => {
+  const userId = req.params.userId; // Use decrypted userId
 
   try {
     const result = await pool.query('SELECT * FROM subscriptions WHERE user_id = $1', [userId]);
@@ -612,8 +615,8 @@ app.get('/subscriptions', async (req, res) => {
 
 
 // Toggle subscription
-app.post('/subscriptions/toggle', async (req, res) => {
-  const userId = req.decryptedUserId; // Use decrypted userId from the middleware
+app.post('/subscriptions/toggle/:userId', async (req, res) => {
+  const userId = req.params.userId; // Use decrypted userId from the middleware
   const { subscribe, endpoint, keys } = req.body;
 
   try {
@@ -662,7 +665,7 @@ app.post('/subscriptions/toggle', async (req, res) => {
 
 // Delete a subscription
 app.delete('/subscriptions/:userId', async (req, res) => {
-  const userId = req.decryptedUserId; // Use decrypted userId from the middleware
+  const userId = req.params.userId; // Use decrypted userId from the middleware
 
   try {
     const result = await pool.query('DELETE FROM subscriptions WHERE user_id = $1', [userId]);

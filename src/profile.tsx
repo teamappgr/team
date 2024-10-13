@@ -81,9 +81,10 @@ const Profile = () => {
       }
 
       try {
-        const response = await fetch(`${process.env.REACT_APP_API}profile`, {
+        const userId = Cookies.get('userId'); // Get the userId from the cookies
+
+        const response = await fetch(`${process.env.REACT_APP_API}profile/${userId}`, {
           method: 'GET',
-          credentials: 'include', // Ensure cookies are included with request
           headers: {
             'Content-Type': 'application/json',
           },
@@ -95,9 +96,8 @@ const Profile = () => {
         setProfileData(data);
 
         // Fetch subscription status
-        const subscriptionResponse = await fetch(`${process.env.REACT_APP_API}subscriptions`, {
+        const subscriptionResponse = await fetch(`${process.env.REACT_APP_API}subscriptions/${userId}`, {
           method: 'GET',
-          credentials: 'include', // Include cookies in the request
           headers: {
             'Content-Type': 'application/json',
           },
@@ -184,7 +184,7 @@ const Profile = () => {
           });
   
           // Send subscription data to backend
-          const response = await fetch(`${process.env.REACT_APP_API}subscriptions/toggle`, {
+          const response = await fetch(`${process.env.REACT_APP_API}subscriptions/toggle/${userId}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -205,7 +205,7 @@ const Profile = () => {
         }
       } else {
         // Unsubscribe
-        const response = await fetch(`${process.env.REACT_APP_API}subscriptions/toggle`, {
+        const response = await fetch(`${process.env.REACT_APP_API}subscriptions/toggle/${userId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
