@@ -186,9 +186,9 @@ app.post('/check-email', async (req, res) => {
 
 const slugify = require('slugify'); // Install slugify using npm
 
-app.post('/ads', async (req, res) => {
+app.post('/ads/:userId', async (req, res) => {
   const { title, description, min, max, date, time,  info, autoreserve } = req.body;
-  const userId=req.decryptedUserId;
+  const userId=req.params.userId;
   // Check if min and max are valid integers
   if (!Number.isInteger(min) || !Number.isInteger(max)) {
     return res.status(400).json({ message: 'Min and Max must be integers.' });
@@ -196,7 +196,7 @@ app.post('/ads', async (req, res) => {
 
   try {
     // Check if the user is verified
-    const userResult = await pool.query('SELECT first_name, verified FROM users WHERE id = $1', [userId]);
+    const userResult = await pool.query('SELECT first_name, verified FROM users WHERE encrypted_code = $1', [userId]);
 
     if (userResult.rows.length === 0 || !userResult.rows[0].verified) {
       return res.status(403).json({ message: 'Your account is not verified.' });
@@ -233,8 +233,8 @@ app.post('/ads', async (req, res) => {
 });
 
 
-app.get('/ads1', async (req, res) => {
-  const userId = req.decryptedUserId; // Use decrypted userId from middleware
+app.get('/ads1/:userId', async (req, res) => {
+  const userId = req.params.userId; // Use decrypted userId from middleware
 
   if (!userId) {
     return res.status(400).json({ message: 'User ID is required' });
@@ -298,7 +298,7 @@ app.get('/ads/:id/requests', async (req, res) => {
 });
 
 app.get('/api/requests', async (req, res) => {
-  const userId = req.decryptedUserId// Use decrypted userId from middleware
+  const userId = req.params.userId// Use decrypted userId from middleware
 
   if (!userId) {
     return res.status(400).json({ message: 'User ID not provided' });
@@ -922,11 +922,11 @@ app.post('/unsubscribe', async (req, res) => {
   }
 });
 
-app.get('/users', async (req, res) => {
-  const user_id = parseInt(req.decryptedUserId); // Use decrypted userId and parse it properly
+app.get('/users/:userId', async (req, res) => {
+  const user_id = req.params.userId; // Use decrypted userId and parse it properly
 
   try {
-    const result = await pool.query('SELECT * FROM users WHERE id = $1', [user_id]);
+    const result = await pool.query('SELECT * FROM users WHERE encrypted_code = $1', [user_id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'User not found' });

@@ -183,7 +183,7 @@ const MyEvents: React.FC = () => {
       }
 
       try {
-        const response = await fetch(`${process.env.REACT_APP_API}ads1`, {
+        const response = await fetch(`${process.env.REACT_APP_API}ads1/${userId}`, {
           method: 'GET',
           credentials: 'include', // Include cookies with request
         });
@@ -216,17 +216,24 @@ const MyEvents: React.FC = () => {
     const fetchRequests = async () => {
       const userId = Cookies.get('userId');
       try {
-        const response = await fetch(`${process.env.REACT_APP_API}api/requests`, {
+        const response = await fetch(`${process.env.REACT_APP_API}api/requests/${userId}`, {
           method: 'GET',
           credentials: 'include', // Include cookies with request
         });
         const data = await response.json();
-        setRequests(data);
+  
+        // Ensure that the fetched data is an array
+        if (Array.isArray(data)) {
+          setRequests(data);
+        } else {
+          setRequests([]); // Set an empty array if the fetched data is not an array
+        }
       } catch (error) {
         console.error("Error fetching requests:", error);
+        setRequests([]); // Ensure it's always an array, even in case of error
       }
     };
-
+  
     fetchRequests();
     fetchMyEvents();
   }, [toast],);

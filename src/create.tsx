@@ -66,6 +66,8 @@ const CreateAd: React.FC = () => {
 
   const fetchUserData = async (userId: string) => {
     try {
+      const userId = Cookies.get('userId');
+
       const response = await fetch(`${process.env.REACT_APP_API}users/${userId}`);
       if (!response.ok) throw new Error('Failed to fetch user data');
       const userData = await response.json();
@@ -150,9 +152,8 @@ const CreateAd: React.FC = () => {
     };
   
     try {
-      const response = await fetch(`${process.env.REACT_APP_API}ads`, {
+      const response = await fetch(`${process.env.REACT_APP_API}ads/${userId}`, {
         method: 'POST',
-        credentials: 'include', // Include cookies for authentication
         headers: {
           'Content-Type': 'application/json',
         },
