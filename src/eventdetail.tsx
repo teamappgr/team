@@ -124,7 +124,7 @@ const AdDetail: React.FC = () => {
         return;
       }
 
-      const response = await fetch(`${process.env.REACT_APP_API}requests`, {
+      const response = await fetch(`${process.env.REACT_APP_API}requests/${userId}`, {
         method: 'POST',
         credentials: 'include', // Include cookies for authentication
         headers: {

@@ -752,7 +752,7 @@ app.post('/send-notification', async (req, res) => {
   }
 });
 
-app.post('/requests', async (req, res) => {
+app.post('/requests/:userId', async (req, res) => {
   const { ad_id } = req.body; // Get ad_id from the request body
   const user_id =  req.params.userId; // Use decrypted userId and parse it properly
 
