@@ -47,6 +47,7 @@ console.log('VAPID Keys from .env:', { publicKey: VAPID_PUBLIC_KEY, privateKey: 
 app.use(cookieParser()); // Use cookie-parser middleware
 app.use(express.json());
 app.use(bodyParser.json()); // For parsing application/json
+app.set('trust proxy', 1); // Trust Render's proxy
 
 // CORS middleware
 app.use(cors({
