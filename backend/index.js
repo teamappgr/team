@@ -17,7 +17,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: 'https://teamappgr.github.io/team', // Allow requests from your frontend
+    origin: process.env.PUBLIC_URL || 'http://localhost:3000', // Allow requests from your frontend
     methods: ['GET', 'POST', 'DELETE', 'PUT'], // Specify allowed methods
     credentials: true, // Allow credentials (cookies)
   },
@@ -51,13 +51,13 @@ app.set('trust proxy', 1); // Trust Render's proxy
 
 // CORS middleware
 app.use(cors({
-  origin: 'https://teamappgr.github.io/team', // Specify the frontend URL
+  origin: process.env.PUBLIC_URL || 'http://localhost:3000', // Specify the frontend URL
   credentials: true, // Allow credentials (cookies)
 }));
 
 // Middleware to decrypt userId from cookies or request body/params
 const decryptUserIdMiddleware = (req, res, next) => {
-  const secretKey = process.env.SECRET_KEY || 'secret-key'; // Use environment variable for secret key
+  const secretKey = process.env.SECRET_KEY || 'your-secret-key'; // Use environment variable for secret key
   console.log('Incoming request:', req.method, req.url);
   console.log('Cookies:', req.cookies);
   console.log('Request Params:', req.params);
