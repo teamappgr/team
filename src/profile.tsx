@@ -83,7 +83,10 @@ const Profile = () => {
       try {
         const response = await fetch(`${process.env.REACT_APP_API}profile`, {
           method: 'GET',
-          credentials: 'include', // Include cookies with request
+          credentials: 'include', // Ensure cookies are included with request
+          headers: {
+            'Content-Type': 'application/json',
+          },
         });
         if (!response.ok) {
           throw new Error('Failed to fetch user data');
