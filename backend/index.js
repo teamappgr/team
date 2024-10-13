@@ -306,7 +306,7 @@ app.get('/api/requests', async (req, res) => {
 
   try {
     // Query to fetch requests for the user
-    const requestResult = await pool.query('SELECT * FROM requests WHERE user_id = $1', [userId]);
+    const requestResult = await pool.query('SELECT * FROM requests WHERE encrypted_code = $1', [userId]);
     const requests = requestResult.rows;
 
     // For each request, join with ads to get the necessary fields
@@ -754,7 +754,7 @@ app.post('/send-notification', async (req, res) => {
 
 app.post('/requests', async (req, res) => {
   const { ad_id } = req.body; // Get ad_id from the request body
-  const user_id = parseInt(req.decryptedUserId); // Use decrypted userId and parse it properly
+  const user_id =  req.params.userId; // Use decrypted userId and parse it properly
 
   if (!user_id || !ad_id) {
     return res.status(400).json({ message: 'User ID or Ad ID not provided' });
