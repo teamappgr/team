@@ -64,7 +64,7 @@ export default function SignIn() {
         const userId: string = result.userId; 
         
         // Encrypt userId before storing it in cookies
-        const encryptedUserId = CryptoJS.AES.encrypt(userId, 'secret-key').toString();
+        const encryptedUserId = CryptoJS.AES.encrypt(userId, 'your-secret-key').toString();
         
         // Set the encrypted userId in cookies
         Cookies.set('userId', encryptedUserId, {
