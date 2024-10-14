@@ -1019,7 +1019,7 @@ app.get('/messages/:slug/:userId', async (req, res) => {
 
       // Fetch messages for the group
       const messagesResult = await pool.query(
-          `SELECT m.message_id, m.message_text, m.sent_at, u.id as sender_id, u.first_name, u.last_name 
+          `SELECT m.message_id, m.message_text, m.sent_at, u.encrypted_code as sender_id, u.first_name, u.last_name 
            FROM Messages m
            JOIN Users u ON m.sender_id = u.encrypted_code 
            WHERE m.group_id = $1 
@@ -1160,7 +1160,7 @@ io.on('connection', (socket) => {
       const sentAt = insertResult.rows[0].sent_at;
 
       // Fetch the sender's first name and last name
-      const userResult = await pool.query(`SELECT first_name, last_name FROM Users WHERE id = $1`, [senderId]);
+      const userResult = await pool.query(`SELECT first_name, last_name FROM Users WHERE encrypted_code = $1`, [senderId]);
       if (userResult.rowCount === 0) {
         return console.error('User not found');
       }

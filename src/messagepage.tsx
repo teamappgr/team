@@ -35,9 +35,9 @@ const Messages: React.FC = () => {
   const [groupName, setGroupName] = useState(''); // Group name
   const [groupMembers, setGroupMembers] = useState<any[]>([]); // Group members
   const [userInfo, setUserInfo] = useState<{ first_name: string; last_name: string } | null>(null); // User info
-  const [decryptedUserId, setDecryptedUserId] = useState<string | null>(null); // Decrypted user ID state
   const messagesEndRef = useRef<HTMLDivElement | null>(null); // Reference for scrolling to the bottom
   const secretKey = process.env.REACT_APP_SECRET_KEY || 'your-secret-key'; // Use your actual secret key
+  const userId = Cookies.get('userId');
 
 
   useEffect(() => {
@@ -143,10 +143,11 @@ const Messages: React.FC = () => {
       socket.emit('leaveGroup', { slug, userId: userId });
       socket.off('newMessage'); // Clean up listener on component unmount
     };
-  }, [slug, decryptedUserId, navigate]);
+  }, [slug, userId, navigate]);
 
   // Scroll to the bottom of the messages container when new messages arrive
   useEffect(() => {
+    
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
@@ -174,7 +175,7 @@ const Messages: React.FC = () => {
       ...prevMessages,
       {
         message_text: newMessage,
-        sender_id: decryptedUserId, // Use the decrypted user ID internally
+        sender_id: userId, // Use the decrypted user ID internally
         created_at: moment().format('YYYY-MM-DD HH:mm:ss'),
         first_name: userInfo.first_name,
         last_name: userInfo.last_name,
@@ -241,11 +242,11 @@ const Messages: React.FC = () => {
       <Box flex="1" overflowY="auto" px={4} py={2}>
         <VStack align="start" spacing={4}>
           {messages.map((msg, idx) => (
-            <Box key={idx} alignSelf={msg.sender_id === decryptedUserId ? 'flex-end' : 'flex-start'}>
+            <Box key={idx} alignSelf={msg.sender_id === userId  ? 'flex-end' : 'flex-start'}>
               <Text fontSize="sm" color="gray.500">
                 {msg.first_name} {msg.last_name} - {formatDate(msg.created_at)}
               </Text>
-              <Text bg={msg.sender_id === decryptedUserId ? 'blue.200' : 'gray.200'} p={2} borderRadius="md">
+              <Text bg={msg.sender_id === userId ? 'blue.200' : 'gray.200'} p={2} borderRadius="md">
                 {msg.message_text}
               </Text>
             </Box>
