@@ -105,13 +105,14 @@ const AdDetail: React.FC = () => {
     }
 
     try {
-      const userResponse = await fetch(`${process.env.REACT_APP_API}profile`, {
+      
+      const userResponse = await fetch(`${process.env.REACT_APP_API}profile/${userId}`, {
         method: 'GET', // Specify the request method
-        credentials: 'include', // Include cookies for authentication
         headers: {
           'Content-Type': 'application/json', // Specify the content type
         },
-      });      const userData = await userResponse.json();
+      });      
+      const userData = await userResponse.json();
 
       if (!userData || !userData.verified) {
         toast({
@@ -126,7 +127,6 @@ const AdDetail: React.FC = () => {
 
       const response = await fetch(`${process.env.REACT_APP_API}requests/${userId}`, {
         method: 'POST',
-        credentials: 'include', // Include cookies for authentication
         headers: {
           'Content-Type': 'application/json',
         },

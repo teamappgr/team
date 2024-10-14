@@ -797,7 +797,7 @@ app.post('/requests/:userId', async (req, res) => {
     const adResult = await pool.query(
       `SELECT ads.title, ads.user_id AS ad_owner_id, users.first_name 
        FROM ads 
-       JOIN users ON ads.user_id = users.id 
+       JOIN users ON ads.user_id = users.encrypted_code 
        WHERE ads.id = $1`,
       [ad_id]
     );
@@ -830,7 +830,7 @@ app.post('/requests/:userId', async (req, res) => {
       // Prepare the payload with user's first name
       const payload = JSON.stringify({
         title: 'New Request',
-        message: `A user has expressed interest in your ad: ${ad.title}`,
+        message: `A user has expressed interest in your event: ${ad.title}`,
       });
 
       // Send the push notification
