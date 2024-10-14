@@ -1101,6 +1101,8 @@ app.get('/groups/members/:slug/:userId', async (req, res) => {
 
 const moment = require('moment');
 
+const activeUsers = {}; // Example: { 'groupSlug': new Set(['userId1', 'userId2']) }
+
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
@@ -1118,11 +1120,26 @@ io.on('connection', (socket) => {
         return console.error('Group not found');
       }
 
+      // Initialize the set for the group if it doesn't exist
+      if (!activeUsers[slug]) {
+        activeUsers[slug] = new Set();
+      }
+
+      // Add the user to the active users set for the group
+      activeUsers[slug].add(userId);
       socket.join(slug);
       console.log(`User ${userId} joined group ${slug}`);
 
     } catch (error) {
       console.error('Error joining group:', error);
+    }
+  });
+
+  // Handle leaving a group
+  socket.on('leaveGroup', ({ slug, userId }) => {
+    if (activeUsers[slug]) {
+      activeUsers[slug].delete(userId); // Remove user from active users set
+      console.log(`User ${userId} left group ${slug}`);
     }
   });
 
@@ -1180,6 +1197,12 @@ io.on('connection', (socket) => {
       // Send push notifications to each group member
       for (const member of members) {
         const userId = member.user_id; // Assume this is the ID of the member
+
+        // Check if the user is active in the chat
+        if (activeUsers[slug] && activeUsers[slug].has(userId)) {
+          console.log(`User ${userId} is active in chat, skipping notification.`);
+          continue; // Skip sending notification if user is active
+        }
 
         // Fetch subscription details for the user
         const subscriptionResult = await pool.query('SELECT * FROM subscriptions WHERE user_id = $1', [userId]);
