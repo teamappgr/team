@@ -1101,27 +1101,32 @@ app.get('/groups/members/:slug/:userId', async (req, res) => {
 
 const moment = require('moment');
 
+const activeUsers = {}; // Example: { 'groupSlug': new Set(['userId1', 'userId2']) }
+
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
   // Handle joining a group
   socket.on('joinGroup', async ({ slug, userId }) => {
     try {
-      // Log the received userId
       console.log('UserId received for joinGroup:', userId);
 
-      // Ensure the userId is provided
       if (!userId) {
         return console.error('Invalid userId for Socket.IO');
       }
 
-      // Fetch the group ID from the slug
       const groupResult = await pool.query(`SELECT group_id FROM Groups WHERE slug = $1`, [slug]);
       if (groupResult.rowCount === 0) {
         return console.error('Group not found');
       }
 
-      // Join the user to the room
+      // Initialize the set for the group if it doesn't exist
+      if (!activeUsers[slug]) {
+        activeUsers[slug] = new Set();
+      }
+
+      // Add the user to the active users set for the group
+      activeUsers[slug].add(userId);
       socket.join(slug);
       console.log(`User ${userId} joined group ${slug}`);
 
@@ -1130,18 +1135,23 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Handle leaving a group
+  socket.on('leaveGroup', ({ slug, userId }) => {
+    if (activeUsers[slug]) {
+      activeUsers[slug].delete(userId); // Remove user from active users set
+      console.log(`User ${userId} left group ${slug}`);
+    }
+  });
+
   // Handle sending a message
   socket.on('sendMessage', async ({ slug, message, senderId }) => {
     try {
-      // Log the received senderId
       console.log('SenderId received for sendMessage:', senderId);
 
-      // Ensure the senderId is provided
       if (!senderId) {
         return console.error('Invalid senderId for Socket.IO');
       }
 
-      // Fetch the group ID from the slug
       const groupResult = await pool.query(`SELECT group_id FROM Groups WHERE slug = $1`, [slug]);
       if (groupResult.rowCount === 0) {
         return console.error('Group not found');
@@ -1160,7 +1170,7 @@ io.on('connection', (socket) => {
       const sentAt = insertResult.rows[0].sent_at;
 
       // Fetch the sender's first name and last name
-      const userResult = await pool.query(`SELECT first_name, last_name FROM Users WHERE encrypted_code = $1`, [senderId]);
+      const userResult = await pool.query(`SELECT first_name, last_name FROM Users WHERE id = $1`, [senderId]);
       if (userResult.rowCount === 0) {
         return console.error('User not found');
       }
@@ -1179,12 +1189,63 @@ io.on('connection', (socket) => {
 
       // Broadcast the message to the group (excluding the sender)
       socket.to(slug).emit('newMessage', newMessage);
+
+      // Fetch group members for sending push notifications
+      const membersResult = await pool.query(`SELECT user_id FROM GroupMembers WHERE group_id = $1`, [groupId]);
+      const members = membersResult.rows;
+
+      // Send push notifications to each group member
+      for (const member of members) {
+        const userId = member.user_id; // Assume this is the ID of the member
+
+        // Check if the user is active in the chat
+        if (activeUsers[slug] && activeUsers[slug].has(userId)) {
+          console.log(`User ${userId} is active in chat, skipping notification.`);
+          continue; // Skip sending notification if user is active
+        }
+
+        // Fetch subscription details for the user
+        const subscriptionResult = await pool.query('SELECT * FROM subscriptions WHERE user_id = $1', [userId]);
+        const userSubscription = subscriptionResult.rows[0];
+
+        if (userSubscription && userSubscription.endpoint) {
+          let keys;
+          try {
+            keys = typeof userSubscription.keys === 'string'
+              ? JSON.parse(userSubscription.keys)
+              : userSubscription.keys;
+          } catch (error) {
+            console.error('Error parsing keys:', error);
+            continue; // Skip to next member if there's an error
+          }
+
+          const subscription = {
+            endpoint: userSubscription.endpoint,
+            keys: keys,
+          };
+
+          // Prepare the payload with notification details
+          const payload = JSON.stringify({
+            title: 'New Message',
+            message: `${first_name} ${last_name}: ${message}`,
+          });
+
+          // Send the push notification
+          try {
+            await webpush.sendNotification(subscription, payload);
+          } catch (error) {
+            console.error('Error sending notification:', error);
+          }
+        } else {
+          console.error('No subscription found for user:', userId);
+        }
+      }
+
     } catch (error) {
       console.error('Error sending message:', error);
     }
   });
 });
-
 
 
 
