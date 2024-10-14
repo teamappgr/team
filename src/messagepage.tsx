@@ -39,39 +39,15 @@ const Messages: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement | null>(null); // Reference for scrolling to the bottom
   const secretKey = process.env.REACT_APP_SECRET_KEY || 'your-secret-key'; // Use your actual secret key
 
-  useEffect(() => {
-    // Decrypt the userId cookie
-    const encryptedUserId = Cookies.get('userId');
-
-    const decryptUserId = (encryptedUserId: string) => {
-      try {
-        const bytes = CryptoJS.AES.decrypt(encryptedUserId, secretKey);
-        const decryptedId = bytes.toString(CryptoJS.enc.Utf8);
-        return decryptedId;
-      } catch (error) {
-        console.error('Error decrypting userId:', error);
-        return null; // Return null if decryption fails
-      }
-    };
-
-    if (encryptedUserId) {
-      const userId = decryptUserId(encryptedUserId);
-      setDecryptedUserId(userId); // Store the decrypted userId in state
-    } else {
-      navigate('/signin'); // Redirect if user is not logged in
-    }
-  }, [navigate]);
 
   useEffect(() => {
-    // Only fetch data if user ID is available
-    if (!decryptedUserId) return;
+    const userId = Cookies.get('userId');
 
     // Fetch user info
     const fetchUserInfo = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API}users`, {
+        const response = await fetch(`${process.env.REACT_APP_API}users/${userId}`, {
           method: 'GET',
-          credentials: 'include', // Include cookies for authentication
           headers: {
             'Content-Type': 'application/json',
           },
@@ -93,7 +69,6 @@ const Messages: React.FC = () => {
           credentials: 'include', // Include cookies for authentication
           headers: {
             'Content-Type': 'application/json',
-            userid: decryptedUserId,
           },
         });
 
@@ -108,12 +83,11 @@ const Messages: React.FC = () => {
     // Fetch messages
     const fetchMessages = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API}messages/${slug}`, {
+        const response = await fetch(`${process.env.REACT_APP_API}messages/${slug}/${userId}`, {
           method: 'GET',
           credentials: 'include', // Include cookies for authentication
           headers: {
             'Content-Type': 'application/json',
-            userid: decryptedUserId,
           },
         });
 
@@ -130,12 +104,11 @@ const Messages: React.FC = () => {
     // Fetch group members
     const fetchGroupMembers = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API}groups/members/${slug}`, {
+        const response = await fetch(`${process.env.REACT_APP_API}groups/members/${slug}/${userId}`, {
           method: 'GET',
           credentials: 'include', // Include cookies for authentication
           headers: {
             'Content-Type': 'application/json',
-            userid: decryptedUserId,
           },
         });
 
@@ -159,7 +132,7 @@ const Messages: React.FC = () => {
     fetchGroupMembers();
 
     // Join the group on socket connection
-    socket.emit('joinGroup', { slug, userId: decryptedUserId });
+    socket.emit('joinGroup', { slug, userId: userId });
 
     // Listen for new messages and update state
     socket.on('newMessage', (newMsg) => {
@@ -167,7 +140,7 @@ const Messages: React.FC = () => {
     });
 
     return () => {
-      socket.emit('leaveGroup', { slug, userId: decryptedUserId });
+      socket.emit('leaveGroup', { slug, userId: userId });
       socket.off('newMessage'); // Clean up listener on component unmount
     };
   }, [slug, decryptedUserId, navigate]);
@@ -179,23 +152,18 @@ const Messages: React.FC = () => {
     }
   }, [messages]);
 
-  // Encrypt the userId when sending messages
-  const encryptUserId = (userId: string) => {
-    const encryptedUserId = CryptoJS.AES.encrypt(userId, secretKey).toString();
-    return encryptedUserId;
-  };
+
 
   // Send new message function
   const handleSendMessage = async () => {
     if (!newMessage || !userInfo) return; // Do nothing if message is empty or user info is not available
   
-    // Encrypt the senderId (userId)
-    const encryptedUserId = encryptUserId(decryptedUserId || ''); // Use decrypted user ID to encrypt it before sending
-  
+    const userId = Cookies.get('userId');
+
     const newMsg = {
       slug,
       message: newMessage,
-      senderId: encryptedUserId, // Send the encrypted user ID
+      senderId: userId, // Send the encrypted user ID
     };
   
     // Emit the message through Socket.IO

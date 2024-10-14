@@ -21,9 +21,8 @@ const Chat: React.FC = () => {
 
     const fetchChats = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API}chats`, {
+        const response = await fetch(`${process.env.REACT_APP_API}chats/${userId}`, {
           method: 'GET',
-          credentials: 'include', // Include cookies in the request
           headers: {
             'Content-Type': 'application/json',
           },

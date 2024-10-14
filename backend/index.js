@@ -280,7 +280,7 @@ app.get('/ads/:id/requests', async (req, res) => {
         u.gender, 
         r.answer
       FROM requests r
-      JOIN users u ON r.user_id = u.id
+      JOIN users u ON r.user_id = u.encrypted_code
       WHERE r.ad_id = $1
     `, [id]);
 
@@ -297,7 +297,7 @@ app.get('/ads/:id/requests', async (req, res) => {
   }
 });
 
-app.get('/api/requests', async (req, res) => {
+app.get('/api/requests/:userId', async (req, res) => {
   const userId = req.params.userId// Use decrypted userId from middleware
 
   if (!userId) {
@@ -306,7 +306,7 @@ app.get('/api/requests', async (req, res) => {
 
   try {
     // Query to fetch requests for the user
-    const requestResult = await pool.query('SELECT * FROM requests WHERE encrypted_code = $1', [userId]);
+    const requestResult = await pool.query('SELECT * FROM requests WHERE user_id = $1', [userId]);
     const requests = requestResult.rows;
 
     // For each request, join with ads to get the necessary fields
@@ -324,11 +324,11 @@ app.get('/api/requests', async (req, res) => {
   }
 });
 
-app.delete('/api/requests/:id', async (req, res) => {
+app.delete('/api/requests/:id/:userId', async (req, res) => {
   const requestId = parseInt(req.params.id); // Parse request ID from URL parameters
-  const userId = parseInt(req.decryptedUserId); // Get user ID from Authorization header
+  const userId = req.params.userId;
 
-  if (isNaN(requestId) || isNaN(userId)) {
+  if (isNaN(requestId) ) {
     return res.status(400).send('Invalid request ID or user ID');
   }
 
@@ -968,8 +968,8 @@ app.get('/ads/:id', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 });
-app.get('/chats', async (req, res) => {
-  const userId = req.decryptedUserId; // Extract userId from middleware
+app.get('/chats/:userId', async (req, res) => {
+  const userId = req.params.userId; // Use decrypted userId and parse it properly
 
   if (!userId) {
     return res.status(401).json({ error: 'User not logged in' });
@@ -997,9 +997,9 @@ app.get('/chats', async (req, res) => {
 
 
 
-app.get('/messages/:slug', async (req, res) => {
+app.get('/messages/:slug/:userId', async (req, res) => {
   const { slug } = req.params;
-  const userId = req.decryptedUserId;
+  const userId = req.params.userId; // Use decrypted userId and parse it properly
 
   try {
       // Check if the user is a member of the group
@@ -1061,9 +1061,9 @@ app.get('/groups/:slug', async (req, res) => {
     res.status(500).json({ message: 'Error fetching group name' });
   }
 });
-app.get('/groups/members/:slug', async (req, res) => {
+app.get('/groups/members/:slug/:userId', async (req, res) => {
   const { slug } = req.params;
-  const userId = req.decryptedUserId;
+  const userId = req.params.userId; // Use decrypted userId and parse it properly
 
   try {
     // Check if the user is a member of the group
@@ -1085,7 +1085,7 @@ app.get('/groups/members/:slug', async (req, res) => {
     const membersResult = await pool.query(
       `SELECT u.first_name, u.last_name 
        FROM Users u
-       JOIN GroupMembers gm ON u.id = gm.user_id
+       JOIN GroupMembers gm ON u.encrypted_code = gm.user_id
        WHERE gm.group_id = $1`,
       [groupId]
     );
@@ -1107,19 +1107,12 @@ io.on('connection', (socket) => {
   // Handle joining a group
   socket.on('joinGroup', async ({ slug, userId }) => {
     try {
-      // Log the received encrypted userId
-      console.log('Encrypted userId received for joinGroup:', userId);
+      // Log the received userId
+      console.log('UserId received for joinGroup:', userId);
 
-      const secretKey = process.env.SECRET_KEY || 'your-secret-key';
-      const bytes = CryptoJS.AES.decrypt(userId, secretKey);
-      const decryptedUserId = bytes.toString(CryptoJS.enc.Utf8);
-
-      // Log the decrypted userId
-      console.log('Decrypted userId for joinGroup:', decryptedUserId);
-
-      // Check if decryption was successful
-      if (!decryptedUserId) {
-        return console.error('Invalid encrypted userId for Socket.IO');
+      // Ensure the userId is provided
+      if (!userId) {
+        return console.error('Invalid userId for Socket.IO');
       }
 
       // Fetch the group ID from the slug
@@ -1130,7 +1123,7 @@ io.on('connection', (socket) => {
 
       // Join the user to the room
       socket.join(slug);
-      console.log(`User ${decryptedUserId} joined group ${slug}`);
+      console.log(`User ${userId} joined group ${slug}`);
 
     } catch (error) {
       console.error('Error joining group:', error);
@@ -1140,19 +1133,12 @@ io.on('connection', (socket) => {
   // Handle sending a message
   socket.on('sendMessage', async ({ slug, message, senderId }) => {
     try {
-      // Log the received encrypted senderId
-      console.log('Encrypted senderId received for sendMessage:', senderId);
+      // Log the received senderId
+      console.log('SenderId received for sendMessage:', senderId);
 
-      const secretKey = process.env.SECRET_KEY || 'your-secret-key';
-      const bytes = CryptoJS.AES.decrypt(senderId, secretKey);
-      const decryptedSenderId = bytes.toString(CryptoJS.enc.Utf8);
-
-      // Log the decrypted senderId
-      console.log('Decrypted senderId for sendMessage:', decryptedSenderId);
-
-      // Check if decryption was successful
-      if (!decryptedSenderId) {
-        return console.error('Invalid encrypted senderId for Socket.IO');
+      // Ensure the senderId is provided
+      if (!senderId) {
+        return console.error('Invalid senderId for Socket.IO');
       }
 
       // Fetch the group ID from the slug
@@ -1167,14 +1153,14 @@ io.on('connection', (socket) => {
       const insertResult = await pool.query(
         `INSERT INTO Messages (message_text, sender_id, group_id, sent_at)
          VALUES ($1, $2, $3, NOW()) RETURNING message_id, sent_at`,
-        [message, decryptedSenderId, groupId]
+        [message, senderId, groupId]
       );
 
       const newMessageId = insertResult.rows[0].message_id;
       const sentAt = insertResult.rows[0].sent_at;
 
       // Fetch the sender's first name and last name
-      const userResult = await pool.query(`SELECT first_name, last_name FROM Users WHERE id = $1`, [decryptedSenderId]);
+      const userResult = await pool.query(`SELECT first_name, last_name FROM Users WHERE id = $1`, [senderId]);
       if (userResult.rowCount === 0) {
         return console.error('User not found');
       }
@@ -1185,7 +1171,7 @@ io.on('connection', (socket) => {
       const newMessage = {
         message_id: newMessageId,
         message_text: message,
-        sender_id: decryptedSenderId,
+        sender_id: senderId,
         first_name,
         last_name,
         created_at: moment(sentAt).format('YYYY-MM-DD HH:mm:ss'),
@@ -1198,6 +1184,7 @@ io.on('connection', (socket) => {
     }
   });
 });
+
 
 
 
