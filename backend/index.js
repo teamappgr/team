@@ -1021,7 +1021,7 @@ app.get('/messages/:slug/:userId', async (req, res) => {
       const messagesResult = await pool.query(
           `SELECT m.message_id, m.message_text, m.sent_at, u.id as sender_id, u.first_name, u.last_name 
            FROM Messages m
-           JOIN Users u ON m.sender_id = u.id 
+           JOIN Users u ON m.sender_id = u.encrypted_code 
            WHERE m.group_id = $1 
            ORDER BY m.sent_at ASC`,
           [groupId]
