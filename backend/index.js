@@ -1105,6 +1105,9 @@ const activeUsers = {}; // Example: { 'groupSlug': new Set(['userId1', 'userId2'
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);
 
+  // Store user ID with the socket object for later cleanup
+  socket.userId = null;
+
   // Handle joining a group
   socket.on('joinGroup', async ({ slug, userId }) => {
     try {
@@ -1114,10 +1117,14 @@ io.on('connection', (socket) => {
         return console.error('Invalid userId for Socket.IO');
       }
 
+      socket.userId = userId; // Store userId on the socket object
+
       const groupResult = await pool.query(`SELECT group_id FROM Groups WHERE slug = $1`, [slug]);
       if (groupResult.rowCount === 0) {
         return console.error('Group not found');
       }
+
+      const groupId = groupResult.rows[0].group_id;
 
       // Initialize the set for the group if it doesn't exist
       if (!activeUsers[slug]) {
@@ -1127,6 +1134,7 @@ io.on('connection', (socket) => {
       // Add the user to the active users set for the group
       activeUsers[slug].add(userId);
       socket.join(slug);
+
       console.log(`User ${userId} joined group ${slug}`);
 
     } catch (error) {
@@ -1195,7 +1203,7 @@ io.on('connection', (socket) => {
 
       // Send push notifications to each group member
       for (const member of members) {
-        const userId = member.user_id; // Assume this is the ID of the member
+        const userId = member.user_id;
 
         // Check if the user is active in the chat
         if (activeUsers[slug] && activeUsers[slug].has(userId)) {
@@ -1226,7 +1234,9 @@ io.on('connection', (socket) => {
           // Prepare the payload with notification details
           const payload = JSON.stringify({
             title: 'New Message',
-            message: `${first_name} ${last_name}: ${message}`,
+            body: `${first_name} ${last_name}: ${message}`,
+            icon: '/path/to/icon.png',
+            click_action: `/chat/${slug}`, // Redirect user to the chat when clicked
           });
 
           // Send the push notification
@@ -1244,7 +1254,21 @@ io.on('connection', (socket) => {
       console.error('Error sending message:', error);
     }
   });
+
+  // Handle disconnection and cleanup
+  socket.on('disconnect', () => {
+    console.log(`User ${socket.id} disconnected`);
+    
+    // Clean up the activeUsers set by removing the user
+    for (const [groupSlug, userSet] of Object.entries(activeUsers)) {
+      if (userSet.has(socket.userId)) {
+        userSet.delete(socket.userId);
+        console.log(`User ${socket.userId} removed from group ${groupSlug}`);
+      }
+    }
+  });
 });
+
 
 
 server.listen(PORT, () => {
