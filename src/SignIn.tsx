@@ -220,7 +220,7 @@ export default function SignIn({ onClose }: { onClose: () => void }) {
             </Button>
             <Grid container>
               <Grid item xs>
-                <Link href="#" variant="body2">
+                <Link href="/forgot" variant="body2">
                   {t('forgotPassword')}
                 </Link>
               </Grid>
