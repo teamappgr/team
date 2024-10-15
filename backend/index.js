@@ -258,7 +258,7 @@ app.get('/ads1/:userId', async (req, res) => {
 // Get all ads
 app.get('/ads', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM ads');
+    const result = await pool.query('SELECT id,title,description,created_at,min,max,date,time,verified,available,info FROM ads');
     res.status(200).json(result.rows);
   } catch (error) {
     console.error('Error fetching ads:', error);
@@ -898,6 +898,100 @@ app.post('/send-email', async (req, res) => {
     res.status(500).send('Error sending email');
 }
 });
+app.post('/send-email1', async (req, res) => {
+  const { email } = req.body;
+  const nodemailer = require('nodemailer');
+
+  // Validate the email
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required.' });
+  }
+
+  try {
+    // Check if the user exists in the database
+    const userResult = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: 'User with this email does not exist.' });
+    }
+
+    // Generate a password reset token
+    const token = crypto.randomBytes(20).toString('hex');
+
+    // Store the token in the database with an expiration time
+    const userId = userResult.rows[0].id;
+    const expires = Date.now() + 3600000; // Token expires in 1 hour
+    await pool.query('UPDATE users SET reset_token = $1, reset_token_expires = $2 WHERE id = $3', [token, expires, userId]);
+
+    // Configure your email transport
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASS,
+      },
+    });
+    const resetLink = `${process.env.PUBLIC_URL}/reset-password?token=${token}`;
+
+    // Send email with the reset link
+    const mailOptions = {
+      from: process.env.GMAIL_USER,
+      to: email,
+      subject: 'Password Reset',
+      text: `You are receiving this email because you requested a password reset. 
+             Please click the following link to reset your password: 
+              ${resetLink}`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({ message: 'Password reset email sent successfully.' });
+  } catch (error) {
+    console.error('Error sending email:', error);
+    res.status(500).json({ message: 'Error sending email' });
+  }
+});
+
+// Endpoint to reset the password
+app.post('/reset-password', async (req, res) => {
+  const { token, newPassword } = req.body;
+
+  // Validate input
+  if (!token || !newPassword) {
+    return res.status(400).json({ message: 'Token and new password are required.' });
+  }
+
+  try {
+    // Check if the token is valid and has not expired
+    const userResult = await pool.query('SELECT id FROM users WHERE reset_token = $1 AND reset_token_expires > $2', [token, Date.now()]);
+
+    if (userResult.rows.length === 0) {
+      return res.status(400).json({ message: 'Invalid or expired token.' });
+    }
+
+    const userId = userResult.rows[0].id;
+
+    // Hash the new password (you need to implement this)
+    const hashedPassword = await hashPassword(newPassword); // Use your hashing function here
+
+    // Update the user's password and clear the reset token
+    await pool.query('UPDATE users SET password = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2', [hashedPassword, userId]);
+
+    res.status(200).json({ message: 'Password reset successfully.' });
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    res.status(500).json({ message: 'Error resetting password' });
+  }
+});
+
+// Function to hash password (you might want to use bcrypt)
+async function hashPassword(password) {
+  const bcrypt = require('bcrypt');
+  const saltRounds = 10;
+  const hashed = await bcrypt.hash(password, saltRounds);
+  return hashed;
+}
+
 // Unsubscribe from Push Notifications
 app.post('/unsubscribe', async (req, res) => {
   const { userId } = req.body;
@@ -950,7 +1044,7 @@ app.get('/ads/:id', async (req, res) => {
 
 
   try {
-    const query = 'SELECT * FROM ads WHERE id = $1'; // Use $1 for PostgreSQL
+    const query = 'SELECT id,title,description,created_at,min,max,date,time,verified,available,info FROM ads WHERE id = $1'; // Use $1 for PostgreSQL
     
     // Execute the query
     const result = await pool.query(query, [adId]);
@@ -969,18 +1063,27 @@ app.get('/ads/:id', async (req, res) => {
   }
 });
 app.get('/chats/:userId', async (req, res) => {
-  const userId = req.params.userId; // Use decrypted userId and parse it properly
+  const userId = req.params.userId;
 
   if (!userId) {
     return res.status(401).json({ error: 'User not logged in' });
   }
 
   try {
+    // Query to fetch group details along with the last message for each group the user is in
     const result = await pool.query(
-      `SELECT g.slug, g.group_name 
+      `SELECT g.slug, g.group_name, m.message_text, u.first_name, u.last_name, m.sent_at
        FROM GroupMembers gm
        JOIN Groups g ON gm.group_id = g.group_id
-       WHERE gm.user_id = $1`, 
+       LEFT JOIN Messages m ON g.group_id = m.group_id
+       LEFT JOIN Users u ON m.sender_id = u.encrypted_code
+       WHERE gm.user_id = $1
+       AND m.sent_at = (
+         SELECT MAX(sent_at) 
+         FROM Messages 
+         WHERE group_id = g.group_id
+       )
+       ORDER BY m.sent_at DESC`,  // Ordering by latest message time
       [userId]
     );
 
@@ -1100,7 +1203,7 @@ app.get('/groups/members/:slug/:userId', async (req, res) => {
 });
 
 const moment = require('moment');
-const activeUsers = {}; // Example: { 'groupSlug': new Set(['userId1', 'userId2']) }
+const activeUsers = {};
 
 io.on('connection', (socket) => {
   console.log('A user connected:', socket.id);

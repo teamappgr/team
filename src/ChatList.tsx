@@ -4,18 +4,26 @@ import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import Layout from './Layout';
 
+interface Chat {
+  slug: string;
+  group_name: string;
+  message_text: string;
+  first_name: string;
+  last_name: string;
+  sent_at: string;
+}
+
 const Chat: React.FC = () => {
-  const [chats, setChats] = useState<any[]>([]);
+  const [chats, setChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
     const userId = Cookies.get('userId');
-    
-    // Early return if no userId is found
+
     if (!userId) {
       console.warn('No userId found in cookies');
-      setLoading(false); // Stop loading if no userId is found
+      setLoading(false);
       return;
     }
 
@@ -28,7 +36,6 @@ const Chat: React.FC = () => {
           },
         });
 
-        // Check for HTTP errors
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -38,7 +45,7 @@ const Chat: React.FC = () => {
       } catch (error) {
         console.error('Error fetching chats:', error);
       } finally {
-        setLoading(false); // Always stop loading when done
+        setLoading(false);
       }
     };
 
@@ -46,7 +53,7 @@ const Chat: React.FC = () => {
   }, []);
 
   const handleChatClick = (slug: string) => {
-    navigate(`/messages/${slug}`); // Use slug for the chat page
+    navigate(`/messages/${slug}`);
   };
 
   return (
@@ -68,11 +75,19 @@ const Chat: React.FC = () => {
                   variant="outline"
                   onClick={() => handleChatClick(chat.slug)}
                 >
-                  {chat.group_name} {/* Change this to your actual chat name field */}
+                  <Box textAlign="left">
+                    <Text fontWeight="bold"
+                    >{chat.group_name}</Text>
+                    <Text fontSize="sm" color="gray.500" >
+                      {chat.first_name && chat.last_name
+                        ? `${chat.first_name} ${chat.last_name}: ${chat.message_text}`
+                        : 'No messages yet.'}
+                    </Text>
+                  </Box>
                 </Button>
               ))
             ) : (
-              <Text>No chats available.</Text> // Handling case where no chats are returned
+              <Text>No chats available.</Text>
             )}
           </VStack>
         )}

@@ -17,7 +17,8 @@ import './i18n';
 import MyEvents from './myevents';
 import { Modal, ModalOverlay, ModalContent } from '@chakra-ui/react';
 import { ChakraProvider } from '@chakra-ui/react';
-
+import ForgotPassword from './forgotpassword';
+import ResetPassword from './resetpassword';
 // Create a default theme
 const theme = createTheme({
   palette: {
@@ -53,8 +54,10 @@ const App: React.FC = () => {
               </ModalContent>
             </Modal>
             <Routes>
+            <Route path="/reset-password" element={<ResetPassword/>} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/" element={<SignUp />} />
+              <Route path="/forgot" element={<ForgotPassword />} />
               <Route path="/create" element={<Create />} />
               <Route path="/event/:id" element={<EventDetail />} />
               <Route path="/myevents" element={<MyEvents />} />
