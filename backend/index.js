@@ -1230,11 +1230,12 @@ io.on('connection', (socket) => {
             endpoint: userSubscription.endpoint,
             keys: keys,
           };
+          console.log(`${first_name} ${last_name}: ${message}`);
 
           // Prepare the payload with notification details
           const payload = JSON.stringify({
             title: 'New Message',
-            body: `${first_name} ${last_name}: ${message}`,
+            message: `${first_name} ${last_name}: ${message}`,
             icon: '/path/to/icon.png',
             click_action: `/chat/${slug}`, // Redirect user to the chat when clicked
           });
