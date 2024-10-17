@@ -2,12 +2,23 @@
 
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import {
+  Box,
+  FormControl,
+  FormLabel,
+  Input,
+  Button,
+  Text,
+  Heading,
+  useToast,
+} from '@chakra-ui/react';
 
 const ResetPassword: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const toast = useToast(); // For toast notifications
 
   // Function to extract query parameters from the URL
   const useQuery = () => {
@@ -37,6 +48,14 @@ const ResetPassword: React.FC = () => {
       const data = await response.json();
 
       if (response.ok) {
+        // Show success toast
+        toast({
+          title: "Success",
+          description: "Password reset successfully!",
+          status: "success",
+          duration: 5000,
+          isClosable: true,
+        });
         setMessage('Password reset successfully!');
         setError('');
       } else {
@@ -49,34 +68,36 @@ const ResetPassword: React.FC = () => {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: 'auto', padding: '20px' }}>
-      <h2>Reset Password</h2>
+    <Box maxWidth="400px" mx="auto" p={5}>
+      <Heading as="h2" size="lg" mb={4}>Reset Password</Heading>
       <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="newPassword">New Password:</label>
-          <input
+        <FormControl isRequired mb={4}>
+          <FormLabel htmlFor="newPassword">New Password:</FormLabel>
+          <Input
             type="password"
             id="newPassword"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            required
+            placeholder="Enter your new password"
           />
-        </div>
-        <div>
-          <label htmlFor="confirmPassword">Confirm Password:</label>
-          <input
+        </FormControl>
+        <FormControl isRequired mb={4}>
+          <FormLabel htmlFor="confirmPassword">Confirm Password:</FormLabel>
+          <Input
             type="password"
             id="confirmPassword"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            required
+            placeholder="Confirm your new password"
           />
-        </div>
-        {error && <p style={{ color: 'red' }}>{error}</p>}
-        {message && <p style={{ color: 'green' }}>{message}</p>}
-        <button type="submit">Reset Password</button>
+        </FormControl>
+        {error && <Text color="red.500" mb={4}>{error}</Text>}
+        {message && <Text color="green.500" mb={4}>{message}</Text>}
+        <Button colorScheme="blue" type="submit" width="full">
+          Reset Password
+        </Button>
       </form>
-    </div>
+    </Box>
   );
 };
 

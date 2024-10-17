@@ -945,7 +945,7 @@ app.post('/send-email1', async (req, res) => {
 
     await transporter.sendMail(mailOptions);
 
-    res.status(200).json({ message: 'Password reset email sent successfully.' });
+    res.status(200).json();
   } catch (error) {
     console.error('Error sending email:', error);
     res.status(500).json({ message: 'Error sending email' });
