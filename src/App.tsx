@@ -63,7 +63,7 @@ const App: React.FC = () => {
               <Route path="/myevents" element={<MyEvents />} />
               <Route path="/signin" element={<SignIn1 />} />
               <Route path="/contactus" element={<ContactUs />} />
-              <Route path="/team" element={<Team />} />
+              <Route path="/" element={<Team />} />
               <Route path="/chat" element={<Chat />} />
               <Route path="/messages/:slug" element={<MessagePage />} />
 
