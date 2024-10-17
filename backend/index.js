@@ -931,16 +931,17 @@ app.post('/send-email1', async (req, res) => {
         pass: process.env.GMAIL_PASS,
       },
     });
-    const resetLink = `${process.env.PUBLIC_URL}/#/reset-password?token=${token}`;
-    // Send email with the reset link
+    const resetLink = `${process.env.PUBLIC_URL}/team/#/reset-password?token=${token}`;
+    console.log(resetLink);
     const mailOptions = {
       from: process.env.GMAIL_USER,
       to: email,
       subject: 'Password Reset',
-      text: `You are receiving this email because you requested a password reset. 
+      html: `<p>You are receiving this email because you requested a password reset. <br>
              Please click the following link to reset your password: 
-              ${resetLink}`,
+             <a href="${resetLink}">${resetLink}</a></p>`,
     };
+    
 
     await transporter.sendMail(mailOptions);
 
