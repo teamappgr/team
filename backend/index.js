@@ -931,7 +931,7 @@ app.post('/send-email1', async (req, res) => {
         pass: process.env.GMAIL_PASS,
       },
     });
-    const resetLink = `${process.env.PUBLIC_URL}/reset-password?token=${token}`;
+    const resetLink = `${process.env.PUBLIC_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
 
     // Send email with the reset link
     const mailOptions = {
