@@ -56,14 +56,14 @@ const App: React.FC = () => {
             <Routes>
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/profile" element={<Profile />} />
-              <Route path="/signup" element={<SignUp />} />
+              <Route path="/" element={<SignUp />} />
               <Route path="/forgot" element={<ForgotPassword />} />
               <Route path="/create" element={<Create />} />
               <Route path="/event/:id" element={<EventDetail />} />
               <Route path="/myevents" element={<MyEvents />} />
               <Route path="/signin" element={<SignIn1 />} />
               <Route path="/contactus" element={<ContactUs />} />
-              <Route path="/" element={<Team />} />
+              <Route path="/team" element={<Team />} />
               <Route path="/chat" element={<Chat />} />
               <Route path="/messages/:slug" element={<MessagePage />} />
 
