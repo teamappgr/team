@@ -8,7 +8,7 @@ const ResetPassword: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  
+
   // Function to extract query parameters from the URL
   const useQuery = () => {
     return new URLSearchParams(useLocation().search);
@@ -26,7 +26,7 @@ const ResetPassword: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_PUBLIC_URL}/reset-password`, {
+      const response = await fetch(`${process.env.REACT_APP_API}/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

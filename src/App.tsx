@@ -54,8 +54,8 @@ const App: React.FC = () => {
               </ModalContent>
             </Modal>
             <Routes>
-            <Route path="/reset-password" element={<ResetPassword/>} />
-              <Route path="/profile" element={<Profile />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/profile" element={<Profile />} />
               <Route path="/" element={<SignUp />} />
               <Route path="/forgot" element={<ForgotPassword />} />
               <Route path="/create" element={<Create />} />
