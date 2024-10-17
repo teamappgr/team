@@ -952,7 +952,6 @@ app.post('/send-email1', async (req, res) => {
   }
 });
 
-// Endpoint to reset the password
 app.post('/reset-password', async (req, res) => {
   const { token, newPassword } = req.body;
 
@@ -963,7 +962,10 @@ app.post('/reset-password', async (req, res) => {
 
   try {
     // Check if the token is valid and has not expired
-    const userResult = await pool.query('SELECT id FROM users WHERE reset_token = $1 AND reset_token_expires > $2', [token, Date.now()]);
+    const userResult = await pool.query(
+      'SELECT id FROM users WHERE reset_token = $1 AND reset_token_expires > $2',
+      [token, Date.now()]
+    );
 
     if (userResult.rows.length === 0) {
       return res.status(400).json({ message: 'Invalid or expired token.' });
@@ -971,11 +973,14 @@ app.post('/reset-password', async (req, res) => {
 
     const userId = userResult.rows[0].id;
 
-    // Hash the new password (you need to implement this)
-    const hashedPassword = await hashPassword(newPassword); // Use your hashing function here
+    // Hash the new password using argon2
+    const hashedPassword = await argon2.hash(newPassword);
 
     // Update the user's password and clear the reset token
-    await pool.query('UPDATE users SET password = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2', [hashedPassword, userId]);
+    await pool.query(
+      'UPDATE users SET password = $1, reset_token = NULL, reset_token_expires = NULL WHERE id = $2',
+      [hashedPassword, userId]
+    );
 
     res.status(200).json({ message: 'Password reset successfully.' });
   } catch (error) {
