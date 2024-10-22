@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react'; // Import useState
 import { useNavigate } from 'react-router-dom';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
@@ -36,6 +36,9 @@ const defaultTheme = createTheme();
 export default function SignIn({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  
+  // State to manage loading state
+  const [loading, setLoading] = useState(false); // Add loading state
 
   useEffect(() => {
     const userId = Cookies.get('userId');
@@ -52,6 +55,8 @@ export default function SignIn({ onClose }: { onClose: () => void }) {
       email: data.get('email') as string,
       password: data.get('password') as string,
     };
+
+    setLoading(true); // Set loading to true before the request
 
     try {
       const response = await fetch(process.env.REACT_APP_API + 'signin', {
@@ -73,6 +78,7 @@ export default function SignIn({ onClose }: { onClose: () => void }) {
           sameSite: 'None', // Required if the frontend and backend are on different domains
           path: '/', // Ensure it's available for all routes
         });
+        
         await subscribeUserToPushNotifications(encryptedCode); // Pass the encryptedCode as userId
         onClose(); // Close the modal after successful sign-in
 
@@ -83,78 +89,82 @@ export default function SignIn({ onClose }: { onClose: () => void }) {
     } catch (error) {
       console.error('Error:', error);
       alert(t('networkError'));
+    } finally {
+      setLoading(false); // Reset loading state after the request completes
     }
   };
+
   const urlB64ToUint8Array = (base64String: string): Uint8Array => {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
     const rawData = window.atob(base64);
     return Uint8Array.from([...rawData].map((char) => char.charCodeAt(0)));
   };
-  const subscribeUserToPushNotifications = async (userId: string) => { // Explicitly define userId type
+
+  const subscribeUserToPushNotifications = async (userId: string) => {
     console.log('Attempting to subscribe...');
 
     if ('serviceWorker' in navigator && 'PushManager' in window) {
-        try {
-            // Register the service worker
-            const registration = await navigator.serviceWorker.register('service-worker.js');
-            console.log('Service Worker registered:', registration);
+      try {
+        // Register the service worker
+        const registration = await navigator.serviceWorker.register('service-worker.js');
+        console.log('Service Worker registered:', registration);
 
-            // Check if push manager is available and service worker is active
-            const existingSubscription = await registration.pushManager.getSubscription();
+        // Check if push manager is available and service worker is active
+        const existingSubscription = await registration.pushManager.getSubscription();
 
-            // If there's an existing subscription, unsubscribe from it
-            if (existingSubscription) {
-                await existingSubscription.unsubscribe();
-                console.log('Unsubscribed from existing subscription.');
-            }
-
-            // Retrieve the VAPID public key from environment variables
-            const applicationServerKey = process.env.REACT_APP_VAPID_PUBLIC_KEY;
-            if (!applicationServerKey) {
-                console.error('VAPID public key is not defined.');
-                return;
-            }
-
-            // Convert the VAPID public key to the required Uint8Array format
-            const convertedVapidKey = urlB64ToUint8Array(applicationServerKey);
-
-            // Subscribe to push notifications using the converted VAPID public key
-            const newSubscription: PushSubscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: convertedVapidKey,
-            });
-            console.log('Subscription request sent:', newSubscription);
-            const userId = Cookies.get('userId'); // Get the userId from the cookies
-
-            // Send the subscription to the backend
-            const response = await fetch(`${process.env.REACT_APP_API}subscribe/${userId}`, {
-                method: 'POST',
-
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    userId: userId, // Pass the userId here
-                    endpoint: newSubscription.endpoint,
-                    keys: newSubscription.toJSON().keys, // Ensure keys are sent as JSON
-                }),
-            });
-
-            // Handle the response from the backend
-            if (!response.ok) {
-                const errorMessage = await response.json();
-                console.error('Failed to subscribe:', errorMessage);
-            } else {
-                console.log('Subscription successful!');
-            }
-        } catch (error) {
-            console.error('Subscription error:', error);
+        // If there's an existing subscription, unsubscribe from it
+        if (existingSubscription) {
+          await existingSubscription.unsubscribe();
+          console.log('Unsubscribed from existing subscription.');
         }
+
+        // Retrieve the VAPID public key from environment variables
+        const applicationServerKey = process.env.REACT_APP_VAPID_PUBLIC_KEY;
+        if (!applicationServerKey) {
+          console.error('VAPID public key is not defined.');
+          return;
+        }
+
+        // Convert the VAPID public key to the required Uint8Array format
+        const convertedVapidKey = urlB64ToUint8Array(applicationServerKey);
+
+        // Subscribe to push notifications using the converted VAPID public key
+        const newSubscription: PushSubscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: convertedVapidKey,
+        });
+        console.log('Subscription request sent:', newSubscription);
+        const userIdFromCookies = Cookies.get('userId'); // Get the userId from the cookies
+
+        // Send the subscription to the backend
+        const response = await fetch(`${process.env.REACT_APP_API}subscribe/${userIdFromCookies}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: userIdFromCookies, // Pass the userId here
+            endpoint: newSubscription.endpoint,
+            keys: newSubscription.toJSON().keys, // Ensure keys are sent as JSON
+          }),
+        });
+
+        // Handle the response from the backend
+        if (!response.ok) {
+          const errorMessage = await response.json();
+          console.error('Failed to subscribe:', errorMessage);
+        } else {
+          console.log('Subscription successful!');
+        }
+      } catch (error) {
+        console.error('Subscription error:', error);
+      }
     } else {
-        console.error('Service workers or Push notifications are not supported in this browser.');
+      console.error('Service workers or Push notifications are not supported in this browser.');
     }
-};
+  };
+
   return (
     <ThemeProvider theme={defaultTheme}>
       <Container component="main" maxWidth="xs">
@@ -181,6 +191,7 @@ export default function SignIn({ onClose }: { onClose: () => void }) {
               color="primary"
               style={{ textTransform: 'none', fontSize: 'inherit', padding: 0, minWidth: 'auto', color: 'gray' }}
             >
+              <CloseIcon />
             </Button>
           </Box>
           <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
@@ -215,8 +226,9 @@ export default function SignIn({ onClose }: { onClose: () => void }) {
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
+              disabled={loading} // Disable button when loading
             >
-              {t('signIn')}
+              {loading ? 'Signing in...' : t('signIn')} {/* Display loading text */}
             </Button>
             <Grid container>
               <Grid item xs>

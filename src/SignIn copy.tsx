@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react'; // Import useState
 import { useNavigate } from 'react-router-dom';
 import Avatar from '@mui/material/Avatar';
 import Button from '@mui/material/Button';
@@ -35,6 +35,9 @@ const defaultTheme = createTheme();
 export default function SignIn() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  
+  // State to manage loading state
+  const [loading, setLoading] = useState(false); // Add loading state
 
   useEffect(() => {
     const userId = Cookies.get('userId');
@@ -51,6 +54,8 @@ export default function SignIn() {
       password: data.get('password') as string,
     };
   
+    setLoading(true); // Set loading to true before the request
+
     try {
       const response = await fetch(process.env.REACT_APP_API + 'signin', {
         method: 'POST',
@@ -83,6 +88,8 @@ export default function SignIn() {
     } catch (error) {
       console.error('Error:', error);
       alert(t('networkError'));
+    } finally {
+      setLoading(false); // Reset loading state after the request completes
     }
   };
 
@@ -230,8 +237,9 @@ export default function SignIn() {
                 fullWidth
                 variant="contained"
                 sx={{ mt: 3, mb: 2 }}
+                disabled={loading} // Disable button when loading
               >
-                {t('signIn')}
+                {loading ? 'Signing in...' : t('signIn')} {/* Display loading text */}
               </Button>
               <Grid container>
                 <Grid item xs>

@@ -9,6 +9,7 @@ const upload = require('./cloudinary'); // Multer configuration for cloudinary
 const cookieParser = require('cookie-parser');
 const CryptoJS = require('crypto-js'); // Ensure this line is present
 const crypto = require('crypto');
+const router = express.Router();
 
 const PORT = process.env.PORT || 5000;
 const webpush = require('web-push'); // Add this line to import web-push
@@ -496,6 +497,44 @@ app.post('/requests/:id/reject', async (req, res) => {
     res.status(500).json({ message: 'Error rejecting request' });
   }
 });
+module.exports = router;
+
+router.post('/requests/:id/reject-ad/:adId', async (req, res) => {
+  const { id } = req.params; // Get request ID from URL parameters
+  const { adId } = req.params; // Get ad ID from URL parameters
+
+  try {
+    // Ensure id and adId are valid numbers
+    if (isNaN(id) || isNaN(adId)) {
+      return res.status(400).json({ message: 'Invalid request or ad ID' });
+    }
+
+    // Begin a transaction
+    await pool.query('BEGIN');
+
+    // Update the requests table to set the answer to 0 (rejected)
+    const result = await pool.query('UPDATE requests SET answer = 0 WHERE id = $1 RETURNING *', [id]);
+
+    // Check if the update was successful
+    if (result.rowCount === 0) {
+      await pool.query('ROLLBACK');
+      return res.status(404).json({ message: 'Request not found' });
+    }
+
+    // Update the ads table to increase the availability by 1
+    await pool.query('UPDATE ads SET available = available + 1 WHERE id = $1', [adId]);
+
+    // Commit the transaction
+    await pool.query('COMMIT');
+
+    res.status(200).json({ message: 'Request rejected and availability updated successfully' });
+  } catch (error) {
+    console.error('Error rejecting request:', error);
+    await pool.query('ROLLBACK'); // Roll back the transaction in case of error
+    res.status(500).json({ message: 'Error rejecting request' });
+  }
+});
+
 
 
 // Assuming you have already imported necessary modules like express and your database connection
@@ -511,7 +550,7 @@ app.delete('/ads/:id', async (req, res) => {
 
     // First, delete all requests associated with the ad
     await client.query('DELETE FROM requests WHERE ad_id = $1', [id]);
-
+    await client.query('UPDATE groups SET ad_id = $1 WHERE ad_id = $2',[null,id])
     // Then, delete the ad itself
     const result = await client.query('DELETE FROM ads WHERE id = $1 RETURNING *', [id]);
 

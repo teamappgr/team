@@ -110,13 +110,7 @@ const Profile = () => {
         } else {
           // Handle cases where the user is not found or other errors
           const errorData = await subscriptionResponse.json();
-          toast({
-            title: t('networkError'),
-            description: errorData.message || t('userIdError'),
-            status: 'error',
-            duration: 3000,
-            isClosable: true,
-          });
+
         }
       } catch (error) {
         toast({

@@ -71,7 +71,7 @@ const Team: React.FC = () => {
   }, [toast]);
 
   const handleAdClick = (id: number) => {
-    navigate(`/event/${id}`);
+    navigate('/event', { state: { adId: id } }); // Pass adId in the state
   };
 
   return (

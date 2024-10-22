@@ -59,7 +59,7 @@ const App: React.FC = () => {
               <Route path="/" element={<SignUp />} />
               <Route path="/forgot" element={<ForgotPassword />} />
               <Route path="/create" element={<Create />} />
-              <Route path="/event/:id" element={<EventDetail />} />
+              <Route path="/event" element={<EventDetail />} />
               <Route path="/myevents" element={<MyEvents />} />
               <Route path="/signin" element={<SignIn1 />} />
               <Route path="/contactus" element={<ContactUs />} />

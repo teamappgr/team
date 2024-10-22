@@ -15,14 +15,13 @@ import {
   AlertDialogOverlay,
   AlertDialogCloseButton,
   useDisclosure,
-  IconButton, // Import IconButton for better UI
+  IconButton,
 } from '@chakra-ui/react';
-import { useParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom'; // Import useLocation
 import Cookies from 'js-cookie';
 import Layout from './Layout';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
-import { ArrowBackIcon } from '@chakra-ui/icons'; // Import the ArrowBackIcon
-import { useTranslation } from 'react-i18next'; // Import useTranslation
+import { ArrowBackIcon } from '@chakra-ui/icons';
+import { useTranslation } from 'react-i18next';
 
 interface Ad {
   id: number;
@@ -37,30 +36,43 @@ interface Ad {
 }
 
 const AdDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const adId = location.state?.adId; // Read adId from state
   const [ad, setAd] = useState<Ad | null>(null);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = React.useRef<HTMLButtonElement>(null);
-  const navigate = useNavigate(); // Initialize navigate
-  const { t } = useTranslation(); // Initialize translation
+  const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
+    if (!adId) {
+      toast({
+        title: t('errorFetchingAdDetails'),
+        description: t('noAdIdProvided'),
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
     const fetchAdDetail = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API}ads/${id}`, {
+        const response = await fetch(`${process.env.REACT_APP_API}ads/${adId}`, {
           method: 'GET',
-          credentials: 'include', // Include credentials (cookies)
-        });        if (!response.ok) {
+          credentials: 'include',
+        });
+        if (!response.ok) {
           throw new Error('Failed to fetch ad detail');
         }
         const data = await response.json();
         setAd(data);
       } catch (error) {
         toast({
-          title: t('errorFetchingAdDetails'), // Use translation for error message
-          description: t('tryAgainLater'), // Use translation for description
+          title: t('errorFetchingAdDetails'),
+          description: t('tryAgainLater'),
           status: 'error',
           duration: 5000,
           isClosable: true,
@@ -71,7 +83,7 @@ const AdDetail: React.FC = () => {
     };
 
     fetchAdDetail();
-  }, [id, toast, t]);
+  }, [adId, toast, t]);
 
   const calculateProgress = (min: number, max: number, available: number) => {
     if (max === available) return 0;
@@ -95,8 +107,8 @@ const AdDetail: React.FC = () => {
     const userId = Cookies.get('userId');
     if (!userId) {
       toast({
-        title: t('error'), // Use translation for error title
-        description: t('mustBeLoggedIn'), // Use translation for description
+        title: t('error'),
+        description: t('mustBeLoggedIn'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -105,19 +117,18 @@ const AdDetail: React.FC = () => {
     }
 
     try {
-      
       const userResponse = await fetch(`${process.env.REACT_APP_API}profile/${userId}`, {
-        method: 'GET', // Specify the request method
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json', // Specify the content type
+          'Content-Type': 'application/json',
         },
-      });      
+      });
       const userData = await userResponse.json();
 
       if (!userData || !userData.verified) {
         toast({
-          title: t('error'), // Use translation for error title
-          description: t('accountNotVerified'), // Use translation for description
+          title: t('error'),
+          description: t('accountNotVerified'),
           status: 'error',
           duration: 5000,
           isClosable: true,
@@ -130,7 +141,7 @@ const AdDetail: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ ad_id: ad?.id}),
+        body: JSON.stringify({ ad_id: ad?.id }),
       });
 
       if (!response.ok) {
@@ -138,16 +149,16 @@ const AdDetail: React.FC = () => {
       }
 
       toast({
-        title: t('success'), // Use translation for success title
-        description: t('expressedInterest'), // Use translation for description
+        title: t('success'),
+        description: t('expressedInterest'),
         status: 'success',
         duration: 5000,
         isClosable: true,
       });
     } catch (error) {
       toast({
-        title: t('error'), // Use translation for error title
-        description: t('alreadyRequested'), // Use translation for description
+        title: t('error'),
+        description: t('alreadyRequested'),
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -164,11 +175,11 @@ const AdDetail: React.FC = () => {
         <Box display="flex" alignItems="center" mb={4}>
           <IconButton
             icon={<ArrowBackIcon />}
-            aria-label={t('gohome')} // Use translation for aria-label
-            onClick={() => navigate('/team')} // Redirect to profile page
-            variant="outline" // Optional styling
-            colorScheme="teal" // Optional styling
-            mr={4} // Add margin to the right for spacing
+            aria-label={t('gohome')}
+            onClick={() => navigate('/team')}
+            variant="outline"
+            colorScheme="teal"
+            mr={4}
           />
           <Heading>{loading ? t('loading') : ad ? ad.title : t('noAdFound')}</Heading>
         </Box>
@@ -210,9 +221,7 @@ const AdDetail: React.FC = () => {
               <AlertDialogContent>
                 <AlertDialogHeader>{t('confirmYourAttendance')}</AlertDialogHeader>
                 <AlertDialogCloseButton />
-                <AlertDialogBody>
-                  {t('sureInterest')}
-                </AlertDialogBody>
+                <AlertDialogBody>{t('sureInterest')}</AlertDialogBody>
                 <AlertDialogFooter>
                   <Button ref={cancelRef} onClick={onClose}>
                     {t('no')}
