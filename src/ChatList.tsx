@@ -43,7 +43,7 @@ const Chat: React.FC = () => {
         if (!response.ok) {
           if (response.status === 404) {
             // Handle the case when there are no chats for the user.
-            setError('No chats found for this user.');
+            setError(t('nomessages'));
           } else {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
