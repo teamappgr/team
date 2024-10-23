@@ -202,13 +202,7 @@ const MyEvents: React.FC = () => {
 
         setAds(adsWithRequests);
       } catch (error) {
-        toast({
-          title: 'Error',
-          description: 'Failed to fetch your events. Please try again later.',
-          status: 'error',
-          duration: 5000,
-          isClosable: true,
-        });
+
       } finally {
         setLoading(false);
       }
