@@ -125,6 +125,12 @@ const resources = {
       female:"Female",
       delete:"Delete",
       cancel:"Cancel",
+      confirm:"Confirm",
+      nomessages:"No Messages Yet",
+      type:"Type a message...",
+      members:"Group Members",
+      quit:"Leave Conversation",
+      send:"Send"
     },
   },
   el: { // Greek translations
@@ -186,7 +192,7 @@ const resources = {
       showinstagram:"Δείξε Το Instagram",
       showlastname:"Δείξε το επίθετο",
       showevents:"Διαθέσημες Εκδηλώσεις",
-      showmyevents:"Οι Εκδηλώσεις Μου",
+      showmyevents:"Εκδηλώσεις",
       norequests:"Δεν υπάρχουν αιτήσεις για αύτο το συμβάν.",
       availability:"Διαθέσημες θέσεις",
       changelanguage:"Αλλαγή Γλώσσας",
@@ -236,7 +242,14 @@ const resources = {
       noevents:"Δεν υπάρχουν διαθέσημες εκδηλώσεις",
       chat:"Συνομιλίες",
       delete:"Διαγραφή",
-      cancel:"Ακύρωση"
+      cancel:"Ακύρωση",
+      confirm:"Επιβεβαίωση",
+      nomessages:"Δεν υπάρχουν μηνύματα",
+      type:"Γραψτε Μήνυμα...",
+      members:"Συμμετέχοντες",
+      quit:"Αποχώρηση από την συνομιλία",
+      send:"Αποστολή"
+
     },
   },
   

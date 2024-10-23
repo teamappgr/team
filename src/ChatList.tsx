@@ -3,6 +3,7 @@ import { Box, Button, Text, VStack, Spinner,Heading } from '@chakra-ui/react';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import Layout from './Layout';
+import { useTranslation } from 'react-i18next';
 
 interface Chat {
   slug: string;
@@ -18,6 +19,7 @@ const Chat: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const userId = Cookies.get('userId');
@@ -69,7 +71,8 @@ const Chat: React.FC = () => {
     <Layout>
       <Box p={4}>
       <Heading mb={6} textAlign="center" color="teal.600">
-          Group Chats
+      {t('chat')}
+
         </Heading>        
         {loading ? (
           <VStack spacing={4} align="center">
@@ -95,7 +98,7 @@ const Chat: React.FC = () => {
                     <Text fontSize="sm" color="gray.500">
                       {chat.first_name && chat.last_name
                         ? `${chat.first_name} ${chat.last_name}: ${chat.message_text}`
-                        : 'No messages yet.'}
+                        : t('nomessages')}
                     </Text>
                   </Box>
                 </Button>

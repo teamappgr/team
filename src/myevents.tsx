@@ -428,7 +428,7 @@ const MyEvents: React.FC = () => {
                                 <Heading size="md" mb={2}>{request.ad.title}</Heading>
                                 <Text mb={2}>{request.ad.description}</Text>
                                 <Text color="gray.500">
-                                    Date: {new Date(request.ad.date).toLocaleDateString()} {request.ad.time}
+                                {t('date')}: {new Date(request.ad.date).toLocaleDateString()} {request.ad.time}
                                 </Text>
                                 <Text color="gray.500">{t('availability')}: {request.ad.available}</Text>
                                 <Text 
@@ -490,7 +490,7 @@ const MyEvents: React.FC = () => {
                 </AlertDialogBody>
                 <AlertDialogFooter>
                     <Button ref={cancelRef} onClick={onClose}>
-                        Cancel
+                    {t('cancel')}
                     </Button>
                     <Button colorScheme="red" onClick={handleConfirm} ml={3}>
                         {selectedRequest?.action === 'accept' ? 'Accept' : 'Reject'}

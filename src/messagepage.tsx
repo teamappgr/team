@@ -23,6 +23,7 @@ import moment from 'moment';
 import { io } from 'socket.io-client';
 import { ArrowBackIcon, InfoIcon } from '@chakra-ui/icons';
 import CryptoJS from 'crypto-js';
+import { useTranslation } from 'react-i18next';
 
 const socket = io(process.env.REACT_APP_API); // Connect to the Socket.IO server
 
@@ -39,6 +40,7 @@ const Messages: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement | null>(null); // Reference for scrolling to the bottom
   const secretKey = process.env.REACT_APP_SECRET_KEY || 'your-secret-key'; // Use your actual secret key
   const userId = Cookies.get('userId');
+  const { t } = useTranslation();
 
 
   useEffect(() => {
@@ -244,7 +246,7 @@ const Messages: React.FC = () => {
       <PopoverContent>
         <PopoverArrow />
         <PopoverCloseButton />
-        <PopoverHeader>Group Members</PopoverHeader>
+        <PopoverHeader>{t('members')}</PopoverHeader>
         <PopoverBody>
           <VStack align="start">
             {groupMembers.map((member) => (
@@ -253,7 +255,7 @@ const Messages: React.FC = () => {
               </Text>
             ))}
             <Button colorScheme="red" onClick={handleQuitGroup}>
-              Quit from Group
+            {t('quit')}
             </Button>
             {error && <Text color="red.500">{error}</Text>}
           </VStack>
@@ -284,10 +286,10 @@ const Messages: React.FC = () => {
         <Input
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Type a message..."
+          placeholder= {t('type')}
         />
         <Button onClick={handleSendMessage} colorScheme="blue">
-          Send
+        {t('send')}
         </Button>
       </HStack>
     </Flex>
