@@ -492,20 +492,49 @@ app.post('/requests/:id/reject', async (req, res) => {
       return res.status(400).json({ message: 'Invalid request ID' });
     }
 
-    // Update the requests table to set the answer to 0 (rejected)
-    const result = await pool.query('UPDATE requests SET answer = 0 WHERE id = $1 RETURNING *', [id]);
+    // Start a transaction
+    await pool.query('BEGIN');
 
-    // Check if the update was successful
-    if (result.rowCount === 0) {
+    // Fetch the current answer before updating
+    const currentRequestResult = await pool.query(
+      'SELECT ad_id, answer FROM requests WHERE id = $1',
+      [id]
+    );
+
+    // Check if the request exists
+    if (currentRequestResult.rowCount === 0) {
+      await pool.query('ROLLBACK');
       return res.status(404).json({ message: 'Request not found' });
     }
 
+    const currentAnswer = currentRequestResult.rows[0].answer;
+    const adId = currentRequestResult.rows[0].ad_id;
+
+    // If the current answer is 1, increment the available count in ads
+    if (currentAnswer === 1) {
+      await pool.query(
+        'UPDATE ads SET available = available + 1 WHERE id = $1',
+        [adId]
+      );
+    }
+
+    // Update the requests table to set the answer to 0 (rejected)
+    const updateResult = await pool.query(
+      'UPDATE requests SET answer = 0 WHERE id = $1',
+      [id]
+    );
+
+    // Commit the transaction
+    await pool.query('COMMIT');
+
     res.status(200).json({ message: 'Request rejected successfully' });
   } catch (error) {
+    await pool.query('ROLLBACK'); // Rollback the transaction in case of an error
     console.error('Error rejecting request:', error);
     res.status(500).json({ message: 'Error rejecting request' });
   }
 });
+
 module.exports = router;
 
 router.post('/requests/:id/reject-ad/:adId', async (req, res) => {

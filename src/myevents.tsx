@@ -319,10 +319,7 @@ const MyEvents: React.FC = () => {
                                 {ad.requests && ad.requests.length > 0 ? (
                                     ad.requests.map((user: User) => (
                                         <Box key={user.requestid} borderWidth="1px" borderRadius="lg" p={2} mt={2}>
-                                            <Text><strong>{t('contactus')}:</strong> {user.first_name} {user.last_name}</Text>
-                                            <Text><strong>Instagram:</strong> {user.instagram_account}</Text>
-                                            <Box display="flex" alignItems="center">
-                                                <Avatar
+                                                                                          <Avatar
                                                     size="sm"
                                                     name={user.gender === 'male' ? 'Male' : 'Female'}
                                                     src={user.gender === 'male' 
@@ -330,6 +327,10 @@ const MyEvents: React.FC = () => {
                                                         : 'https://i.pinimg.com/736x/1b/2e/31/1b2e314e767a957a44ed8f992c6d9098.jpg'}
                                                     ml={2}
                                                 />
+                                            <Text><strong>{t('firstName')}:</strong> {user.first_name}<strong> {t('lastName')}:</strong>{user.last_name}</Text>
+                                            <Text><strong>Instagram:</strong> {user.instagram_account}</Text>
+                                            <Box display="flex" alignItems="center">
+
                                             </Box>
                                             <Box mt={2}>
                                                 {user.answer === 2 || user.answer === 1 ? (
@@ -342,7 +343,7 @@ const MyEvents: React.FC = () => {
                                                             }}
                                                             isDisabled={ad.available <= 0 || user.answer === 1}
                                                         >
-                                                            Accept
+                                                            {t('accept')}
                                                         </Button>
                                                         <Button 
                                                             colorScheme="red" 
@@ -352,7 +353,7 @@ const MyEvents: React.FC = () => {
                                                             }}
                                                             ml={2}
                                                         >
-                                                            Reject
+                                                            {t('reject')}
                                                         </Button>
                                                     </>
                                                 ) : (
@@ -410,7 +411,7 @@ const MyEvents: React.FC = () => {
                                 >
                                     {ad.verified === true ? 'Accepted' : 
                                      ad.verified === false ? 'Rejected' : 
-                                     'Pending'}
+                                     t('pending')}
                                 </Text>
                             </Box>
                         ))}
@@ -422,7 +423,7 @@ const MyEvents: React.FC = () => {
                     <h2>
                         <AccordionButton>
                             <Box as='span' flex='1' textAlign='left'>
-                                My Requests
+                            {t('myrequests')}
                             </Box>
                             <AccordionIcon />
                         </AccordionButton>
@@ -435,7 +436,7 @@ const MyEvents: React.FC = () => {
                                 <Text color="gray.500">
                                     Date: {new Date(request.ad.date).toLocaleDateString()} {request.ad.time}
                                 </Text>
-                                <Text color="gray.500">Availability: {request.ad.available}</Text>
+                                <Text color="gray.500">{t('availability')}: {request.ad.available}</Text>
                                 <Text 
                                     fontWeight="bold" 
                                     color={
@@ -446,7 +447,7 @@ const MyEvents: React.FC = () => {
                                 >
                                     {request.answer === 1 ? 'Accepted' : 
                                      request.answer === 0 ? 'Rejected' : 
-                                     'Pending'}
+                                     t('pending')}
                                 </Text>
                                 <Button colorScheme="red" onClick={() => handleDeleteRequest(request.id)}>
                                     Cancel

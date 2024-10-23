@@ -82,7 +82,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             onClick={() => checkUserAndNavigate('/chat')}
           >
             <Icon as={ChatIcon} boxSize={6} color="teal.500" />
-            <Text fontSize="xs" mt={1}>{t('Chat')}</Text>
+            <Text fontSize="xs" mt={1}>{t('chat')}</Text>
           </Box>
 
           <Box 

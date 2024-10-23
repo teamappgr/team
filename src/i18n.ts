@@ -122,7 +122,9 @@ const resources = {
       removeImage:"Remove Image",
       selectGender:"Slect Gender",
       male:"Male",
-      female:"Female"
+      female:"Female",
+      delete:"Delete",
+      cancel:"Cancel",
     },
   },
   el: { // Greek translations
@@ -232,7 +234,9 @@ const resources = {
       getnotifications:"Λαμβάνω Ειδοποιήσεις",
       enablebrowser:"Δώσε Πρόσβαση",
       noevents:"Δεν υπάρχουν διαθέσημες εκδηλώσεις",
-
+      chat:"Συνομιλίες",
+      delete:"Διαγραφή",
+      cancel:"Ακύρωση"
     },
   },
   
