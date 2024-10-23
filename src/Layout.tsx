@@ -60,7 +60,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             onClick={() => checkUserAndNavigate('/myevents')}
           >
             <Icon as={FaClipboardList} boxSize={6} color="teal.500" />
-            <Text fontSize="xs" mt={1}>{t('showmyevents')}</Text>
+            <Text fontSize="xs" mt={1}>{t('myevents')}</Text>
           </Box>
 
           <Box 
