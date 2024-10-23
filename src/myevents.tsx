@@ -332,7 +332,7 @@ const MyEvents: React.FC = () => {
                                                 />
                                             </Box>
                                             <Box mt={2}>
-                                                {user.answer === 2 ? (
+                                                {user.answer === 2 || user.answer === 1 ? (
                                                     <>
                                                         <Button 
                                                             colorScheme="green" 
@@ -340,7 +340,7 @@ const MyEvents: React.FC = () => {
                                                                 console.log("User object:", user);
                                                                 onOpen(user.requestid, ad.id, 'accept');
                                                             }}
-                                                            isDisabled={ad.available <= 0}
+                                                            isDisabled={ad.available <= 0 || user.answer === 1}
                                                         >
                                                             Accept
                                                         </Button>

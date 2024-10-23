@@ -27,6 +27,7 @@ import CryptoJS from 'crypto-js';
 const socket = io(process.env.REACT_APP_API); // Connect to the Socket.IO server
 
 const Messages: React.FC = () => {
+  const [error, setError] = useState(null);
   const { slug } = useParams<{ slug: string }>(); // Get group slug from URL
   const navigate = useNavigate();
   const [messages, setMessages] = useState<any[]>([]); // Store messages
@@ -154,7 +155,26 @@ const Messages: React.FC = () => {
   }, [messages]);
 
 
+  const handleQuitGroup = async () => {
+    try {
+      const response = await fetch(`${process.env.REACT_APP_API}groups/${slug}/members/${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log(data.message); // Log success message
+      navigate(`/chat`);
+    } catch (err) {
+      console.error(err);
+    }
+  };
   // Send new message function
   const handleSendMessage = async () => {
     if (!newMessage || !userInfo) return; // Do nothing if message is empty or user info is not available
@@ -214,28 +234,32 @@ const Messages: React.FC = () => {
         />
         <Text fontSize="2xl">{groupName}</Text>
         <Popover>
-          <PopoverTrigger>
-            <IconButton
-              icon={<InfoIcon />}
-              aria-label="Group Info"
-              ml="auto"
-            />
-          </PopoverTrigger>
-          <PopoverContent>
-            <PopoverArrow />
-            <PopoverCloseButton />
-            <PopoverHeader>Group Members</PopoverHeader>
-            <PopoverBody>
-              <VStack align="start">
-                {groupMembers.map((member) => (
-                  <Text key={member.user_id}>
-                    {member.first_name} {member.last_name}
-                  </Text>
-                ))}
-              </VStack>
-            </PopoverBody>
-          </PopoverContent>
-        </Popover>
+      <PopoverTrigger>
+        <IconButton
+          icon={<InfoIcon />}
+          aria-label="Group Info"
+          ml="auto"
+        />
+      </PopoverTrigger>
+      <PopoverContent>
+        <PopoverArrow />
+        <PopoverCloseButton />
+        <PopoverHeader>Group Members</PopoverHeader>
+        <PopoverBody>
+          <VStack align="start">
+            {groupMembers.map((member) => (
+              <Text key={member.user_id}>
+                {member.first_name} {member.last_name}
+              </Text>
+            ))}
+            <Button colorScheme="red" onClick={handleQuitGroup}>
+              Quit from Group
+            </Button>
+            {error && <Text color="red.500">{error}</Text>}
+          </VStack>
+        </PopoverBody>
+      </PopoverContent>
+    </Popover>
       </HStack>
 
       {/* Messages Display */}

@@ -417,11 +417,22 @@ app.post('/requests/:id/accept', async (req, res) => {
 
     const groupId = groupResult.rows[0].group_id; // Get the group_id
 
-    // Insert the user as a member of the group
-    await pool.query(
-      'INSERT INTO groupmembers (user_id, group_id) VALUES ($1, $2)',
+    // Check if the user is already a member of the group
+    const memberCheckResult = await pool.query(
+      'SELECT * FROM groupmembers WHERE user_id = $1 AND group_id = $2',
       [userId, groupId]
     );
+
+    if (memberCheckResult.rowCount > 0) {
+      // User is already a member
+      console.log(`User ${userId} is already a member of group ${groupId}. Skipping insert.`);
+    } else {
+      // Insert the user as a member of the group
+      await pool.query(
+        'INSERT INTO groupmembers (user_id, group_id) VALUES ($1, $2)',
+        [userId, groupId]
+      );
+    }
 
     // Commit the transaction
     await pool.query('COMMIT');
@@ -456,8 +467,8 @@ app.post('/requests/:id/accept', async (req, res) => {
       // Send the push notification
       await webpush.sendNotification(subscription, payload);
     } else {
-      console.error('No subscription found for user:', userId);
-      return res.status(404).json({ message: 'No subscription found' });
+      // Log that no subscription was found but continue execution
+      console.log(`No subscription found for user: ${userId}. Skipping notification.`);
     }
 
     // Send a response indicating success
@@ -469,8 +480,6 @@ app.post('/requests/:id/accept', async (req, res) => {
     res.status(500).json({ message: 'Error accepting request' });
   }
 });
-
-
 
 
 // Reject a request
@@ -1116,18 +1125,21 @@ app.get('/chats/:userId', async (req, res) => {
   try {
     // Query to fetch group details along with the last message for each group the user is in
     const result = await pool.query(
-      `SELECT g.slug, g.group_name, m.message_text, u.first_name, u.last_name, m.sent_at
+      `SELECT g.slug, g.group_name, 
+              COALESCE(m.message_text, '') AS message_text, 
+              u.first_name, u.last_name, 
+              m.sent_at
        FROM GroupMembers gm
        JOIN Groups g ON gm.group_id = g.group_id
-       LEFT JOIN Messages m ON g.group_id = m.group_id
+       LEFT JOIN Messages m ON g.group_id = m.group_id 
+                              AND m.sent_at = (
+                                SELECT MAX(sent_at) 
+                                FROM Messages 
+                                WHERE group_id = g.group_id
+                              )
        LEFT JOIN Users u ON m.sender_id = u.encrypted_code
        WHERE gm.user_id = $1
-       AND m.sent_at = (
-         SELECT MAX(sent_at) 
-         FROM Messages 
-         WHERE group_id = g.group_id
-       )
-       ORDER BY m.sent_at DESC`,  // Ordering by latest message time
+       ORDER BY m.sent_at DESC NULLS LAST`,  // Show groups with no messages last
       [userId]
     );
 
@@ -1143,6 +1155,34 @@ app.get('/chats/:userId', async (req, res) => {
 });
 
 
+app.delete('/groups/:slug/members/:userId', async (req, res) => {
+  const { slug, userId } = req.params;
+
+  try {
+    // Find the group by slug
+    const groupResult = await pool.query('SELECT group_id FROM Groups WHERE slug = $1', [slug]);
+    if (groupResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+
+    const groupId = groupResult.rows[0].group_id;
+
+    // Delete the user from the GroupMembers table
+    const deleteResult = await pool.query(
+      'DELETE FROM GroupMembers WHERE group_id = $1 AND user_id = $2',
+      [groupId, userId]
+    );
+
+    if (deleteResult.rowCount === 0) {
+      return res.status(404).json({ message: 'User not a member of this group' });
+    }
+
+    res.status(200).json({ message: 'User removed from group successfully' });
+  } catch (error) {
+    console.error('Error removing user from group:', error);
+    res.status(500).json({ error: 'Failed to remove user from group' });
+  }
+});
 
 app.get('/messages/:slug/:userId', async (req, res) => {
   const { slug } = req.params;
