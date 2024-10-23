@@ -831,8 +831,9 @@ app.post('/send-notification', async (req, res) => {
 
 app.post('/requests/:userId', async (req, res) => {
   const { ad_id } = req.body; // Get ad_id from the request body
-  const user_id =  req.params.userId; // Use decrypted userId and parse it properly
+  const user_id = req.params.userId; // Use decrypted userId and parse it properly
 
+  // Validate input
   if (!user_id || !ad_id) {
     return res.status(400).json({ message: 'User ID or Ad ID not provided' });
   }
@@ -862,10 +863,33 @@ app.post('/requests/:userId', async (req, res) => {
       return res.status(400).json({ message: 'You have already requested this event.' });
     }
 
-    // Insert into the requests table
-    const result = await pool.query('INSERT INTO requests (ad_id, user_id) VALUES ($1, $2)', [ad_id, user_id]);
+    // Fetch the owner's subscription from the database
+    const subscriptionResult = await pool.query('SELECT * FROM subscriptions WHERE user_id = $1', [adOwnerId]);
+    const userSubscription = subscriptionResult.rows[0];
 
-    if (result.rowCount === 0) {
+    // Check if the subscription exists and is valid
+    if (!userSubscription || !userSubscription.endpoint) {
+      console.error('No subscription found for user:', adOwnerId);
+      return res.status(404).json({ message: 'No subscription found' });
+    }
+
+    let keys;
+    try {
+      keys = typeof userSubscription.keys === 'string' ? JSON.parse(userSubscription.keys) : userSubscription.keys;
+    } catch (error) {
+      console.error('Error parsing keys:', error);
+      return res.status(500).json({ message: 'Failed to parse subscription keys' });
+    }
+
+    const subscription = {
+      endpoint: userSubscription.endpoint,
+      keys: keys,
+    };
+
+    // Insert into the requests table
+    const insertResult = await pool.query('INSERT INTO requests (ad_id, user_id) VALUES ($1, $2)', [ad_id, user_id]);
+
+    if (insertResult.rowCount === 0) {
       console.error('Failed to create request in database.');
       return res.status(400).json({ message: 'Failed to create request' });
     }
@@ -885,37 +909,14 @@ app.post('/requests/:userId', async (req, res) => {
       return res.status(404).json({ message: 'Ad not found' });
     }
 
-    // Fetch the owner's subscription from the database
-    const subscriptionResult = await pool.query('SELECT * FROM subscriptions WHERE user_id = $1', [adOwnerId]);
-    const userSubscription = subscriptionResult.rows[0];
+    // Prepare the payload with user's first name
+    const payload = JSON.stringify({
+      title: 'New Request',
+      message: `A user has expressed interest in your event: ${ad.title}`,
+    });
 
-    // Check if the subscription exists and is valid
-    if (userSubscription && userSubscription.endpoint) {
-      let keys;
-      try {
-        keys = typeof userSubscription.keys === 'string' ? JSON.parse(userSubscription.keys) : userSubscription.keys;
-      } catch (error) {
-        console.error('Error parsing keys:', error);
-        return res.status(500).json({ message: 'Failed to parse subscription keys' });
-      }
-
-      const subscription = {
-        endpoint: userSubscription.endpoint,
-        keys: keys,
-      };
-
-      // Prepare the payload with user's first name
-      const payload = JSON.stringify({
-        title: 'New Request',
-        message: `A user has expressed interest in your event: ${ad.title}`,
-      });
-
-      // Send the push notification
-      await webpush.sendNotification(subscription, payload);
-    } else {
-      console.error('No subscription found for user:', adOwnerId);
-      return res.status(404).json({ message: 'No subscription found' });
-    }
+    // Send the push notification
+    await webpush.sendNotification(subscription, payload);
 
     res.status(201).json({ message: 'Request created successfully' });
   } catch (error) {
@@ -923,6 +924,7 @@ app.post('/requests/:userId', async (req, res) => {
     res.status(500).json({ message: 'Error creating request' });
   }
 });
+
 
 
 
