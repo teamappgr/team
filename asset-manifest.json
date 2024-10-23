@@ -1,16 +1,16 @@
 {
   "files": {
     "main.css": "https://teamappgr.github.io/team/static/css/main.f855e6bc.css",
-    "main.js": "https://teamappgr.github.io/team/static/js/main.ffd80d3e.js",
+    "main.js": "https://teamappgr.github.io/team/static/js/main.f9512bea.js",
     "static/js/845.e61d76ce.chunk.js": "https://teamappgr.github.io/team/static/js/845.e61d76ce.chunk.js",
     "static/media/backimg.jpeg": "https://teamappgr.github.io/team/static/media/backimg.9aecbfa7eadcc55e3d26.jpeg",
     "index.html": "https://teamappgr.github.io/team/index.html",
     "main.f855e6bc.css.map": "https://teamappgr.github.io/team/static/css/main.f855e6bc.css.map",
-    "main.ffd80d3e.js.map": "https://teamappgr.github.io/team/static/js/main.ffd80d3e.js.map",
+    "main.f9512bea.js.map": "https://teamappgr.github.io/team/static/js/main.f9512bea.js.map",
     "845.e61d76ce.chunk.js.map": "https://teamappgr.github.io/team/static/js/845.e61d76ce.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.f855e6bc.css",
-    "static/js/main.ffd80d3e.js"
+    "static/js/main.f9512bea.js"
   ]
 }
