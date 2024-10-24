@@ -17,6 +17,7 @@ import {
   PopoverCloseButton,
   PopoverHeader,
   PopoverBody,
+  IconButton,
   Switch,  // Import Chakra's Switch component
 } from '@chakra-ui/react';
 import Cookies from 'js-cookie';
@@ -25,7 +26,7 @@ import Layout from './Layout';
 import { useTranslation } from 'react-i18next';
 import LanguageSelector from './LanguageSelector';
 import { MdBuild, MdCall } from "react-icons/md";
-import { EmailIcon } from '@chakra-ui/icons'; // Import EmailIcon
+import { EmailIcon,BellIcon } from '@chakra-ui/icons'; // Import EmailIcon
 
 const Profile = () => {
   const { t } = useTranslation(); 
@@ -385,9 +386,27 @@ const Profile = () => {
                 isChecked={isSubscribed}
                 onChange={(e) => handleSubscriptionToggle(e.target.checked)}
               />
-                          <Button onClick={requestNotificationPermission} colorScheme="teal">
-                {t('enablebrowser')}
-            </Button>
+            <Popover>
+          <PopoverTrigger>
+          {/* Use IconButton with BellIcon as the trigger */}
+           <IconButton 
+         aria-label="Notifications" 
+         icon={<BellIcon />} 
+         colorScheme="teal" 
+           />
+         </PopoverTrigger>
+        <PopoverContent>
+        <PopoverArrow />
+        <PopoverCloseButton />
+        <PopoverHeader>{t('enablebrowser')}</PopoverHeader>
+       <PopoverBody>
+       {/* Button to request notification permission */}
+         <Button onClick={requestNotificationPermission} colorScheme="teal">
+          {t('enablebrowser')}
+        </Button>
+        </PopoverBody>
+        </PopoverContent>
+            </Popover>
             </FormControl>
             <Button 
               colorScheme="teal" 
