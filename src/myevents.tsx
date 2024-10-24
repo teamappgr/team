@@ -306,9 +306,9 @@ const MyEvents: React.FC = () => {
                                         'yellow.500'
                                     }
                                 >
-                                    {ad.verified === true ? t('accepted') : 
+                                    {ad.verified === true ? t('verified') : 
                                      ad.verified === false ? t('rejected') : 
-                                     'Pending'}
+                                     t('pending')}
                                 </Text>
                                 {ad.requests && ad.requests.length > 0 ? (
                                     ad.requests.map((user: User) => (
@@ -349,6 +349,12 @@ const MyEvents: React.FC = () => {
                                                         >
                                                             {t('reject')}
                                                         </Button>
+                                                        {user.answer === 1 && (
+                                                            <Text fontWeight="bold" color="green.500">
+                                                              {t('accepted')}
+                                                            </Text>
+                                                          )}
+
                                                     </>
                                                 ) : (
                                                     <Text 
