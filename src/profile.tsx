@@ -4,7 +4,6 @@ import {
   Button,
   FormControl,
   FormLabel,
-  Input,
   Stack,
   Heading,
   useToast,
@@ -18,15 +17,30 @@ import {
   PopoverHeader,
   PopoverBody,
   IconButton,
-  Switch,  // Import Chakra's Switch component
+  Switch,
+  Editable,
+  EditableInput,
+  EditablePreview,
+  ButtonGroup,
+  Flex,
+  useEditableControls,
 } from '@chakra-ui/react';
+import { CheckIcon, CloseIcon, EditIcon, EmailIcon, BellIcon,SettingsIcon } from '@chakra-ui/icons';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
-import Layout from './Layout'; 
+import Layout from './Layout';
 import { useTranslation } from 'react-i18next';
 import LanguageSelector from './LanguageSelector';
-import { MdBuild, MdCall } from "react-icons/md";
-import { EmailIcon,BellIcon } from '@chakra-ui/icons'; // Import EmailIcon
+import { MdBuild } from 'react-icons/md';
+
+type ProfileData = {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  instagram_account: string;
+  verified: boolean;
+};
 
 const Profile = () => {
   const { t } = useTranslation(); 
@@ -42,6 +56,7 @@ const Profile = () => {
   const [isSubscribed, setIsSubscribed] = useState<boolean>(false); // Subscription state
   const toast = useToast();
   const navigate = useNavigate();
+  const [isEdited, setIsEdited] = useState<boolean>(false); // Track if any field is edited
 
   const userId = Cookies.get('userId');
   const requestNotificationPermission = async () => {
@@ -129,9 +144,14 @@ const Profile = () => {
     fetchUserData();
   }, [userId, toast, t]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setProfileData(prevState => ({ ...prevState, [name]: value }));
+  const handleChange = (field: keyof ProfileData, value: string) => {
+    setProfileData((prevState) => ({
+      ...prevState,
+      [field]: value,
+      
+    }));
+    setIsEdited(true); // Mark as edited when any field changes
+
   };
   const urlB64ToUint8Array = (base64String: string): Uint8Array => {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -267,6 +287,7 @@ const Profile = () => {
         isClosable: true,
       });
     } finally {
+      setIsEdited(false); // Mark as edited when any field changes
       setLoading(false);
     }
   };
@@ -313,7 +334,21 @@ const Profile = () => {
         // Error handling
     }
   };
+  
+  function EditableControls() {
+    const { isEditing, getSubmitButtonProps, getCancelButtonProps, getEditButtonProps } = useEditableControls();
 
+    return isEditing ? (
+      <ButtonGroup justifyContent="center" size="sm">
+        <IconButton icon={<CheckIcon />} aria-label="Submit" {...getSubmitButtonProps()} />
+        <IconButton icon={<CloseIcon />} aria-label="Cancel" {...getCancelButtonProps()} />
+      </ButtonGroup>
+    ) : (
+      <Flex justifyContent="center">
+        <IconButton size="sm" icon={<EditIcon />} aria-label="Edit" {...getEditButtonProps()} />
+      </Flex>
+    );
+  }
   return (
     <Layout>
       <Box p={5}>
@@ -323,54 +358,34 @@ const Profile = () => {
           <Spinner size="xl" />
         ) : (
           <Stack spacing={4}>
-            <FormControl>
-              <FormLabel>{t('firstName')}</FormLabel>
-              <Input
-                name="first_name"
-                value={profileData.first_name}
-                onChange={handleChange}
-                placeholder={t('firstName')}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>{t('lastName')}</FormLabel>
-              <Input
-                name="last_name"
-                value={profileData.last_name}
-                onChange={handleChange}
-                placeholder={t('lastName')}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>{t('email')}</FormLabel>
-              <Input
-                name="email"
-                value={profileData.email}
-                onChange={handleChange}
-                placeholder={t('email')}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>{t('phone')}</FormLabel>
-              <Input
-                name="phone"
-                value={profileData.phone}
-                onChange={handleChange}
-                placeholder={t('phone')}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>{t('instagramInfo')}</FormLabel>
-              <Input
-                name="instagram_account"
-                value={profileData.instagram_account}
-                onChange={handleChange}
-                placeholder={t('instagramInfo')}
-              />
-            </FormControl>
+{[
+  { label: 'firstName', field: 'first_name' as const },
+  { label: 'lastName', field: 'last_name' as const },
+  { label: 'email', field: 'email' as const },
+  { label: 'phone', field: 'phone' as const },
+  { label: 'instagramInfo', field: 'instagram_account' as const },
+].map(({ label, field }) => (
+  <FormControl key={field}>
+    <FormLabel fontWeight="bold">{t(label)}</FormLabel> {/* Make label bold */}
+    <Editable
+      defaultValue={profileData[field]}
+      onSubmit={(value) => handleChange(field, value)}
+      fontSize="md"
+      isPreviewFocusable={false}
+      display="flex"  // Add display flex here
+      alignItems="center" // Ensure vertical centering
+    >
+      <EditablePreview />
+      <EditableInput />
+      <Box ml={2}> {/* Add margin for spacing between input and controls */}
+        <EditableControls />
+      </Box>
+    </Editable>
+  </FormControl>
+))}
 
             <Box>
-              <Stack direction='row'>
+              <Stack direction="row">
                 <Badge colorScheme={profileData.verified ? 'green' : 'red'}>
                   {profileData.verified ? t('verified') : t('notVerified')}
                 </Badge>
@@ -386,39 +401,29 @@ const Profile = () => {
                 isChecked={isSubscribed}
                 onChange={(e) => handleSubscriptionToggle(e.target.checked)}
               />
-            <Popover>
-          <PopoverTrigger>
-          {/* Use IconButton with BellIcon as the trigger */}
-           <IconButton 
-         aria-label="Notifications" 
-         icon={<BellIcon />} 
-         colorScheme="teal" 
-           />
-         </PopoverTrigger>
-        <PopoverContent>
-        <PopoverArrow />
-        <PopoverCloseButton />
-        <PopoverHeader>{t('enablebrowser')}</PopoverHeader>
-       <PopoverBody>
-       {/* Button to request notification permission */}
-         <Button onClick={requestNotificationPermission} colorScheme="teal">
-          {t('enablebrowser')}
-        </Button>
-        </PopoverBody>
-        </PopoverContent>
-            </Popover>
+              <Popover>
+                <PopoverTrigger>
+                  <IconButton aria-label="Notifications" icon={<SettingsIcon />} colorScheme="teal" />
+                </PopoverTrigger>
+                <PopoverContent>
+                  <PopoverArrow />
+                  <PopoverCloseButton />
+                  <PopoverHeader>{t('enablebrowser')}</PopoverHeader>
+                  <PopoverBody>
+                    <Button onClick={() => {/* Request notification permission */}} colorScheme="teal">
+                      {t('enablebrowser')}
+                    </Button>
+                  </PopoverBody>
+                </PopoverContent>
+              </Popover>
             </FormControl>
-            <Button 
-              colorScheme="teal" 
-              onClick={handleSubmit} 
-              isLoading={loading}
-            >
-              {t('update')}
-            </Button>
-            <Button 
-              colorScheme="red" 
-              onClick={handleSignOut}
-            >
+
+            {isEdited && (
+              <Button colorScheme="teal" onClick={handleSubmit} isLoading={loading}>
+                {t('update')}
+              </Button>
+            )}
+            <Button colorScheme="red" onClick={handleSignOut}>
               {t('signout')}
             </Button>
           </Stack>
@@ -449,8 +454,10 @@ const Profile = () => {
           >
             {t('contactus')}
           </Button>
+          
         </Stack>
       </Box>
+      
     </Layout>
   );
 };

@@ -131,7 +131,9 @@ const resources = {
       type:"Type a message...",
       members:"Group Members",
       quit:"Leave Conversation",
-      send:"Send"
+      send:"Send",
+      about:"About Team",
+      version:"Version"
     },
   },
   el: { // Greek translations
@@ -250,8 +252,9 @@ const resources = {
       type:"Γραψτε Μήνυμα...",
       members:"Συμμετέχοντες",
       quit:"Αποχώρηση από την συνομιλία",
-      send:"Αποστολή"
-
+      send:"Αποστολή",
+      about:"Σεχτικά Με Το Team",
+      version:"Έκδοση"
     },
   },
   

@@ -19,6 +19,7 @@ import { Modal, ModalOverlay, ModalContent } from '@chakra-ui/react';
 import { ChakraProvider } from '@chakra-ui/react';
 import ForgotPassword from './forgotpassword';
 import ResetPassword from './resetpassword';
+import About from './about';
 // Create a default theme
 const theme = createTheme({
   palette: {
@@ -66,7 +67,7 @@ const App: React.FC = () => {
               <Route path="/team" element={<Team />} />
               <Route path="/chat" element={<Chat />} />
               <Route path="/messages/:slug" element={<MessagePage />} />
-
+              <Route path="/about" element={<About />} />
             </Routes>
           </Router>
         </div>

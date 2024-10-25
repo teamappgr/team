@@ -68,7 +68,7 @@ const ContactUs: React.FC = () => {
           <IconButton
             icon={<ArrowBackIcon />}
             aria-label="Go back to profile"
-            onClick={() => navigate('/profile')} // Redirect to profile page
+            onClick={() => navigate(-1)} // Redirect to profile page
             variant="outline" // Optional styling
             colorScheme="teal" // Optional styling
             mr={4} // Add margin to the right for spacing
