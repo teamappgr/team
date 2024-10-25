@@ -410,9 +410,9 @@ const Profile = () => {
                   <PopoverCloseButton />
                   <PopoverHeader>{t('enablebrowser')}</PopoverHeader>
                   <PopoverBody>
-                    <Button onClick={() => {/* Request notification permission */}} colorScheme="teal">
-                      {t('enablebrowser')}
-                    </Button>
+                  <Button onClick={requestNotificationPermission} colorScheme="teal">
+      {t('enablebrowser')}
+    </Button>
                   </PopoverBody>
                 </PopoverContent>
               </Popover>
