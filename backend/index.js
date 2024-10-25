@@ -1484,6 +1484,7 @@ io.on('connection', (socket) => {
 });
 
 
-module.exports = (req, res) => {
-  app(req, res); // Export the app as a serverless function
-};
+
+server.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
