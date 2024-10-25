@@ -1485,6 +1485,8 @@ io.on('connection', (socket) => {
 
 
 
-server.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+if(!module.parent){
+  app.listen(process.env.PORT, () =>
+    console.log(`Example app listening on port ${process.env.PORT}!`),
+  );
+}
