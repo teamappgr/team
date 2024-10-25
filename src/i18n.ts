@@ -129,6 +129,7 @@ const resources = {
       confirm:"Confirm",
       nomessages:"No Messages Yet",
       type:"Type a message...",
+      chat:"Chat",
       members:"Group Members",
       quit:"Leave Conversation",
       send:"Send",
