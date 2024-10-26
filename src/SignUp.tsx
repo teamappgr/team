@@ -26,6 +26,8 @@ import {
 import Cookies from 'js-cookie';
 import { useTranslation } from 'react-i18next';
 import backround from './backimg.jpeg'; // Correct import
+import Visibility from '@mui/icons-material/Visibility'; // Import Visibility icon
+import VisibilityOff from '@mui/icons-material/VisibilityOff'; // Import VisibilityOff icon
 
 
 const steps = [
@@ -42,6 +44,7 @@ const SignUp: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [isCameraOpen, setIsCameraOpen] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null); // For camera-captured image
@@ -54,7 +57,9 @@ const SignUp: React.FC = () => {
       navigate('/team');
     }
   }, [navigate]);
-
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
   const { activeStep, setActiveStep } = useSteps({
     index: 0,
     count: steps.length,
@@ -615,13 +620,20 @@ const switchCamera = () => {
                   mb={3}
                   required
                 />
-                <Input
-                  placeholder={t('password')}
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => handleInputChange('password', e.target.value)}
-                  required
-                />
+<Box display="flex" alignItems="center" mb={3}>
+  <Input
+    placeholder={t('password')}
+    type={showPassword ? 'text' : 'password'} // Toggle input type
+    value={formData.password}
+    onChange={(e) => handleInputChange('password', e.target.value)}
+    required
+    flex="1" // Allow input to take available space
+    mr={2} // Margin to the right of the input
+  />
+  <Button onClick={handleTogglePasswordVisibility} style={{ padding: 0 }}>
+    {showPassword ? <VisibilityOff /> : <Visibility />} {/* Toggle icon */}
+  </Button>
+</Box>
                 <Select placeholder={t('selectGender')} onChange={handleGenderChange}>
                 <option value="male">{t('male')}</option>
                 <option value="female">{t('female')}</option>

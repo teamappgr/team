@@ -16,6 +16,8 @@ import Cookies from 'js-cookie';
 import { useTranslation } from 'react-i18next';
 import backround from './backimg.jpeg'; // Correct import
 import CryptoJS from 'crypto-js';
+import Visibility from '@mui/icons-material/Visibility'; // Import the visibility icon
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 function Copyright(props: any) {
   return (
@@ -35,7 +37,8 @@ const defaultTheme = createTheme();
 export default function SignIn() {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  
+  const [showPassword, setShowPassword] = useState(false);
+
   // State to manage loading state
   const [loading, setLoading] = useState(false); // Add loading state
 
@@ -45,7 +48,9 @@ export default function SignIn() {
       navigate('/team');
     }
   }, [navigate]);
-
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
@@ -222,16 +227,26 @@ export default function SignIn() {
                 autoComplete="email"
                 autoFocus
               />
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                name="password"
-                label={t('password')}
-                type="password"
-                id="password"
-                autoComplete="current-password"
-              />
+            <TextField
+              margin="normal"
+              required
+              fullWidth
+              name="password"
+              label={t('password')}
+              type={showPassword ? 'text' : 'password'} // Change input type based on visibility state
+              id="password"
+              autoComplete="current-password"
+              InputProps={{
+                endAdornment: (
+                  <Button
+                    onClick={handleTogglePasswordVisibility}
+                    style={{ padding: 0 }}
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />} {/* Toggle icon */}
+                  </Button>
+                ),
+              }}
+            />
               <Button
                 type="submit"
                 fullWidth

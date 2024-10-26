@@ -45,7 +45,7 @@ const AdDetail: React.FC = () => {
   const cancelRef = React.useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const shareUrl = `${window.location.origin}/#/event/${ad?.title.replace(/\s+/g, '-').replace(/[^\w-]/g, '')}/${ad?.id}`;
+  const shareUrl = `${window.location.origin}/team/#/event/${ad?.title.replace(/\s+/g, '-').replace(/[^\w-]/g, '')}/${ad?.id}`;
 
   const handleShare = async () => {
     if (navigator.share) {

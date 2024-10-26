@@ -304,6 +304,7 @@ const MyEvents: React.FC = () => {
                                 colorScheme="teal"
                                 variant="outline"
                                  /> 
+
                                 <Text mb={2}>{ad.description}</Text>
                                 <Text color="gray.500">
                                     {t('date')}: {new Date(ad.date).toLocaleDateString()} {ad.time}
