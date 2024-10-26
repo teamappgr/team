@@ -60,7 +60,7 @@ const App: React.FC = () => {
               <Route path="/" element={<SignUp />} />
               <Route path="/forgot" element={<ForgotPassword />} />
               <Route path="/create" element={<Create />} />
-              <Route path="/event" element={<EventDetail />} />
+              <Route path="/event/:title/:id" element={<EventDetail />} /> {/* Updated route with title and id parameters */}
               <Route path="/myevents" element={<MyEvents />} />
               <Route path="/signin" element={<SignIn1 />} />
               <Route path="/contactus" element={<ContactUs />} />

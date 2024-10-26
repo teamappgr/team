@@ -16,11 +16,12 @@ import {
   AlertDialogCloseButton,
   useDisclosure,
   IconButton,
+  Flex
 } from '@chakra-ui/react';
-import { useLocation, useNavigate } from 'react-router-dom'; // Import useLocation
+import { useParams, useNavigate } from 'react-router-dom'; // Import useParams
 import Cookies from 'js-cookie';
 import Layout from './Layout';
-import { ArrowBackIcon } from '@chakra-ui/icons';
+import { ArrowBackIcon,ExternalLinkIcon } from '@chakra-ui/icons';
 import { useTranslation } from 'react-i18next';
 
 interface Ad {
@@ -36,8 +37,7 @@ interface Ad {
 }
 
 const AdDetail: React.FC = () => {
-  const location = useLocation();
-  const adId = location.state?.adId; // Read adId from state
+  const { id } = useParams<{ id: string }>(); // Get the ID from the URL
   const [ad, setAd] = useState<Ad | null>(null);
   const [loading, setLoading] = useState(true);
   const toast = useToast();
@@ -45,9 +45,56 @@ const AdDetail: React.FC = () => {
   const cancelRef = React.useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const shareUrl = `${window.location.origin}/#/event/${ad?.title.replace(/\s+/g, '-').replace(/[^\w-]/g, '')}/${ad?.id}`;
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: ad?.title || t('adDetails'),
+          text: t('checkOutThisEvent'),
+          url: shareUrl,
+        });
+        toast({
+          title: t('sharedSuccessfully'),
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } catch (error) {
+        toast({
+          title: t('shareFailed'),
+          description: t('tryAgain'),
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: t('linkCopied'),
+          description: shareUrl,
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } catch (error) {
+        toast({
+          title: t('copyFailed'),
+          description: t('tryAgain'),
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    }
+  };
 
   useEffect(() => {
-    if (!adId) {
+    if (!id) {
+      // Redirect to a different page if no ID is provided
       toast({
         title: t('errorFetchingAdDetails'),
         description: t('noAdIdProvided'),
@@ -55,12 +102,13 @@ const AdDetail: React.FC = () => {
         duration: 5000,
         isClosable: true,
       });
+      navigate('/team'); // Redirect to the team page or any other relevant page
       return;
     }
 
     const fetchAdDetail = async () => {
       try {
-        const response = await fetch(`${process.env.REACT_APP_API}ads/${adId}`, {
+        const response = await fetch(`${process.env.REACT_APP_API}ads/${id}`, {
           method: 'GET',
           credentials: 'include',
         });
@@ -83,7 +131,7 @@ const AdDetail: React.FC = () => {
     };
 
     fetchAdDetail();
-  }, [adId, toast, t]);
+  }, [id, toast, t, navigate]);
 
   const calculateProgress = (min: number, max: number, available: number) => {
     if (max === available) return 0;
@@ -171,18 +219,27 @@ const AdDetail: React.FC = () => {
   return (
     <Layout>
       <Box maxW="800px" mx="auto" p={6}>
-        {/* Back Button */}
-        <Box display="flex" alignItems="center" mb={4}>
+      <Flex justify="space-between" alignItems="center" mb={4}>
+          <Box display="flex" alignItems="center">
+            <IconButton
+              icon={<ArrowBackIcon />}
+              aria-label={t('gohome')}
+              onClick={() => navigate('/team')}
+              variant="outline"
+              colorScheme="teal"
+              mr={4}
+            />
+            <Heading>{loading ? t('loading') : ad ? ad.title : t('noAdFound')}</Heading>
+          </Box>
+          {/* Share Button */}
           <IconButton
-            icon={<ArrowBackIcon />}
-            aria-label={t('gohome')}
-            onClick={() => navigate('/team')}
-            variant="outline"
+            icon={<ExternalLinkIcon />}
+            aria-label={t('share')}
+            onClick={handleShare}
             colorScheme="teal"
-            mr={4}
+            variant="outline"
           />
-          <Heading>{loading ? t('loading') : ad ? ad.title : t('noAdFound')}</Heading>
-        </Box>
+        </Flex>
 
         {loading ? (
           <Spinner size="xl" />

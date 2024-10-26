@@ -70,10 +70,10 @@ const Team: React.FC = () => {
     fetchAds();
   }, [toast]);
 
-  const handleAdClick = (id: number) => {
-    navigate('/event', { state: { adId: id } }); // Pass adId in the state
+  const handleAdClick = (id: number, title: string) => {
+    const formattedTitle = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+    navigate(`/event/${formattedTitle}/${id}`, { state: { adId: id } }); // Pass adId in state
   };
-
   return (
     <Layout>
       <Box maxW="1200px" mx="auto" p={6}>
@@ -89,7 +89,7 @@ const Team: React.FC = () => {
           <SimpleGrid columns={[1, 2, 3]} spacing={4}>
             {ads.length > 0 ? (
               ads.map((ad) => (
-                <Card key={ad.id} borderWidth="1px" borderRadius="lg" onClick={() => handleAdClick(ad.id)} cursor="pointer">
+                <Card key={ad.id} borderWidth="1px" borderRadius="lg" onClick={() => handleAdClick(ad.id, ad.title)} cursor="pointer">
                   <CardHeader>
                     <Heading size="md">{ad.title}</Heading>
                   </CardHeader>
