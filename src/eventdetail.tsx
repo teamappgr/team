@@ -62,13 +62,7 @@ const AdDetail: React.FC = () => {
           isClosable: true,
         });
       } catch (error) {
-        toast({
-          title: t('shareFailed'),
-          description: t('tryAgain'),
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
+
       }
     } else {
       try {
