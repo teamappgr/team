@@ -134,7 +134,11 @@ const resources = {
       quit:"Leave Conversation",
       send:"Send",
       about:"About Team",
-      version:"Version"
+      version:"Version",
+      submitSuccess:"Success Sign Up",
+      formSubmitted:"Wait until verify your account",
+      sharedSuccessfully:"Shared"
+
     },
   },
   el: { // Greek translations
@@ -255,7 +259,10 @@ const resources = {
       quit:"Αποχώρηση από την συνομιλία",
       send:"Αποστολή",
       about:"Σεχτικά Με Το Team",
-      version:"Έκδοση"
+      version:"Έκδοση",
+      submitSuccess:"Εγγραφήκατε",
+      formSubmitted:"Περιμένετε μέχρι να επαληθευτεί ο λογαριασμος",
+      sharedSuccessfully:"Κοινοποίηση"
     },
   },
   

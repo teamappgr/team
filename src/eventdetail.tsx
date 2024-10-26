@@ -23,7 +23,7 @@ import Cookies from 'js-cookie';
 import Layout from './Layout';
 import { ArrowBackIcon,ExternalLinkIcon } from '@chakra-ui/icons';
 import { useTranslation } from 'react-i18next';
-
+import ShareIcon from '@mui/icons-material/Share';
 interface Ad {
   id: number;
   title: string;
@@ -224,7 +224,7 @@ const AdDetail: React.FC = () => {
             <IconButton
               icon={<ArrowBackIcon />}
               aria-label={t('gohome')}
-              onClick={() => navigate('/team')}
+              onClick={() => navigate(-1)}
               variant="outline"
               colorScheme="teal"
               mr={4}
@@ -233,8 +233,8 @@ const AdDetail: React.FC = () => {
           </Box>
           {/* Share Button */}
           <IconButton
-            icon={<ExternalLinkIcon />}
-            aria-label={t('share')}
+      icon={<ShareIcon />}
+      aria-label={t('share')}
             onClick={handleShare}
             colorScheme="teal"
             variant="outline"

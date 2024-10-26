@@ -19,10 +19,13 @@ import {
   AccordionButton,
   AccordionPanel,
   AccordionIcon,
+  IconButton,
 } from '@chakra-ui/react';
+import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import Layout from './Layout';
 import { useTranslation } from 'react-i18next';
+import { ExternalLinkIcon,LinkIcon } from '@chakra-ui/icons'; // Import the external link icon
 
 interface User {
   requestid: number;
@@ -65,6 +68,7 @@ const MyEvents: React.FC = () => {
   const [selectedRequest, setSelectedRequest] = useState<{ requestId: number; adId: number; action: 'accept' | 'reject' } | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const cancelRef = useRef<HTMLButtonElement>(null);
+  const navigate = useNavigate();
 
   const onOpen = (requestId: number, adId: number, action: 'accept' | 'reject') => {
     console.log(`Opening dialog with requestId: ${requestId}, adId: ${adId}, action: ${action}`);
@@ -293,6 +297,13 @@ const MyEvents: React.FC = () => {
                         {ads.filter(ad => new Date(ad.date) >= new Date()).map(ad => (
                             <Box key={ad.id} borderWidth="1px" borderRadius="lg" p={4} mb={4}>
                                 <Heading size="md" mb={2}>{ad.title}</Heading>
+                                <IconButton
+                                icon={<LinkIcon />}
+                                aria-label={t('share')}
+                                 onClick={() => navigate(`/event/${ad.title}/${ad.id}`)} // Use navigate instead of window.location
+                                colorScheme="teal"
+                                variant="outline"
+                                 /> 
                                 <Text mb={2}>{ad.description}</Text>
                                 <Text color="gray.500">
                                     {t('date')}: {new Date(ad.date).toLocaleDateString()} {ad.time}
@@ -377,6 +388,7 @@ const MyEvents: React.FC = () => {
                                 >
                                     {t('delete')}
                                 </Button>
+
                             </Box>
                         ))}
                     </AccordionPanel>
@@ -409,8 +421,8 @@ const MyEvents: React.FC = () => {
                                         'yellow.500'
                                     }
                                 >
-                                    {ad.verified === true ? 'Accepted' : 
-                                     ad.verified === false ? 'Rejected' : 
+                                    {ad.verified === true ? t('accepted') : 
+                                     ad.verified === false ? t('rejected') : 
                                      t('pending')}
                                 </Text>
                             </Box>
@@ -445,8 +457,8 @@ const MyEvents: React.FC = () => {
                                         'yellow.500'
                                     }
                                 >
-                                    {request.answer === 1 ? 'Accepted' : 
-                                     request.answer === 0 ? 'Rejected' : 
+                                    {request.answer === 1 ? t('accepted') : 
+                                     request.answer === 0 ? t('rejected') : 
                                      t('pending')}
                                 </Text>
                                 <Button colorScheme="red" onClick={() => handleDeleteRequest(request.id)}>

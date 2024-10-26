@@ -211,6 +211,9 @@ const handleNextStep = async () => {
   
 
 const handleNext = async () => {
+  // Set loading state to true while checking email
+  setIsLoading(true); 
+
   // Perform validation and wait for the result
   const isValid = await validateFields();
   
@@ -222,6 +225,7 @@ const handleNext = async () => {
       duration: 4000,
       isClosable: true,
     });
+    setIsLoading(false); // Stop loading if validation fails
     return; // Do not proceed to the next step if validation fails
   }
 
@@ -231,8 +235,6 @@ const handleNext = async () => {
   } 
   // Handle form submission when it's the last step
   else {
-    setIsLoading(true); // Start loading spinner
-
     try {
       await handleSubmit(); // Make sure handleSubmit is an async function
       toast({
@@ -254,7 +256,20 @@ const handleNext = async () => {
       setIsLoading(false); // Stop loading spinner after submission is complete
     }
   }
+  setIsLoading(false); // Stop loading spinner after submission is complete
+
 };
+
+// Button component
+<Button
+  onClick={handleNext}
+  isLoading={isLoading} // Show spinner while submitting
+  spinner={<Spinner />} // Custom spinner can be used
+  isDisabled={isLoading} // Disable button while loading
+>
+  {activeStep === steps.length - 1 ? t('submit') : t('next')}
+</Button>
+
 
 
   const handlePrevious = () => {
@@ -626,13 +641,13 @@ const switchCamera = () => {
               {t('previous')}
             </Button>
             <Button
-            onClick={handleNext}
-            isLoading={isLoading} // Show spinner while submitting
-            spinner={<Spinner />} // Optional: Custom spinner
-            isDisabled={isLoading} // Disable button while loading
-            >
-             {activeStep === steps.length - 1 ? t('submit') : t('next')}
-            </Button>
+  onClick={handleNext}
+  isLoading={isLoading} // Show spinner while submitting
+  spinner={<Spinner />} // Custom spinner can be used
+  isDisabled={isLoading} // Disable button while loading
+>
+  {activeStep === steps.length - 1 ? t('submit') : t('next')}
+</Button>
           </Flex>
           <Button
   onClick={() => navigate('/signin')} // Use navigate for redirection
