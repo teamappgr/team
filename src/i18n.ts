@@ -137,7 +137,8 @@ const resources = {
       version:"Version",
       submitSuccess:"Success Sign Up",
       formSubmitted:"Wait until verify your account",
-      sharedSuccessfully:"Shared"
+      sharedSuccessfully:"Shared",
+      linkCopied:"Link Copied"
 
     },
   },
@@ -262,7 +263,8 @@ const resources = {
       version:"Έκδοση",
       submitSuccess:"Εγγραφήκατε",
       formSubmitted:"Περιμένετε μέχρι να επαληθευτεί ο λογαριασμος",
-      sharedSuccessfully:"Κοινοποίηση"
+      sharedSuccessfully:"Κοινοποίηση",
+      linkCopied:"Ο σύνδεσμος αντιγράφηκε"
     },
   },
   
