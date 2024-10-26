@@ -11,15 +11,18 @@ import {
   Text,
   Heading,
   useToast,
+  Flex
 } from '@chakra-ui/react';
-
+import Visibility from '@mui/icons-material/Visibility'; // Import Visibility icon
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 const ResetPassword: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const toast = useToast(); // For toast notifications
-
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   // Function to extract query parameters from the URL
   const useQuery = () => {
     return new URLSearchParams(useLocation().search);
@@ -27,6 +30,13 @@ const ResetPassword: React.FC = () => {
 
   const query = useQuery();
   const token = query.get('token'); // Get the token from the URL
+  const handleToggleNewPasswordVisibility = () => {
+    setShowNewPassword((prev) => !prev);
+  };
+
+  const handleToggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword((prev) => !prev);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,26 +81,45 @@ const ResetPassword: React.FC = () => {
     <Box maxWidth="400px" mx="auto" p={5}>
       <Heading as="h2" size="lg" mb={4}>Reset Password</Heading>
       <form onSubmit={handleSubmit}>
-        <FormControl isRequired mb={4}>
-          <FormLabel htmlFor="newPassword">New Password:</FormLabel>
+      <FormControl isRequired mb={4}>
+        <FormLabel htmlFor="newPassword">New Password:</FormLabel>
+        <Flex align="center">
           <Input
-            type="password"
+            type={showNewPassword ? 'text' : 'password'} // Toggle input type
             id="newPassword"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             placeholder="Enter your new password"
+            pr="40px" // Add right padding to make space for the icon
           />
-        </FormControl>
-        <FormControl isRequired mb={4}>
-          <FormLabel htmlFor="confirmPassword">Confirm Password:</FormLabel>
+          <Button 
+            onClick={handleToggleNewPasswordVisibility} 
+            style={{ padding: 0, marginLeft: '-40px', zIndex: 1 }} // Adjust position of the button
+          >
+            {showNewPassword ? <VisibilityOff /> : <Visibility />} {/* Toggle icon */}
+          </Button>
+        </Flex>
+      </FormControl>
+
+      <FormControl isRequired mb={4}>
+        <FormLabel htmlFor="confirmPassword">Confirm Password:</FormLabel>
+        <Flex align="center">
           <Input
-            type="password"
+            type={showConfirmPassword ? 'text' : 'password'} // Toggle input type
             id="confirmPassword"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Confirm your new password"
+            pr="40px" // Add right padding to make space for the icon
           />
-        </FormControl>
+          <Button 
+            onClick={handleToggleConfirmPasswordVisibility} 
+            style={{ padding: 0, marginLeft: '-40px', zIndex: 1 }} // Adjust position of the button
+          >
+            {showConfirmPassword ? <VisibilityOff /> : <Visibility />} {/* Toggle icon */}
+          </Button>
+        </Flex>
+      </FormControl>
         {error && <Text color="red.500" mb={4}>{error}</Text>}
         {message && <Text color="green.500" mb={4}>{message}</Text>}
         <Button colorScheme="blue" type="submit" width="full">

@@ -265,15 +265,7 @@ const handleNext = async () => {
 
 };
 
-// Button component
-<Button
-  onClick={handleNext}
-  isLoading={isLoading} // Show spinner while submitting
-  spinner={<Spinner />} // Custom spinner can be used
-  isDisabled={isLoading} // Disable button while loading
->
-  {activeStep === steps.length - 1 ? t('submit') : t('next')}
-</Button>
+
 
 
 
