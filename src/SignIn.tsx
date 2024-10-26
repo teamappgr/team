@@ -246,7 +246,7 @@ export default function SignIn({ onClose }: { onClose: () => void }) {
             </Button>
             <Grid container>
               <Grid item xs>
-                <Link href="/forgot" variant="body2">
+                <Link href="/team/#/forgot" variant="body2">
                   {t('forgotPassword')}
                 </Link>
               </Grid>
