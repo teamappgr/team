@@ -352,7 +352,7 @@ const Profile = () => {
   return (
     <Layout>
       <Box p={5}>
-        <Heading mb={6}>{t('contactInfo')}</Heading>
+        <Heading mb={6} color="teal.600">{t('contactInfo')} </Heading>
 
         {loading ? ( 
           <Spinner size="xl" />
