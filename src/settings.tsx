@@ -579,7 +579,7 @@ const Profile = () => {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Confirm Deletion</ModalHeader>
+          <ModalHeader>{t('confirm')}  </ModalHeader>
           <ModalBody>
           {t('confirmdelete')}            
           </ModalBody>
