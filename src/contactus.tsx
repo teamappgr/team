@@ -82,7 +82,7 @@ const ContactUs: React.FC = () => {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Your Name"
+              placeholder={t('name')}
             />
           </FormControl>
           <FormControl mb={4} isRequired>
@@ -91,7 +91,7 @@ const ContactUs: React.FC = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Your Email"
+              placeholder={t('email')}
             />
           </FormControl>
           <FormControl mb={4} isRequired>
@@ -99,7 +99,7 @@ const ContactUs: React.FC = () => {
             <Textarea
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Your Message"
+              placeholder={t('message')}
               rows={6}
             />
           </FormControl>
