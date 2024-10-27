@@ -368,9 +368,9 @@ const MyEvents: React.FC = () => {
                                                
                                                     <Text 
                                                         fontWeight="bold" 
-                                                        color={user.answer === 1 ? 'green.500' : 'red.500'}
+                                                        color={user.answer === 1 ? 'green.500' :  user.answer === 0 ?'red.500'}
                                                     >
-                                                        {user.answer === 1 ? t('accepted') : t('rejected')}
+                                                        {user.answer === 1 ? t('accepted') :  user.answer === 0 ? t('rejected')}
                                                     </Text>
                                              
                                             </Box>
