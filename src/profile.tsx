@@ -502,10 +502,21 @@ const Profile = () => {
         colorScheme="teal"
         width="100%"
         size="lg"
+        mb={4}
         variant="outline" // Keep outline for differentiation
         onClick={() => navigate("/about")} // Your onClick function
       >
         {t('about')} {/* Button text */}
+      </Button>
+      <Button
+        leftIcon={<CloseIcon />}
+        colorScheme="teal"
+        width="100%"
+        size="lg"
+        variant="outline" // Keep outline for differentiation
+        onClick={() => navigate("/about")} // Your onClick function
+      >
+        {t('deleteaccount')} {/* Button text */}
       </Button>
     </Box>
       </Box>
