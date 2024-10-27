@@ -387,7 +387,7 @@ const Profile = () => {
       {[
         { label: 'firstName', field: 'first_name' as const },
         { label: 'lastName', field: 'last_name' as const },
-        { label: 'email', field: 'email' as const },
+        { label: 'Email', field: 'email' as const },
         { label: 'phone', field: 'phone' as const },
         { label: 'instagramInfo', field: 'instagram_account' as const },
       ].map(({ label, field }) => (
