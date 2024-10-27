@@ -140,7 +140,12 @@ const resources = {
       sharedSuccessfully:"Shared",
       linkCopied:"Link Copied",
       checkOutThisEvent:"Check Out This Event",
-      Profileupdatedsuccessfully:"Profile updated successfully"
+      Profileupdatedsuccessfully:"Profile updated successfully",
+      settings:"Settings",
+      deleteaccount:"Delete Account",
+      accountdeleted:"Account Deleted",
+      deletesuccess:"Your account has been deleted successfully."
+
 
     },
   },
@@ -268,7 +273,11 @@ const resources = {
       sharedSuccessfully:"Κοινοποίηση",
       linkCopied:"Ο σύνδεσμος αντιγράφηκε",
       checkOutThisEvent:"Δες αυτή την εκδήλωση",
-      Profileupdatedsuccessfully:"Ο λογαριασμός ενημερώθηκε επιτυχώς"
+      Profileupdatedsuccessfully:"Ο λογαριασμός ενημερώθηκε επιτυχώς",
+      settings:"Ρυθμίσεις",
+      deleteaccount:"Διαγραφή Λογαρσιαμού",
+      accountdeleted:"Ο λογαριασμος διαγράφηκε",
+      deletesuccess:"Ο λογαριασμος διαγράφηκε επιτυχώς"
     },
   },
   

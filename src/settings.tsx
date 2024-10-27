@@ -4,7 +4,6 @@ import {
   Button,
   FormControl,
   FormLabel,
-  Text,
   Stack,
   Heading,
   useToast,
@@ -15,6 +14,7 @@ import {
   PopoverContent,
   PopoverArrow,
   PopoverCloseButton,
+  Text,
   PopoverHeader,
   PopoverBody,
   IconButton,
@@ -22,11 +22,11 @@ import {
   Editable,
   EditableInput,
   EditablePreview,
-  ButtonGroup,
+  ButtonGroup,Modal, ModalOverlay, ModalContent, ModalHeader, ModalFooter, ModalBody, useDisclosure,
   Flex,
   useEditableControls,
 } from '@chakra-ui/react';
-import { CheckIcon, CloseIcon, EditIcon, EmailIcon, InfoIcon,SettingsIcon } from '@chakra-ui/icons';
+import { CheckIcon, CloseIcon, EditIcon, EmailIcon, InfoIcon,SettingsIcon,ArrowBackIcon } from '@chakra-ui/icons';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 import Layout from './Layout';
@@ -59,6 +59,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const [isEdited, setIsEdited] = useState<boolean>(false); // Track if any field is edited
   const [tempEmail, setTempEmail] = useState(profileData.email);
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const userId = Cookies.get('userId');
   const requestNotificationPermission = async () => {
@@ -277,7 +278,50 @@ const Profile = () => {
     }
   };
   
-  
+  const deleteAccount = async () => {
+    const userId = Cookies.get('userId'); // Get the userId from cookies
+
+    // Construct the API URL using the environment variable and userId
+    const apiUrl = `${process.env.REACT_APP_API}user/delete/${userId}`;
+
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          // Add any other headers you may need (like auth tokens)
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      // Show a success toast notification
+      toast({
+        title: t('accountdeleted'),
+        description: t('deletesuccess'),
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+      Cookies.remove('userId');
+
+      // Navigate to home page after successful deletion
+      navigate("/");
+    } catch (error) {
+      console.error('There was a problem with the fetch operation:', error);
+
+      // Show an error toast notification
+      toast({
+        title: "Deletion failed.",
+        description: "There was a problem deleting your account. Please try again later.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+  };
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -378,30 +422,47 @@ const Profile = () => {
   return (
     <Layout>
       <Box p={5}>
-        <Heading mb={6} color="teal.600">{t('contactInfo')} </Heading>
+      <Box display="flex" alignItems="center" mb={6}>
+          <IconButton
+            icon={<ArrowBackIcon />}
+            aria-label="Go back to profile"
+            onClick={() => navigate(-1)} // Redirect to profile page
+            variant="outline" // Optional styling
+            colorScheme="teal" // Optional styling
+            mr={4} // Add margin to the right for spacing
+          />
+          <Heading  color="teal.600">{t('settings')}</Heading>
+        </Box>
 
         {loading ? ( 
           <Spinner size="xl" />
         ) : (
           <Stack spacing={4}>
-      {[
-        { label: 'firstName', field: 'first_name' as const },
-        { label: 'lastName', field: 'last_name' as const },
-        { label: 'email', field: 'email' as const },
-        { label: 'phone', field: 'phone' as const },
-        { label: 'instagramInfo', field: 'instagram_account' as const },
-      ].map(({ label, field }) => (
-        <FormControl key={field} mb={2}> {/* Margin-bottom for spacing */}
-          <Flex align="center"> {/* Align items center vertically */}
-            <FormLabel fontWeight="bold" mr={4} whiteSpace="nowrap" mb={0}>
-              {t(label)}:
-            </FormLabel>
-            <Text fontSize="md" color="gray.600" lineHeight="1.5" mb={0}>
-              {profileData[field] || 'N/A'} {/* Display 'N/A' if the field is undefined */}
-            </Text>
-          </Flex>
-        </FormControl>
-      ))}
+{[
+  { label: 'firstName', field: 'first_name' as const },
+  { label: 'lastName', field: 'last_name' as const },
+  { label: 'email', field: 'email' as const },
+  { label: 'phone', field: 'phone' as const },
+  { label: 'instagramInfo', field: 'instagram_account' as const },
+].map(({ label, field }) => (
+  <FormControl key={field}>
+    <FormLabel fontWeight="bold">{t(label)}</FormLabel>
+    <Editable
+      defaultValue={profileData[field]}
+      onSubmit={(value) => handleChange(field, value)}
+      fontSize="md"
+      isPreviewFocusable={false}
+      display="flex"
+      alignItems="center"
+    >
+      <EditablePreview />
+      <EditableInput />
+      <Box ml={2}>
+        <EditableControls />
+      </Box>
+    </Editable>
+  </FormControl>
+))}
 
 
             <Box>
@@ -412,28 +473,130 @@ const Profile = () => {
               </Stack>
             </Box>
 
-            <Button
-        leftIcon={<SettingsIcon />}
+            <FormControl display="flex" alignItems="center">
+              <FormLabel htmlFor="subscription-switch" mb="0">
+                {t('getnotifications')}
+              </FormLabel>
+              <Switch
+                id="subscription-switch"
+                isChecked={isSubscribed}
+                onChange={(e) => handleSubscriptionToggle(e.target.checked)}
+              />
+              <Popover>
+                <PopoverTrigger>
+                  <IconButton aria-label="Notifications" icon={<SettingsIcon />} colorScheme="teal" />
+                </PopoverTrigger>
+                <PopoverContent>
+                  <PopoverArrow />
+                  <PopoverCloseButton />
+                  <PopoverHeader>{t('enablebrowser')}</PopoverHeader>
+                  <PopoverBody>
+                  <Button onClick={requestNotificationPermission} colorScheme="teal">
+      {t('enablebrowser')}
+    </Button>
+                  </PopoverBody>
+                </PopoverContent>
+              </Popover>
+            </FormControl>
+
+            {isEdited && (
+              <Button colorScheme="teal" onClick={handleSubmit} isLoading={loading}>
+                {t('update')}
+              </Button>
+            )}
+
+          </Stack>
+        )}
+
+        <Stack direction='row' spacing={4} mt={5}>
+          <Popover>
+            <PopoverTrigger>
+              <Button leftIcon={<MdBuild />} colorScheme='pink' variant='solid'         width="100%"
+        size="lg">
+                {t('language')}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent>
+              <PopoverArrow />
+              <PopoverCloseButton />
+              <PopoverHeader>{t('changelanguage')}</PopoverHeader>
+              <PopoverBody>
+                <LanguageSelector />
+              </PopoverBody>
+            </PopoverContent>
+          </Popover>
+          
+
+          
+        </Stack>
+        <Box
+      position="relative"
+      width="100vw"
+      left="50%"
+      right="50%"
+      marginLeft="-50vw"
+      marginRight="-50vw"
+      p={4}
+    >
+      <Button
+        leftIcon={<EmailIcon />}
+        colorScheme="teal"
+        width="100%"
+        size="lg"
+        variant="solid"
+        mb={4} // Add margin bottom to space between buttons
+        onClick={() => navigate('/contactus')}
+      >
+        {t('contactus')}
+      </Button>
+
+      <Button
+        leftIcon={<InfoIcon />}
         colorScheme="teal"
         width="100%"
         size="lg"
         mb={4}
         variant="outline" // Keep outline for differentiation
-        onClick={() => navigate("/settings")} // Your onClick function
+        onClick={() => navigate("/about")} // Your onClick function
       >
-        {t('settings')} {/* Button text */}
+        {t('about')} {/* Button text */}
       </Button>
-
-
-            <Button colorScheme="red" onClick={handleSignOut}>
-              {t('signout')}
-            </Button>
-          </Stack>
-        )}
-
-
+      {loading ? ( 
+          <Text></Text>
+        ) : (
+          <Button
+          leftIcon={<CloseIcon />}
+          colorScheme="red"
+          width="100%"
+          size="lg"
+          variant="outline"
+          onClick={onOpen} // Open the dialog
+        >
+          {t('deleteaccount')}
+        </Button>)}
+    </Box>
       </Box>
-      
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Confirm Deletion</ModalHeader>
+          <ModalBody>
+            Are you sure you want to delete your account? This action cannot be undone.
+          </ModalBody>
+
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={onClose}>
+              Cancel
+            </Button>
+            <Button colorScheme="red" onClick={() => {
+              deleteAccount();
+              onClose();
+            }}>
+              Delete Account
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Layout>
   );
 };

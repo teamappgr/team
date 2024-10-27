@@ -1492,8 +1492,47 @@ io.on('connection', (socket) => {
   });
 });
 
+app.delete('/user/delete/:userId', async (req, res) => {
+  const userId = req.params.userId; // Use decrypted userId and parse it properly
 
+  if (!userId) {
+    return res.status(400).json({ message: 'Missing user id parameter' });
+  }
 
+  const client = await pool.connect(); // Get a client from the pool
+
+  try {
+    await client.query('BEGIN');
+
+    // First, delete all requests associated with the user
+    await client.query('DELETE FROM requests WHERE user_id = $1', [userId]);
+    await client.query('DELETE FROM groupmembers WHERE user_id = $1', [userId]);
+    await client.query('DELETE FROM subscriptions WHERE user_id = $1', [userId]);
+
+    // Nullify user_id in ads where the user is being deleted
+    await client.query('UPDATE ads SET user_id = $1 WHERE user_id = $2', [null, userId]);
+    await client.query('UPDATE groups SET created_by = $1 WHERE created_by = $2', [null, userId]);
+    await client.query('UPDATE messages SET sender_id = $1 WHERE sender_id = $2', [null, userId]);
+
+    // Then, delete the user itself
+    const result = await client.query('DELETE FROM users WHERE encrypted_code = $1 RETURNING *', [userId]);
+
+    if (result.rowCount === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Commit the transaction
+    await client.query('COMMIT');
+    res.json({ message: 'User and associated ads deleted successfully', deletedUser: result.rows[0] });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Error deleting user and associated data:', error);
+    res.status(500).json({ error: 'An error occurred while deleting the user and its associated data' });
+  } finally {
+    client.release(); // Release the client back to the pool
+  }
+});
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

@@ -45,7 +45,7 @@ export default function SignIn() {
   useEffect(() => {
     const userId = Cookies.get('userId');
     if (userId) {
-      navigate('/team');
+      navigate('/');
     }
   }, [navigate]);
   const handleTogglePasswordVisibility = () => {
@@ -168,7 +168,7 @@ export default function SignIn() {
   };
 
   const handleSignIn = () => {
-    navigate('/'); // This function is not required anymore as it's not called
+    navigate('/signup'); // This function is not required anymore as it's not called
   };
 
   return (

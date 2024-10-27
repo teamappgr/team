@@ -8,7 +8,7 @@ import SignIn1 from './SignIn copy';
 import ContactUs from './contactus'; 
 import SignUp from './SignUp';
 import Create from './create'; 
-import Profile from './profile';
+import Settings from './settings';
 import Team from './team'; 
 import Chat from './ChatList'; 
 import MessagePage from './messagepage';
@@ -20,6 +20,8 @@ import { ChakraProvider } from '@chakra-ui/react';
 import ForgotPassword from './forgotpassword';
 import ResetPassword from './resetpassword';
 import About from './about';
+import Profile from './profile';
+
 // Create a default theme
 const theme = createTheme({
   palette: {
@@ -56,18 +58,20 @@ const App: React.FC = () => {
             </Modal>
             <Routes>
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/profile" element={<Profile />} />
-              <Route path="/" element={<SignUp />} />
+            <Route path="/settings" element={<Settings />} />
+              <Route path="/signup" element={<SignUp />} />
               <Route path="/forgot" element={<ForgotPassword />} />
               <Route path="/create" element={<Create />} />
               <Route path="/event/:title/:id" element={<EventDetail />} /> {/* Updated route with title and id parameters */}
               <Route path="/myevents" element={<MyEvents />} />
               <Route path="/signin" element={<SignIn1 />} />
               <Route path="/contactus" element={<ContactUs />} />
-              <Route path="/team" element={<Team />} />
+              <Route path="/" element={<Team />} />
               <Route path="/chat" element={<Chat />} />
               <Route path="/messages/:slug" element={<MessagePage />} />
               <Route path="/about" element={<About />} />
+              <Route path="/profile" element={<Profile />} />
+
             </Routes>
           </Router>
         </div>

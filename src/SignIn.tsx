@@ -46,7 +46,7 @@ export default function SignIn({ onClose }: { onClose: () => void }) {
     const userId = Cookies.get('userId');
     
     if (userId) {
-      navigate('/team');
+      navigate('/');
     }
   }, [navigate]);
   const handleTogglePasswordVisibility = () => {
@@ -253,7 +253,7 @@ export default function SignIn({ onClose }: { onClose: () => void }) {
               <Grid item>
                 <Button
                   component="a"
-                  onClick={() => navigate('/')} // Replace with your desired navigation
+                  onClick={() => navigate('/signup')} // Replace with your desired navigation
                   variant="text"
                   color="primary"
                   style={{ textTransform: 'none', fontSize: 'inherit', padding: 0, minWidth: 'auto' }}
