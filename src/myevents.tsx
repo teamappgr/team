@@ -167,6 +167,7 @@ const MyEvents: React.FC = () => {
       });
     } finally {
       onClose();
+      window.location.reload();
     }
   };
 
