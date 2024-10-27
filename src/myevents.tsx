@@ -140,7 +140,7 @@ const MyEvents: React.FC = () => {
           if (ad.id === adId) {
             return {
               ...ad,
-              available: action === 'accept' ? ad.available - 1 : ad.available,
+              available: action === 'accept' ? ad.available - 1 : ad.available + 1,
               requests: ad.requests?.map(req => 
                 req.requestid === requestId ? { ...req, answer: action === 'accept' ? 1 : 0 } : req
               ),
@@ -339,7 +339,7 @@ const MyEvents: React.FC = () => {
 
                                             </Box>
                                             <Box mt={2}>
-                                                {user.answer === 2 || user.answer === 1 ? (
+                                              
                                                     <>
                                                         <Button 
                                                             colorScheme="green" 
@@ -357,25 +357,22 @@ const MyEvents: React.FC = () => {
                                                                 console.log("User object for reject:", user);
                                                                 onOpen(user.requestid, ad.id, 'reject');
                                                             }}
+                                                            isDisabled={ad.available <= 0 || user.answer === 0}
                                                             ml={2}
                                                         >
                                                             {t('reject')}
                                                         </Button>
-                                                        {user.answer === 1 && (
-                                                            <Text fontWeight="bold" color="green.500">
-                                                              {t('accepted')}
-                                                            </Text>
-                                                          )}
+
 
                                                     </>
-                                                ) : (
+                                               
                                                     <Text 
                                                         fontWeight="bold" 
                                                         color={user.answer === 1 ? 'green.500' : 'red.500'}
                                                     >
-                                                        {user.answer === 1 ? t('accept') : t('rejected')}
+                                                        {user.answer === 1 ? t('accepted') : t('rejected')}
                                                     </Text>
-                                                )}
+                                             
                                             </Box>
                                         </Box>
                                     ))
@@ -446,6 +443,13 @@ const MyEvents: React.FC = () => {
                             <Box key={request.id} borderWidth="1px" borderRadius="lg" p={4} mb={4}>
                                 <Heading size="md" mb={2}>{request.ad.title}</Heading>
                                 <Text mb={2}>{request.ad.description}</Text>
+                                <IconButton
+                                icon={<LinkIcon />}
+                                aria-label={t('share')}
+                                 onClick={() => navigate(`/event/${request.ad.title}/${request.ad_id}`)} // Use navigate instead of window.location
+                                colorScheme="teal"
+                                variant="outline"
+                                 /> 
                                 <Text color="gray.500">
                                 {t('date')}: {new Date(request.ad.date).toLocaleDateString()} {request.ad.time}
                                 </Text>

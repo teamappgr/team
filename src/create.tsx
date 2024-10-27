@@ -191,6 +191,8 @@ const CreateAd: React.FC = () => {
     } finally {
       setIsSubmitting(false);
       onClose();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+
     }
   };
   

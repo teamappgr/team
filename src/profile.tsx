@@ -25,7 +25,7 @@ import {
   Flex,
   useEditableControls,
 } from '@chakra-ui/react';
-import { CheckIcon, CloseIcon, EditIcon, EmailIcon, BellIcon,SettingsIcon } from '@chakra-ui/icons';
+import { CheckIcon, CloseIcon, EditIcon, EmailIcon, InfoIcon,SettingsIcon } from '@chakra-ui/icons';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
 import Layout from './Layout';
@@ -57,6 +57,7 @@ const Profile = () => {
   const toast = useToast();
   const navigate = useNavigate();
   const [isEdited, setIsEdited] = useState<boolean>(false); // Track if any field is edited
+  const [tempEmail, setTempEmail] = useState(profileData.email);
 
   const userId = Cookies.get('userId');
   const requestNotificationPermission = async () => {
@@ -143,15 +144,39 @@ const Profile = () => {
   
     fetchUserData();
   }, [userId, toast, t]);
-
-  const handleChange = (field: keyof ProfileData, value: string) => {
+  const handleChange = async (field: keyof ProfileData, value: string) => {
+    // Check for email field
+    if (field === 'email') {
+      // Call the backend to check if the email exists
+      const response = await fetch(`${process.env.REACT_APP_API}check-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: value }),
+      });
+  
+      const data = await response.json();
+  
+      if (data.exists) {
+        // Show toast notification if the email exists
+        toast({
+          title: "Email already exists.",
+          description: "Please enter a different email address.",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return; // Prevent changing the value if the email exists
+      }
+    }
+  
+    // Update state only if the email does not exist
     setProfileData((prevState) => ({
       ...prevState,
       [field]: value,
-      
     }));
     setIsEdited(true); // Mark as edited when any field changes
-
   };
   const urlB64ToUint8Array = (base64String: string): Uint8Array => {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -273,7 +298,7 @@ const Profile = () => {
 
       toast({
         title: t('submit'),
-        description: t('Profile updated successfully'),
+        description: t('Profileupdatedsuccessfully'),
         status: 'success',
         duration: 3000,
         isClosable: true,
@@ -366,23 +391,24 @@ const Profile = () => {
   { label: 'instagramInfo', field: 'instagram_account' as const },
 ].map(({ label, field }) => (
   <FormControl key={field}>
-    <FormLabel fontWeight="bold">{t(label)}</FormLabel> {/* Make label bold */}
+    <FormLabel fontWeight="bold">{t(label)}</FormLabel>
     <Editable
       defaultValue={profileData[field]}
       onSubmit={(value) => handleChange(field, value)}
       fontSize="md"
       isPreviewFocusable={false}
-      display="flex"  // Add display flex here
-      alignItems="center" // Ensure vertical centering
+      display="flex"
+      alignItems="center"
     >
       <EditablePreview />
       <EditableInput />
-      <Box ml={2}> {/* Add margin for spacing between input and controls */}
+      <Box ml={2}>
         <EditableControls />
       </Box>
     </Editable>
   </FormControl>
 ))}
+
 
             <Box>
               <Stack direction="row">
@@ -432,7 +458,8 @@ const Profile = () => {
         <Stack direction='row' spacing={4} mt={5}>
           <Popover>
             <PopoverTrigger>
-              <Button leftIcon={<MdBuild />} colorScheme='pink' variant='solid'>
+              <Button leftIcon={<MdBuild />} colorScheme='pink' variant='solid'         width="100%"
+        size="lg">
                 {t('language')}
               </Button>
             </PopoverTrigger>
@@ -446,16 +473,41 @@ const Profile = () => {
             </PopoverContent>
           </Popover>
           
-          <Button
-            leftIcon={<EmailIcon />}
-            colorScheme='teal'
-            variant='solid'
-            onClick={() => navigate('/contactus')}
-          >
-            {t('contactus')}
-          </Button>
+
           
         </Stack>
+        <Box
+      position="relative"
+      width="100vw"
+      left="50%"
+      right="50%"
+      marginLeft="-50vw"
+      marginRight="-50vw"
+      p={4}
+    >
+      <Button
+        leftIcon={<EmailIcon />}
+        colorScheme="teal"
+        width="100%"
+        size="lg"
+        variant="solid"
+        mb={4} // Add margin bottom to space between buttons
+        onClick={() => navigate('/contactus')}
+      >
+        {t('contactus')}
+      </Button>
+
+      <Button
+        leftIcon={<InfoIcon />}
+        colorScheme="teal"
+        width="100%"
+        size="lg"
+        variant="outline" // Keep outline for differentiation
+        onClick={() => navigate("/about")} // Your onClick function
+      >
+        {t('about')} {/* Button text */}
+      </Button>
+    </Box>
       </Box>
       
     </Layout>

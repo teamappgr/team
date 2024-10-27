@@ -139,8 +139,8 @@ const resources = {
       formSubmitted:"Wait until verify your account",
       sharedSuccessfully:"Shared",
       linkCopied:"Link Copied",
-      checkOutThisEvent:"Check Out This Event"
-
+      checkOutThisEvent:"Check Out This Event",
+      Profileupdatedsuccessfully:"Profile updated successfully"
 
     },
   },
@@ -267,7 +267,8 @@ const resources = {
       formSubmitted:"Περιμένετε μέχρι να επαληθευτεί ο λογαριασμος",
       sharedSuccessfully:"Κοινοποίηση",
       linkCopied:"Ο σύνδεσμος αντιγράφηκε",
-      checkOutThisEvent:"Δες αυτή την εκδήλωση"
+      checkOutThisEvent:"Δες αυτή την εκδήλωση",
+      Profileupdatedsuccessfully:"Ο λογαριασμός ενημερώθηκε επιτυχώς"
     },
   },
   
