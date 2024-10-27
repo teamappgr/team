@@ -581,18 +581,18 @@ const Profile = () => {
         <ModalContent>
           <ModalHeader>Confirm Deletion</ModalHeader>
           <ModalBody>
-            Are you sure you want to delete your account? This action cannot be undone.
+          {t('confirmdelete')}            
           </ModalBody>
 
           <ModalFooter>
             <Button colorScheme="blue" mr={3} onClick={onClose}>
-              Cancel
+            {t('cancel')}            
             </Button>
             <Button colorScheme="red" onClick={() => {
               deleteAccount();
               onClose();
             }}>
-              Delete Account
+               {t('delete')} 
             </Button>
           </ModalFooter>
         </ModalContent>
