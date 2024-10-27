@@ -54,7 +54,7 @@ const SignUp: React.FC = () => {
   useEffect(() => {
     const userId = Cookies.get('userId');
     if (userId) {
-      navigate('/team');
+      navigate('/');
     }
   }, [navigate]);
   const handleTogglePasswordVisibility = () => {
