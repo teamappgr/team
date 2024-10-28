@@ -71,7 +71,7 @@ const Team: React.FC = () => {
   }, [toast]);
 
   const handleAdClick = (id: number, title: string) => {
-    const formattedTitle = title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+    const formattedTitle = title.replace(/\s+/g, '-').replace(/[^\p{L}\d-]/gu, '');
     navigate(`/event/${formattedTitle}/${id}`, { state: { adId: id } }); // Pass adId in state
   };
   return (

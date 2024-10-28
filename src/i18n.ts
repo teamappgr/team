@@ -147,7 +147,8 @@ const resources = {
       accountdeleted:"Account Deleted",
       deletesuccess:"Your account has been deleted successfully.",
       confirmdelete:"Are you sure you want to delete your account? This action cannot be undone.",
-      areyousuredelete:"Are you sure you want to delete your event"
+      areyousuredelete:"Are you sure you want to delete your event",
+      editevent:"Edit Event"
     },
   },
   el: { // Greek translations
@@ -281,8 +282,8 @@ const resources = {
       accountdeleted:"Ο λογαριασμος διαγράφηκε",
       deletesuccess:"Ο λογαριασμος διαγράφηκε επιτυχώς",
       confirmdelete:"Είστε βέβαιοι ότι θέλετε να διαγράψετε τον λογαριασμό σας; Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.",
-      areyousuredelete:"Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτη την εκδήλωση"
-
+      areyousuredelete:"Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτη την εκδήλωση",
+      editevent:"Επεξεργασία"
     },
   },
   

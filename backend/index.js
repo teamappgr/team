@@ -680,7 +680,31 @@ app.put('/profile/:userId', async (req, res) => {
     res.status(500).json({ message: 'Error updating profile' });
   }
 });
+app.put('/ads2/:adid', async (req, res) => {
+  const adId = req.params.adid; // Get ad ID from URL parameters
+  const { title, description, min, max, date, time, available, emailAlerts, showName, showLastName, showInstagramAccount, autoreserve } = req.body;
 
+  // Validate required fields
+  if (title === undefined || description === undefined || min === undefined || max === undefined || date === undefined || time === undefined ||available ===undefined) {
+    return res.status(400).json({ message: 'All fields are required' });
+  }
+
+  try {
+    const result = await pool.query(
+      'UPDATE ads SET title = $1, description = $2, min = $3, max = $4, date = $5, time = $6,available=$7 WHERE id = $8',
+      [title, description, min, max, date, time,available, adId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Ad not found' });
+    }
+
+    res.status(200).json({ message: 'Ad updated successfully' });
+  } catch (error) {
+    console.error('Error updating ad: ', error);
+    res.status(500).json({ message: 'Error updating ad' });
+  }
+});
 
 app.get('/subscriptions/:userId', async (req, res) => {
   const userId = req.params.userId; // Use decrypted userId
@@ -1265,6 +1289,33 @@ app.get('/messages/:slug/:userId', async (req, res) => {
   }
 });
 
+app.get('/group/:adId', async (req, res) => {
+  // Correctly extract adId from params and convert it to an integer
+  const adId = parseInt(req.params.adId, 10);
+  console.log('Received adId:', adId); // Log adId
+
+  // Check if adId is a valid number
+  if (isNaN(adId)) {
+    return res.status(400).json({ message: 'Invalid ad_id' });
+  }
+
+  try {
+    // Log the SQL query
+    console.log('Executing query to get slug for ad_id:', adId);
+
+    const result = await pool.query('SELECT slug FROM Groups WHERE ad_id = $1', [adId]);
+    console.log('Query result:', result.rows); // Log query result
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching group name:', error);
+    res.status(500).json({ message: 'Error fetching group name' });
+  }
+});
 
 
 app.get('/groups/:slug', async (req, res) => {

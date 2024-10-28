@@ -25,7 +25,9 @@ import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import Layout from './Layout';
 import { useTranslation } from 'react-i18next';
-import { ExternalLinkIcon,LinkIcon } from '@chakra-ui/icons'; // Import the external link icon
+import { ExternalLinkIcon,LinkIcon,EditIcon } from '@chakra-ui/icons'; // Import the external link icon
+import MessageIcon from '@mui/icons-material/Message';
+import ShareIcon from '@mui/icons-material/Share';
 
 interface User {
   requestid: number;
@@ -84,6 +86,108 @@ const MyEvents: React.FC = () => {
   const onDeleteClose = () => {
     setIsDeleteOpen(false);
     setSelectedAdId(null);
+  };
+  const handleShare = async (ad: Ad) => {
+    let shareUrl;
+      shareUrl = `${window.location.origin}/team/#/event/${encodeURIComponent(ad?.title?.replace(/\s+/g, '-').replace(/[^\p{L}\d-]/gu, ''))}/${ad?.id}`;
+
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: ad?.title || t('adDetails'),
+          text: t('checkOutThisEvent'),
+          url: shareUrl,
+        });
+        toast({
+          title: t('sharedSuccessfully'),
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } catch (error) {
+        console.error("Error sharing:", error);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: t('linkCopied'),
+          description: shareUrl,
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } catch (error) {
+        toast({
+          title: t('copyFailed'),
+          description: t('tryAgain'),
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    }
+  };
+  const handleShare1 = async (id:number, title:string) => {
+    let shareUrl;
+  
+    // Construct the shareUrl based on the provided ad object
+    shareUrl = `${window.location.origin}/team/#/event/${title?.replace(/\s+/g, '-').replace(/[^\p{L}\d-]/gu, '')}/${id}`;
+  
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: title || t('adDetails'),
+          text: t('checkOutThisEvent'),
+          url: shareUrl,
+        });
+        toast({
+          title: t('sharedSuccessfully'),
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } catch (error) {
+        console.error("Error sharing:", error);
+      }
+    } else {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        toast({
+          title: t('linkCopied'),
+          description: shareUrl,
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } catch (error) {
+        toast({
+          title: t('copyFailed'),
+          description: t('tryAgain'),
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    }
+  };
+  const handleClick = async (adId: number) => {
+    try {
+      // Fetch the slug from the API
+      const response = await fetch(`${process.env.REACT_APP_API}group/${adId}`);
+      const data = await response.json();
+
+      // Check if the response was successful and contains the slug
+      if (response.ok && data.slug) {
+        // Navigate to the messages route with the slug
+        navigate(`/messages/${data.slug}`);
+      } else {
+        console.error('Group not found');
+      }
+    } catch (error) {
+      console.error('Error fetching group slug:', error);
+    }
   };
 
   const handleDelete = async () => {
@@ -167,7 +271,6 @@ const MyEvents: React.FC = () => {
       });
     } finally {
       onClose();
-      window.location.reload();
     }
   };
 
@@ -305,7 +408,27 @@ const MyEvents: React.FC = () => {
                                 colorScheme="teal"
                                 variant="outline"
                                  /> 
-
+    <IconButton
+      icon={<MessageIcon />}
+      aria-label="messages"
+      onClick={() => handleClick(ad.id)}
+      colorScheme="teal"
+      variant="outline"
+    />
+                   <IconButton
+                      icon={<ShareIcon />}
+                      aria-label={t('share')}
+                      onClick={() => handleShare(ad)} // Pass the ad to handleShare
+                      colorScheme="teal"
+                      variant="outline"
+                    />
+                        <IconButton
+      icon={<EditIcon />}
+      aria-label="edit"
+      onClick={() => navigate('/eventedit', { state: { adId: ad.id } })} // Pass ad.id in state
+      colorScheme="teal"
+      variant="outline"
+    />
                                 <Text mb={2}>{ad.description}</Text>
                                 <Text color="gray.500">
                                     {t('date')}: {new Date(ad.date).toLocaleDateString()} {ad.time}
@@ -451,6 +574,21 @@ const MyEvents: React.FC = () => {
                                 colorScheme="teal"
                                 variant="outline"
                                  /> 
+                                                    <IconButton
+                              icon={<ShareIcon />}
+                             aria-label={t('share')}
+                             onClick={() =>  handleShare1(request.ad_id, request.ad.title)} // Pass the ad to handleShare
+                              colorScheme="teal"
+                             variant="outline"
+                          />
+<IconButton
+  icon={<MessageIcon />}
+  aria-label="messages"
+  onClick={() => handleClick(request.ad_id)}
+  colorScheme="teal"
+  variant="outline"
+  isDisabled={request.answer !== 1} // Disable button if request.answer is not 1
+/>
                                 <Text color="gray.500">
                                 {t('date')}: {new Date(request.ad.date).toLocaleDateString()} {request.ad.time}
                                 </Text>

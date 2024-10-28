@@ -21,6 +21,7 @@ import ForgotPassword from './forgotpassword';
 import ResetPassword from './resetpassword';
 import About from './about';
 import Profile from './profile';
+import EventEdit from './eventedit';
 
 // Create a default theme
 const theme = createTheme({
@@ -71,6 +72,7 @@ const App: React.FC = () => {
               <Route path="/messages/:slug" element={<MessagePage />} />
               <Route path="/about" element={<About />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/eventedit" element={<EventEdit />} />
 
             </Routes>
           </Router>
