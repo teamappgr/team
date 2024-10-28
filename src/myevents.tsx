@@ -442,7 +442,7 @@ const MyEvents: React.FC = () => {
                                         'yellow.500'
                                     }
                                 >
-                                    {ad.verified === true ? t('verified') : 
+                                    {ad.verified === true ? t('approved') : 
                                      ad.verified === false ? t('rejected') : 
                                      t('pending')}
                                 </Text>
@@ -543,7 +543,7 @@ const MyEvents: React.FC = () => {
                                         'yellow.500'
                                     }
                                 >
-                                    {ad.verified === true ? t('accepted') : 
+                                    {ad.verified === true ? t('approved') : 
                                      ad.verified === false ? t('rejected') : 
                                      t('pending')}
                                 </Text>
