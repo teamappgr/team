@@ -396,7 +396,7 @@ const EventEdit: React.FC = () => {
 
 
             <Button type="submit" colorScheme="teal" isLoading={isSubmitting}>
-              {t('saveChanges')}
+              {t('update')}
             </Button>
           </VStack>
         </form>
