@@ -277,7 +277,7 @@ const resources = {
       checkOutThisEvent:"Δες αυτή την εκδήλωση",
       Profileupdatedsuccessfully:"Ο λογαριασμός ενημερώθηκε επιτυχώς",
       settings:"Ρυθμίσεις",
-      deleteaccount:"Διαγραφή Λογαρσιαμού",
+      deleteaccount:"Διαγραφή Λογαριασμού",
       accountdeleted:"Ο λογαριασμος διαγράφηκε",
       deletesuccess:"Ο λογαριασμος διαγράφηκε επιτυχώς",
       confirmdelete:"Είστε βέβαιοι ότι θέλετε να διαγράψετε τον λογαριασμό σας; Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.",
