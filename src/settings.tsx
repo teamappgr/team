@@ -491,6 +491,7 @@ const Profile = () => {
                   <PopoverCloseButton />
                   <PopoverHeader>{t('enablebrowser')}</PopoverHeader>
                   <PopoverBody>
+                    <Text>{t('lastsignin')}</Text>
                   <Button onClick={requestNotificationPermission} colorScheme="teal">
       {t('enablebrowser')}
     </Button>

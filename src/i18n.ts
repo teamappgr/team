@@ -149,7 +149,9 @@ const resources = {
       confirmdelete:"Are you sure you want to delete your account? This action cannot be undone.",
       areyousuredelete:"Are you sure you want to delete your event",
       editevent:"Edit Event",
-      approved:"Approved"
+      approved:"Approved",
+      lastsignin:"You get notifications on the last signin device"
+
     },
   },
   el: { // Greek translations
@@ -259,6 +261,7 @@ const resources = {
       iWantToGo: "Θέλω να πάω",
       noAdDetailsFound: "Δεν βρέθηκαν λεπτομέρειες διαφήμισης.",
       getnotifications:"Λαμβάνω Ειδοποιήσεις",
+      lastsignin:"Παίρνεις ειδοποιήσεις στην τελευταια συσκευή που συνδέθηκες",
       enablebrowser:"Δώσε Πρόσβαση",
       noevents:"Δεν υπάρχουν διαθέσημες εκδηλώσεις",
       chat:"Συνομιλίες",
