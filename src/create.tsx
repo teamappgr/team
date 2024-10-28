@@ -273,8 +273,13 @@ const CreateAd: React.FC = () => {
                   <IconButton
                     aria-label="Increase Min"
                     icon={<AddIcon />}
-                    onClick={() => setMinCount(minCount + 1)}
-                    size="sm"
+                    onClick={() => {
+                      setMinCount(prevMin => {
+                        const newMin = prevMin + 1;
+                        setMaxCount(prevMax => (prevMax < newMin ? newMin : prevMax));
+                        return newMin;
+                      });
+                    }}                    size="sm"
                     colorScheme="teal"
                   />
                 </HStack>
@@ -286,7 +291,13 @@ const CreateAd: React.FC = () => {
                   <IconButton
                     aria-label="Decrease Max"
                     icon={<MinusIcon />}
-                    onClick={() => setMaxCount(maxCount > 0 ? maxCount - 1 : 0)}
+                    onClick={() => {
+                      setMaxCount(prevMax => {
+                        const newMax = Math.max(prevMax - 1, minCount);
+                        return newMax;
+                      });
+                    }}
+                    
                     size="sm"
                     colorScheme="teal"
                   />

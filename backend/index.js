@@ -219,7 +219,7 @@ app.post('/ads/:userId', async (req, res) => {
     const month = String(dateObject.getMonth() + 1).padStart(2, '0'); // Get month (0-based index, so add 1) and pad
     const year = dateObject.getFullYear(); // Get the full year
     
-    const formattedDate = `${day}_${month}-${year}`; // Rearrange to dd/mm/yyyy
+    const formattedDate = `${day}-${month}-${year}`; // Rearrange to dd/mm/yyyy
     
     const groupChatResult = await pool.query(
       'INSERT INTO Groups (group_name, created_by, ad_id) VALUES ($1, $2, $3) RETURNING group_id, slug',
