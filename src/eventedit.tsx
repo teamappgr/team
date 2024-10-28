@@ -368,15 +368,6 @@ const EventEdit: React.FC = () => {
   </HStack>
 </HStack>
 
-<Box mb={2}></Box> {/* Line break added here */}
-
-<HStack justify="space-between" width="100%">
-  <FormLabel>{t('available')}</FormLabel>
-  <HStack>
-    <Text>{available}</Text> {/* Display available */}
-  </HStack>
-</HStack>
-
 </VStack>
 
 
