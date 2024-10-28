@@ -334,7 +334,7 @@ const handleSubmit = async () => {
         await subscribeUserToPushNotifications(userId);
     
         // Navigate to the /team route
-        navigate('/team');
+        navigate('/');
       } else {
         toast({
           title: t('userIdError'),
