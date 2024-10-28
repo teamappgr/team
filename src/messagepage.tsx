@@ -24,6 +24,7 @@ import { io } from 'socket.io-client';
 import { ArrowBackIcon, InfoIcon } from '@chakra-ui/icons';
 import CryptoJS from 'crypto-js';
 import { useTranslation } from 'react-i18next';
+import SendIcon from '@mui/icons-material/Send';
 
 const socket = io(process.env.REACT_APP_API); // Connect to the Socket.IO server
 
@@ -288,8 +289,7 @@ const Messages: React.FC = () => {
           onChange={(e) => setNewMessage(e.target.value)}
           placeholder= {t('type')}
         />
-        <Button onClick={handleSendMessage} colorScheme="blue">
-        {t('send')}
+        <Button onClick={handleSendMessage} colorScheme="blue" rightIcon={<SendIcon />}>
         </Button>
       </HStack>
     </Flex>
