@@ -324,47 +324,50 @@ const EventEdit: React.FC = () => {
     </HStack>
   </HStack>
   <HStack justify="space-between" width="100%">
-      <FormLabel>{t('max')}</FormLabel>
-      <HStack>
-        <IconButton
-          aria-label="Decrease Max"
-          icon={<MinusIcon />}
-          onClick={() => {
-            // Check if available is greater than 0 before allowing decrease
-            if (available > 0) {
-              setMaxCount(prevMax => {
-                const newMax = Math.max(prevMax - 1, minCount);
-                setavailable(prevAvailable => Math.max(prevAvailable - 1, 0)); // Decrease available
-                return newMax;
-              });
-            }
-          }}
-          size="sm"
-          colorScheme="teal"
-          isDisabled={available === 0} // Disable button if available is 0
-        />
-        <Text>{maxCount}</Text>
-        <IconButton
-          aria-label="Increase Max"
-          icon={<AddIcon />}
-          onClick={() => {
-            setMaxCount(prevMax => {
-              const newMax = Number(prevMax) + 1;
-              setavailable(prevAvailable => Math.min(prevAvailable + 1, newMax)); // Increase available
-              return newMax;
-            });
-          }}
-          size="sm"
-          colorScheme="teal"
-        />
-      </HStack>
-      <HStack justify="space-between" width="100%">
-        <FormLabel>{t('available')}</FormLabel>
-        <HStack>
-          <Text>{available}</Text> {/* Display available */}
-        </HStack>
-      </HStack>
-    </HStack>
+  <FormLabel>{t('max')}</FormLabel>
+  <HStack>
+    <IconButton
+      aria-label="Decrease Max"
+      icon={<MinusIcon />}
+      onClick={() => {
+        setMaxCount(prevMax => {
+          const newMax = Math.max(prevMax - 1, minCount);
+          if (newMax < maxCount) {
+            setavailable(prevAvailable => Math.max(prevAvailable - 1, 0)); // Decrease available separately
+          }
+          return newMax;
+        });
+      }}
+      size="sm"
+      colorScheme="teal"
+      isDisabled={available === 0} // Disable button if available is 0
+    />
+    <Text>{maxCount}</Text>
+    <IconButton
+      aria-label="Increase Max"
+      icon={<AddIcon />}
+      onClick={() => {
+        setMaxCount(prevMax => {
+          const newMax = Number(prevMax) + 1;
+          setavailable(prevAvailable => Math.min(prevAvailable + 1, newMax)); // Increase available separately
+          return newMax;
+        });
+      }}
+      size="sm"
+      colorScheme="teal"
+    />
+  </HStack>
+</HStack>
+
+<Box mb={2}></Box> {/* Line break added here */}
+
+<HStack justify="space-between" width="100%">
+  <FormLabel>{t('available')}</FormLabel>
+  <HStack>
+    <Text>{available}</Text> {/* Display available */}
+  </HStack>
+</HStack>
+
 </VStack>
 
 
