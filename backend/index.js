@@ -585,9 +585,7 @@ router.post('/requests/:id/reject-ad/:adId', async (req, res) => {
 
 
 
-// Assuming you have already imported necessary modules like express and your database connection
 
-// Fetch ad details by ID
 app.delete('/ads/:id', async (req, res) => {
   const { id } = req.params;
 
@@ -1278,7 +1276,6 @@ app.get('/messages/:slug/:userId', async (req, res) => {
           message_id: msg.message_id,
           message_text: msg.message_text,
           created_at: moment(msg.sent_at).format('YYYY-MM-DD HH:mm:ss'),
-          sender_id: msg.sender_id, // Include sender_id here
           first_name: msg.first_name,
           last_name: msg.last_name,
       }));
