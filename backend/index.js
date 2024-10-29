@@ -1289,32 +1289,38 @@ app.get('/messages/:slug/:userId', async (req, res) => {
   }
 });
 
-app.get('/group/:adId', async (req, res) => {
+app.get('/group/:adId/:userId', async (req, res) => {
   // Correctly extract adId from params and convert it to an integer
   const adId = parseInt(req.params.adId, 10);
-  console.log('Received adId:', adId); // Log adId
+  const userId = req.params.userId; // Use decrypted userId and parse it properly
 
   // Check if adId is a valid number
   if (isNaN(adId)) {
     return res.status(400).json({ message: 'Invalid ad_id' });
   }
+  const result = await pool.query('SELECT * FROM groupmembers WHERE user_id = $1', [userId]);
 
-  try {
-    // Log the SQL query
-    console.log('Executing query to get slug for ad_id:', adId);
-
-    const result = await pool.query('SELECT slug FROM Groups WHERE ad_id = $1', [adId]);
-    console.log('Query result:', result.rows); // Log query result
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Group not found' });
+  if (result.rows.length === 0) {
+    return res.status(404).json({ message: 'Group not found' });
+  }else{
+    try {
+      // Log the SQL query
+      console.log('Executing query to get slug for ad_id:', adId);
+  
+      const result = await pool.query('SELECT slug FROM Groups WHERE ad_id = $1', [adId]);
+      console.log('Query result:', result.rows); // Log query result
+  
+      if (result.rows.length === 0) {
+        return res.status(404).json({ message: 'Group not found' });
+      }
+  
+      res.json(result.rows[0]);
+    } catch (error) {
+      console.error('Error fetching group name:', error);
+      res.status(500).json({ message: 'Error fetching group name' });
     }
-
-    res.json(result.rows[0]);
-  } catch (error) {
-    console.error('Error fetching group name:', error);
-    res.status(500).json({ message: 'Error fetching group name' });
   }
+
 });
 
 

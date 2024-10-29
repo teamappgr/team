@@ -173,9 +173,11 @@ const MyEvents: React.FC = () => {
     }
   };
   const handleClick = async (adId: number) => {
+    const userId = Cookies.get('userId');
+
     try {
       // Fetch the slug from the API
-      const response = await fetch(`${process.env.REACT_APP_API}group/${adId}`);
+      const response = await fetch(`${process.env.REACT_APP_API}group/${adId}/${userId}`);
       const data = await response.json();
 
       // Check if the response was successful and contains the slug
