@@ -304,7 +304,7 @@ const MyEvents: React.FC = () => {
 
         const adsWithRequests = await Promise.all(
           adsData.map(async (ad: Ad) => {
-            const requestsResponse = await fetch(`${process.env.REACT_APP_API}ads/${ad.id}/requests`);
+            const requestsResponse = await fetch(`${process.env.REACT_APP_API}ads/${ad.id}/requests/${userId}`);
             const requestsData = await requestsResponse.json();
             return { ...ad, requests: requestsData };
           })

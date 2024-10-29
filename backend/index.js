@@ -276,9 +276,8 @@ app.get('/ads', async (req, res) => {
   }
 });
 
-// Get ad by ID
-app.get('/ads/:id/requests', async (req, res) => {
-  const { id } = req.params; // Get ad ID from request parameters
+app.get('/ads/:id/requests/:userId', async (req, res) => {
+  const { id, userId } = req.params; // Get ad ID and userId from request parameters
 
   try {
     const result = await pool.query(`
@@ -291,15 +290,17 @@ app.get('/ads/:id/requests', async (req, res) => {
         r.answer
       FROM requests r
       JOIN users u ON r.user_id = u.encrypted_code
+      JOIN ads a ON a.id = r.ad_id  -- Join with ads to check if the ad exists for the given user
       WHERE r.ad_id = $1
-    `, [id]);
-
+      AND a.user_id = $2
+      AND a.id = $1
+    `, [id, userId]);
 
     // Check if any rows were returned
     if (result.rows.length > 0) {
       res.status(200).json(result.rows); // Send the results back to the client
     } else {
-      res.status(404).json({ message: 'No requests found for this ad ID' }); // Handle no results case
+      res.status(404).json({ message: 'No requests found for this ad ID and user' }); // Handle no results case
     }
   } catch (error) {
     console.error('Error fetching requests:', error);
