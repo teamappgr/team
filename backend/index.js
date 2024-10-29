@@ -1290,38 +1290,47 @@ app.get('/messages/:slug/:userId', async (req, res) => {
 });
 
 app.get('/group/:adId/:userId', async (req, res) => {
-  // Correctly extract adId from params and convert it to an integer
   const adId = parseInt(req.params.adId, 10);
-  const userId = req.params.userId; // Use decrypted userId and parse it properly
-
-  // Check if adId is a valid number
+  const userId = req.params.userId; // Decrypted userId
+  
+  // Validate `adId`
   if (isNaN(adId)) {
     return res.status(400).json({ message: 'Invalid ad_id' });
   }
-  const result = await pool.query('SELECT * FROM groupmembers WHERE user_id = $1', [userId]);
 
-  if (result.rows.length === 0) {
-    return res.status(404).json({ message: 'Group not found' });
-  }else{
-    try {
-      // Log the SQL query
-      console.log('Executing query to get slug for ad_id:', adId);
-  
-      const result = await pool.query('SELECT slug FROM Groups WHERE ad_id = $1', [adId]);
-      console.log('Query result:', result.rows); // Log query result
-  
-      if (result.rows.length === 0) {
-        return res.status(404).json({ message: 'Group not found' });
-      }
-  
-      res.json(result.rows[0]);
-    } catch (error) {
-      console.error('Error fetching group name:', error);
-      res.status(500).json({ message: 'Error fetching group name' });
+  try {
+
+    // First query to get `group_id` and `slug`
+    const groupResult = await pool.query(
+      'SELECT group_id, slug FROM Groups WHERE ad_id = $1', 
+      [adId]
+    );
+
+    if (groupResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Group not found' });
     }
-  }
 
+    const { group_id: groupId, slug } = groupResult.rows[0];
+
+    // Second query to check if the user is a member of the group
+    const memberResult = await pool.query(
+      'SELECT 1 FROM GroupMembers WHERE user_id = $1 AND group_id = $2', 
+      [userId, groupId]
+    );
+
+    if (memberResult.rows.length === 0) {
+      return res.status(403).json({ message: 'User is not a member of the group' });
+    }
+
+    // Return `slug` if user is a member of the group
+    res.json({ slug });
+
+  } catch (error) {
+    console.error('Error fetching group or membership information:', error);
+    res.status(500).json({ message: 'Error fetching group or membership information' });
+  }
 });
+
 
 
 app.get('/groups/:slug', async (req, res) => {
