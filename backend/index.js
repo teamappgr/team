@@ -1276,6 +1276,7 @@ app.get('/messages/:slug/:userId', async (req, res) => {
           message_id: msg.message_id,
           message_text: msg.message_text,
           created_at: moment(msg.sent_at).format('YYYY-MM-DD HH:mm:ss'),
+          sender_id: msg.sender_id === userId ? msg.sender_id : undefined, // Only include sender_id if it matches userId
           first_name: msg.first_name,
           last_name: msg.last_name,
       }));
