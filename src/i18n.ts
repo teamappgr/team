@@ -273,7 +273,7 @@ const resources = {
       members:"Συμμετέχοντες",
       quit:"Αποχώρηση από την συνομιλία",
       send:"Αποστολή",
-      about:"Σεχτικά Με Το Team",
+      about:"Σχετικά Με Το Team",
       version:"Έκδοση",
       submitSuccess:"Εγγραφήκατε",
       formSubmitted:"Περιμένετε μέχρι να επαληθευτεί ο λογαριασμος",
