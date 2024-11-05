@@ -387,6 +387,38 @@ app.delete('/api/requests/:id/:userId', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+app.get('/gender/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Step 1: Query the database to get male and female counts
+    const { rows } = await pool.query(`
+      SELECT users.gender, COUNT(*) as count
+      FROM requests
+      JOIN users ON requests.user_id = users.encrypted_code
+      WHERE requests.ad_id = $1 AND requests.answer = 1
+      GROUP BY users.gender
+    `, [id]);
+
+    // Step 2: Process the results to count males and females
+    let maleCount = 0;
+    let femaleCount = 0;
+
+    rows.forEach(row => {
+      if (row.gender === 'male') {
+        maleCount = row.count;
+      } else if (row.gender === 'female') {
+        femaleCount = row.count;
+      }
+    });
+
+    // Send the counts as JSON response
+    res.json({ maleCount, femaleCount });
+  } catch (error) {
+    console.error('Error fetching gender counts:', error);
+    res.status(500).json({ error: 'Failed to fetch gender counts' });
+  }
+});
 
 
 

@@ -16,7 +16,8 @@ import {
   AlertDialogCloseButton,
   useDisclosure,
   IconButton,
-  Flex
+  Flex,
+  Image
 } from '@chakra-ui/react';
 import { useParams, useNavigate } from 'react-router-dom'; // Import useParams
 import Cookies from 'js-cookie';
@@ -35,7 +36,10 @@ interface Ad {
   available: number;
   info?: string;
 }
-
+interface GenderData {
+  maleCount: number;
+  femaleCount: number;
+}
 const AdDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>(); // Get the ID from the URL
   const [ad, setAd] = useState<Ad | null>(null);
@@ -46,6 +50,7 @@ const AdDetail: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const shareUrl = `${window.location.origin}/team/#/event/${ad?.title.replace(/\s+/g, '-').replace(/[^\p{L}\d-]/gu, '')}/${ad?.id}`;
+  const [genderData, setGenderData] = useState<GenderData | null>(null);
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -99,22 +104,36 @@ const AdDetail: React.FC = () => {
       navigate('/team'); // Redirect to the team page or any other relevant page
       return;
     }
-
-    const fetchAdDetail = async () => {
+    const fetchAdData = async () => {
+      setLoading(true);
       try {
-        const response = await fetch(`${process.env.REACT_APP_API}ads/${id}`, {
+        // Fetch Ad details
+        const adResponse = await fetch(`${process.env.REACT_APP_API}ads/${id}`, {
           method: 'GET',
           credentials: 'include',
         });
-        if (!response.ok) {
+        if (!adResponse.ok) {
           throw new Error('Failed to fetch ad detail');
         }
-        const data = await response.json();
-        setAd(data);
+        const adData = await adResponse.json();
+        setAd(adData);
+
+        // Fetch Gender data
+        const genderResponse = await fetch(`${process.env.REACT_APP_API}gender/${id}`, {
+          method: 'GET',
+          credentials: 'include',
+        });
+        if (!genderResponse.ok) {
+          throw new Error('Failed to fetch gender data');
+        }
+        const genderData: GenderData = await genderResponse.json();
+        setGenderData(genderData);
+
       } catch (error) {
+        console.error('Error:', error);
         toast({
-          title: t('errorFetchingAdDetails'),
-          description: t('tryAgainLater'),
+          title: 'Error Fetching Data',
+          description: 'Please try again later',
           status: 'error',
           duration: 5000,
           isClosable: true,
@@ -124,7 +143,7 @@ const AdDetail: React.FC = () => {
       }
     };
 
-    fetchAdDetail();
+    fetchAdData();
   }, [id, toast, t, navigate]);
 
   const calculateProgress = (min: number, max: number, available: number) => {
@@ -258,9 +277,29 @@ const AdDetail: React.FC = () => {
                 <Text mt={2} color="red.500">
                   {t('lastAvailablePositions')}: {getLastAvailablePositions(ad.min, ad.max, ad.available)}
                 </Text>
+                
               )}
             </Box>
+            {genderData ? (
 
+<Flex alignItems="center" justify="center" mb={4}> {/* Flex container for gender data */}
+<Flex alignItems="center" mr={4}> {/* Group male image and count */}
+  <Image src="male.jpg" alt="Male" boxSize="50px" objectFit="cover" />
+  <Text ml={2}>{genderData.maleCount}</Text>
+</Flex>
+<Flex alignItems="center"> {/* Group female image and count */}
+  <Image src="female.jpg" alt="Female" boxSize="50px" objectFit="cover" />
+  <Text ml={2}>{genderData.femaleCount}</Text>
+</Flex>
+</Flex>
+) : (
+  <Text color="gray.500">Gender data not available.</Text>
+)}
+        {ad && ad.available > 0 && (
+          <Button colorScheme="teal" onClick={handleButtonClick} mb={4}>
+            {t('iWantToGo')}
+          </Button>
+        )}
             <AlertDialog
               motionPreset="slideInBottom"
               leastDestructiveRef={cancelRef}
@@ -287,11 +326,7 @@ const AdDetail: React.FC = () => {
         ) : (
           <Text>{t('noAdDetailsFound')}</Text>
         )}
-        {ad && ad.available > 0 && (
-          <Button colorScheme="teal" onClick={handleButtonClick} mb={4}>
-            {t('iWantToGo')}
-          </Button>
-        )}
+
       </Box>
     </Layout>
   );

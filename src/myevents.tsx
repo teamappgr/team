@@ -455,8 +455,8 @@ const MyEvents: React.FC = () => {
                                                     size="sm"
                                                     name={user.gender === 'male' ? 'Male' : 'Female'}
                                                     src={user.gender === 'male' 
-                                                        ? 'https://static.vecteezy.com/system/resources/previews/001/840/612/non_2x/picture-profile-icon-male-icon-human-or-people-sign-and-symbol-free-vector.jpg' 
-                                                        : 'https://i.pinimg.com/736x/1b/2e/31/1b2e314e767a957a44ed8f992c6d9098.jpg'}
+                                                        ? "male.jpg" 
+                                                        : "female.jpg"}
                                                     ml={2}
                                                 />
                                             <Text><strong>{t('firstName')}:</strong> {user.first_name}<strong> {t('lastName')}:</strong>{user.last_name}</Text>
