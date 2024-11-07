@@ -122,7 +122,7 @@ const resources = {
       closeCamera:"Close Camea",
       retakeImage:"Retake Image",
       removeImage:"Remove Image",
-      selectGender:"Slect Gender",
+      selectGender:"Select Gender",
       male:"Male",
       female:"Female",
       delete:"Delete",
@@ -157,7 +157,7 @@ const resources = {
       mixed:"Mixed",
       youarenotaman:"You are not a man",
       youarenotwοman:"You are not a woman"
-
+      
     },
   },
   el: { // Greek translations
@@ -225,6 +225,7 @@ const resources = {
       norequests:"Δεν υπάρχουν αιτήσεις για αύτο το συμβάν.",
       availability:"Διαθέσημες θέσεις",
       changelanguage:"Αλλαγή Γλώσσας",
+      selectGender:"Φύλο",
       upcoming:"Επερχόμενες Εκδηλώσεις",
       past:"Περασμένα Γεγονότα",
       myrequests:"Οι Αιτήσεις Μου",
