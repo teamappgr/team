@@ -22,7 +22,7 @@ export const GenderRadioCard: React.FC<GenderRadioCardProps> = ({ value, onChang
       }
     }}>
       <Stack spacing={4}>
-        <HStack spacing={2} wrap="nowrap" justify="space-between">
+        <HStack spacing={1} wrap="nowrap" justify="space-between">
           {/* Women Only Radio Button */}
           <Box borderWidth="1px" borderRadius="lg" p={2} width="auto">
             <Radio value="women" size="sm">
