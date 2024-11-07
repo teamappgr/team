@@ -26,7 +26,7 @@ export const GenderRadioCard: React.FC<GenderRadioCardProps> = ({ value, onChang
           {/* Women Only Radio Button */}
           <Box borderWidth="1px" borderRadius="lg" p={2} width="auto">
             <Radio value="women" size="sm">
-              <HStack spacing={2} align="center">
+              <HStack spacing={0} align="center">
                 <Female fontSize="small" />
                 <Box as="span" fontSize="sm">{t('onlywomen')}</Box>
               </HStack>
@@ -36,7 +36,7 @@ export const GenderRadioCard: React.FC<GenderRadioCardProps> = ({ value, onChang
           {/* Mixed Radio Button */}
           <Box borderWidth="1px" borderRadius="lg" p={2} width="auto">
             <Radio value="mixed" size="sm">
-              <HStack spacing={2} align="center">
+              <HStack spacing={0} align="center">
                 <Box width={4} height={4} borderRadius="full" bg="gray.400" />
                 <Box as="span" fontSize="sm">{t('mixed')}</Box>
               </HStack>
@@ -46,7 +46,7 @@ export const GenderRadioCard: React.FC<GenderRadioCardProps> = ({ value, onChang
           {/* Men Only Radio Button */}
           <Box borderWidth="1px" borderRadius="lg" p={2} width="auto">
             <Radio value="men" size="sm">
-              <HStack spacing={2} align="center">
+              <HStack spacing={0} align="center">
                 <Male fontSize="small" />
                 <Box as="span" fontSize="sm">{t('onlymen')}</Box>
               </HStack>
