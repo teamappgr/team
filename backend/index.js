@@ -722,8 +722,8 @@ app.put('/ads2/:adid', async (req, res) => {
 
   try {
     const result = await pool.query(
-      'UPDATE ads SET title = $1, description = $2, min = $3, max = $4, date = $5, time = $6,available=$7 WHERE id = $8',
-      [title, description, min, max, date, time,available, adId]
+      'UPDATE ads SET title = $1, description = $2, min = $3, max = $4, date = $5, time = $6, available=$7, verified=$8 WHERE id = $9',
+      [title, description, min, max, date, time,available,null, adId]
     );
 
     if (result.rowCount === 0) {

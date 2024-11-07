@@ -25,6 +25,7 @@ import {
   AlertDialogCloseButton,
   useDisclosure,
   Switch,
+  Link
 } from '@chakra-ui/react';
 import { AddIcon, MinusIcon } from '@chakra-ui/icons';
 import Layout from './Layout';
@@ -197,8 +198,9 @@ const CreateAd: React.FC = () => {
     } finally {
       setIsSubmitting(false);
       onClose();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 100); 
     }
   };
   
@@ -225,6 +227,9 @@ const CreateAd: React.FC = () => {
             <Alert status="success">
               <AlertIcon />
               {t('createAdSuccess')}
+              <Link href="/team/#/myevents" color="teal.500">
+          {t('showmyevents')}
+        </Link>
             </Alert>
           )}
           {alertStatus === 'info' && (

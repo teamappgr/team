@@ -24,6 +24,7 @@ import {
   AlertDialogFooter,
   AlertDialogCloseButton,
   useDisclosure,
+  Link,
   Switch,
 } from '@chakra-ui/react';
 import { AddIcon, MinusIcon,ArrowBackIcon } from '@chakra-ui/icons';
@@ -217,8 +218,10 @@ const EventEdit: React.FC = () => {
     } finally {
       setIsSubmitting(false);
       onClose();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+      setTimeout(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }, 100);    }
+
   };
 
   const handleLanguageChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -250,7 +253,10 @@ const EventEdit: React.FC = () => {
           {alertStatus === 'success' && (
             <Alert status="success">
               <AlertIcon />
-              {t('createAdSuccess')}
+              {t('updateAdSuccess')}
+              <Link href="/team/#/myevents" color="teal.500">
+          {t('showmyevents')}
+        </Link>
             </Alert>
           )}
           {alertStatus === 'info' && (
@@ -392,7 +398,7 @@ const EventEdit: React.FC = () => {
                 bg="gray.100"
               />
             </FormControl>
-
+            <Text>{t('unapproved')}</Text>
 
 
             <Button type="submit" colorScheme="teal" isLoading={isSubmitting}>
