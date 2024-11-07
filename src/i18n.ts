@@ -97,7 +97,7 @@ const resources = {
       mustBeLoggedIn: "You must be logged in to express your interest.",
       success: "Success!",
       expressedInterest: "You have expressed your interest in attending this event.",
-      alreadyRequested: "You have already requested for that event.",
+      alreadyRequested: "You have already requested for that event or you are the owner.",
       noAdFound: "No Event Found",
       progress: "Progress",
       peopleNeeded: "people needed to reach the minimum number for this event.",
@@ -150,7 +150,13 @@ const resources = {
       areyousuredelete:"Are you sure you want to delete your event",
       editevent:"Edit Event",
       approved:"Approved",
-      lastsignin:"You get notifications on the last signin device"
+      lastsignin:"You get notifications on the last signin device",
+      willgo:"Will Go",
+      onlywomen:"Only Women",
+      onlymen:"Only Men",
+      mixed:"Mixed",
+      youarenotaman:"You are not a man",
+      youarenotwοman:"You are not a woman"
 
     },
   },
@@ -245,7 +251,7 @@ const resources = {
       mustBeLoggedIn: "Πρέπει να είστε συνδεδεμένοι για να εκφράσετε το ενδιαφέρον σας.",
       success: "Επιτυχία!",
       expressedInterest: "Έχετε εκφράσει το ενδιαφέρον σας να παρακολουθήσετε αυτό το γεγονός.",
-      alreadyRequested: "Έχετε ήδη υποβάλει αίτηση για αυτό το γεγονός.",
+      alreadyRequested: "Έχετε ήδη υποβάλει αίτηση για αυτό το γεγονός ή σας ανήκει.",
       noAdFound: "Δεν βρέθηκε διαφήμιση",
       autoreserve:"Αυτόματη Κράτηση Στο Μαγαζί(by team)",
       progress: "Πρόοδος",
@@ -288,7 +294,14 @@ const resources = {
       confirmdelete:"Είστε βέβαιοι ότι θέλετε να διαγράψετε τον λογαριασμό σας; Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.",
       areyousuredelete:"Είστε βέβαιοι ότι θέλετε να διαγράψετε αυτη την εκδήλωση",
       editevent:"Επεξεργασία",
-      approved:"Εγκρίθηκε"
+      approved:"Εγκρίθηκε",
+      willgo:"Θα Πάνε",
+      onlywomen:"Μόνο Γυναίκες",
+      onlymen:"Μόνο Άνδρες",
+      mixed:"Μικτά",
+      youarenotaman:"Πρέπει να είσαι αντρας για να υποβάλεις",
+      youarenotwοman:"Πρέπει να είσαι γυναίκα για να υποβάλεις"
+
     },
   },
   

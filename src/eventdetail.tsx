@@ -35,6 +35,7 @@ interface Ad {
   max: number;
   available: number;
   info?: string;
+  gender: boolean;
 }
 interface GenderData {
   maleCount: number;
@@ -195,6 +196,24 @@ const AdDetail: React.FC = () => {
           isClosable: true,
         });
         return;
+      }else if(userData.gender=="male" && ad?.gender==true){
+        toast({
+          title: t('onlywomen'),
+          description: t('youarenotwοman'),
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+        return;
+      }else if(userData.gender=="female" && ad?.gender==false){
+        toast({
+          title: t('onlymen'),
+          description: t('youarenotaman'),
+          status: 'error',
+          duration: 5000,
+          isClosable: true,
+        });
+        return;
       }
 
       const response = await fetch(`${process.env.REACT_APP_API}requests/${userId}`, {
@@ -282,24 +301,43 @@ const AdDetail: React.FC = () => {
             </Box>
             {genderData ? (
 
-<Flex alignItems="center" justify="center" mb={4}> {/* Flex container for gender data */}
-<Flex alignItems="center" mr={4}> {/* Group male image and count */}
-  <Image src="male.jpg" alt="Male" boxSize="50px" objectFit="cover" />
-  <Text ml={2}>{genderData.maleCount}</Text>
+<Box p={4} borderWidth={1} borderRadius="lg" boxShadow="md">
+{/* Title Section */}
+<Flex alignItems="center" justify="center" mb={4}>
+  <Text fontSize="lg" fontWeight="bold">{t('willgo')}</Text>
 </Flex>
-<Flex alignItems="center"> {/* Group female image and count */}
-  <Image src="female.jpg" alt="Female" boxSize="50px" objectFit="cover" />
-  <Text ml={2}>{genderData.femaleCount}</Text>
+
+{/* Gender Count Section */}
+<Flex alignItems="center" justify="center" mb={6}>
+  {/* Male Group */}
+  <Flex alignItems="center" mr={6} direction={{ base: 'column', md: 'row' }} mb={{ base: 4, md: 0 }}>
+    <Image src="male.jpg" alt="Male" boxSize="50px" objectFit="cover" borderRadius="full" />
+    <Text ml={2} fontSize="lg">{genderData.maleCount}</Text>
+  </Flex>
+
+  {/* Female Group */}
+  <Flex alignItems="center" direction={{ base: 'column', md: 'row' }}>
+    <Image src="female.jpg" alt="Female" boxSize="50px" objectFit="cover" borderRadius="full" />
+    <Text ml={2} fontSize="lg">{genderData.femaleCount}</Text>
+  </Flex>
 </Flex>
-</Flex>
+</Box>
 ) : (
-  <Text color="gray.500">Gender data not available.</Text>
+<Text color="gray.500">Gender data not available.</Text>
 )}
-        {ad && ad.available > 0 && (
-          <Button colorScheme="teal" onClick={handleButtonClick} mb={4}>
-            {t('iWantToGo')}
-          </Button>
-        )}
+
+{/* Gender Display Text - 'Only Women' */}
+<Flex justify="center" mt={4}>
+<Text fontWeight="bold" fontSize="md" color={ad.gender === true ? 'pink.500' : ad.gender === false ? 'blue.500' : 'gray.500'}>
+{ad.gender === true ? t('onlywomen') : ad.gender === false ? t('onlymen') : ""}
+</Text>
+</Flex>
+
+{ad && ad.available > 0 && (
+<Button colorScheme="teal" onClick={handleButtonClick} mb={4}>
+{t('iWantToGo')}
+</Button>
+)}
             <AlertDialog
               motionPreset="slideInBottom"
               leastDestructiveRef={cancelRef}

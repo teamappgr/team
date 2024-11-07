@@ -30,6 +30,7 @@ import { AddIcon, MinusIcon } from '@chakra-ui/icons';
 import Layout from './Layout';
 import Cookies from 'js-cookie';
 import { useTranslation } from 'react-i18next';
+import { GenderRadioCard } from 'radio-card';
 
 const CreateAd: React.FC = () => {
   const navigate = useNavigate();
@@ -49,6 +50,7 @@ const CreateAd: React.FC = () => {
   const [showLastName, setShowLastName] = useState(false);
   const [showInstagramAccount, setShowInstagramAccount] = useState(false);
   const [autoreserve, setAutoReserve] = useState(true);
+  const [gender, setGender] = useState<boolean | null>(null);
 
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -149,6 +151,8 @@ const CreateAd: React.FC = () => {
       emailAlerts,
       info: constructedInfo.trim() || null, // Only include if constructedInfo is not empty
       autoreserve, // Add this line for autoreserve
+      gender, // Pass the gender value to backend
+
     };
   
     try {
@@ -173,6 +177,8 @@ const CreateAd: React.FC = () => {
         setShowName(false);
         setShowLastName(false); // Reset show last name toggle
         setShowInstagramAccount(false); // Reset show Instagram account toggle
+        setGender(null); // Reset gender to undefined
+
       } else {
         if (result.message === 'Your account is not verified.') {
           toast({
@@ -332,7 +338,11 @@ const CreateAd: React.FC = () => {
                 focusBorderColor="teal.500"
               />
             </FormControl>
-
+            <FormControl id="gender" isRequired>
+              <FormLabel>{t('selectGender')}</FormLabel>
+              <FormControl id="gender" isRequired>
+        <GenderRadioCard value={gender} onChange={setGender} />
+        </FormControl>       </FormControl>
             <FormControl display="flex" alignItems="center">
               <FormLabel htmlFor="showname" mb="0">
                 {t('showname')}
@@ -395,7 +405,7 @@ const CreateAd: React.FC = () => {
               <Button ref={cancelRef} onClick={onClose}>
                 {t('cancel')}
               </Button>
-              <Button colorScheme="teal" onClick={confirmSubmission} ml={3}>
+              <Button colorScheme="teal" onClick={confirmSubmission} isLoading={isSubmitting} ml={3}>
                 {t('confirm')}
               </Button>
             </AlertDialogFooter>

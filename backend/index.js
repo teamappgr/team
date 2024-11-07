@@ -188,7 +188,7 @@ app.post('/check-email', async (req, res) => {
 const slugify = require('slugify'); // Install slugify using npm
 
 app.post('/ads/:userId', async (req, res) => {
-  const { title, description, min, max, date, time,  info, autoreserve } = req.body;
+  const { title, description, min, max, date, time,  info, autoreserve,gender } = req.body;
   const userId=req.params.userId;
   // Check if min and max are valid integers
   if (!Number.isInteger(min) || !Number.isInteger(max)) {
@@ -205,8 +205,8 @@ app.post('/ads/:userId', async (req, res) => {
 
     // Proceed to insert the ad with the received info
     const adResult = await pool.query(
-      'INSERT INTO ads (title, description, user_id, min, max, date, time, info, available, autoreserve) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING id',
-      [title, description, userId, min, max, date, time, info, max, autoreserve]
+      'INSERT INTO ads (title, description, user_id, min, max, date, time, info, available, autoreserve,gender) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10,$11) RETURNING id',
+      [title, description, userId, min, max, date, time, info, max, autoreserve,gender]
     );
 
     const adId = adResult.rows[0].id;
@@ -1187,7 +1187,7 @@ app.get('/ads/:id', async (req, res) => {
 
 
   try {
-    const query = 'SELECT id,title,description,created_at,min,max,date,time,verified,available,info FROM ads WHERE id = $1'; // Use $1 for PostgreSQL
+    const query = 'SELECT id,title,description,created_at,min,max,date,time,verified,available,info,gender FROM ads WHERE id = $1'; // Use $1 for PostgreSQL
     
     // Execute the query
     const result = await pool.query(query, [adId]);

@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    
     "target": "es2015",
     "lib": [
       "dom",
@@ -18,7 +19,11 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "baseUrl": "src",
+    "paths": {
+      "@radio-card": ["src/radio-cart"]
+    },
   },
   "include": [
     "src",
