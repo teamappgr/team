@@ -697,8 +697,8 @@ app.put('/profile/:userId', async (req, res) => {
 
   try {
     const result = await pool.query(
-      'UPDATE users SET first_name = $1, last_name = $2, email = $3, phone = $4, instagram_account = $5 WHERE encrypted_code = $6',
-      [first_name, last_name, email, phone, instagram_account, userId]
+      'UPDATE users SET first_name = $1, last_name = $2, email = $3, phone = $4, instagram_account = $5,verified=$6 WHERE encrypted_code = $7',
+      [first_name, last_name, email, phone, instagram_account,false, userId]
     );
 
     if (result.rowCount === 0) {

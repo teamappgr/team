@@ -157,7 +157,10 @@ const resources = {
       onlymen:"Only Men",
       mixed:"Mixed",
       youarenotaman:"You are not a man",
-      youarenotwοman:"You are not a woman"
+      youarenotwοman:"You are not a woman",
+      verifyagain:"After Update Your Account Should Get Verified Again",
+      emailAlreadyExists:"Email Already Exist",
+      emailAlreadyExistsDescription:"Change your email because someone else use this email"
       
     },
   },
@@ -304,7 +307,10 @@ const resources = {
       onlymen:"Μόνο Άνδρες",
       mixed:"Μικτά",
       youarenotaman:"Πρέπει να είσαι αντρας για να υποβάλεις",
-      youarenotwοman:"Πρέπει να είσαι γυναίκα για να υποβάλεις"
+      youarenotwοman:"Πρέπει να είσαι γυναίκα για να υποβάλεις",
+      verifyagain:"Μετα την ενημέρωση θα πρέπει να ξαναεπαλυθευτεί ο λογιαρασμός",
+      emailAlreadyExists:"Το email υπάρχει ήδη",
+      emailAlreadyExistsDescription:"Άλλαξε το email γιατί κάποιος άλλος το χρησιμοποιεί"
 
     },
   },

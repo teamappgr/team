@@ -147,8 +147,19 @@ const Profile = () => {
     fetchUserData();
   }, [userId, toast, t]);
   const handleChange = async (field: keyof ProfileData, value: string) => {
-    // Check for email field
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (field === 'email') {
+      if (!emailPattern.test(value)) {
+        // Show error toast if the email format is invalid
+        toast({
+            title: t('invalidEmail'),
+            description: t('invalidEmailDescription'),
+            status: "error",
+            duration: 3000,
+            isClosable: true,
+        });
+        return; // Exit early if the email format is invalid
+    }
       // Call the backend to check if the email exists
       const response = await fetch(`${process.env.REACT_APP_API}check-email`, {
         method: 'POST',
@@ -163,8 +174,8 @@ const Profile = () => {
       if (data.exists) {
         // Show toast notification if the email exists
         toast({
-          title: "Email already exists.",
-          description: "Please enter a different email address.",
+          title: t('emailAlreadyExists'),
+          description: t('emailAlreadyExistsDescription'),
           status: "error",
           duration: 3000,
           isClosable: true,
@@ -172,7 +183,28 @@ const Profile = () => {
         return; // Prevent changing the value if the email exists
       }
     }
-  
+  if(field === 'phone'){
+    if (!/^69\d{8}$/.test(value)) {
+      toast({
+        title: t('invalidPhone'),
+        description: t('invalidPhoneDescription'),
+        status: 'error',
+        duration: 4000,
+        isClosable: true,
+      });
+      return false; // Do not proceed to the next step
+    }
+  }
+  if (!value) {
+    toast({
+        title: "Field cannot be empty.",
+        description: `Please enter a value for ${field}.`,
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+    });
+    return; // Exit early if the field is empty
+}
     // Update state only if the email does not exist
     setProfileData((prevState) => ({
       ...prevState,
@@ -501,9 +533,13 @@ const Profile = () => {
             </FormControl>
 
             {isEdited && (
-              <Button colorScheme="teal" onClick={handleSubmit} isLoading={loading}>
+              <Box>
+              <Text>{t('verifyagain')}</Text>
+              <Button colorScheme="teal" width="full" onClick={handleSubmit} isLoading={loading}>
                 {t('update')}
               </Button>
+              </Box>
+
             )}
 
           </Stack>
