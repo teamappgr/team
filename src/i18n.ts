@@ -61,7 +61,7 @@ const resources = {
       no: "No",
       yes: "Yes",
       verified: "Verified", // Added translation for Verified
-      notVerified: "Not Verified", // Added translation for Not Verified
+      notVerified: "Not Verified(You have been rejected. Create a new account with the correct details)", // Added translation for Not Verified
       showname:"Show My Name",
       showinstagram:"Show My Instagram",
       showlastname:"Show My Last Name",
@@ -160,8 +160,8 @@ const resources = {
       youarenotwοman:"You are not a woman",
       verifyagain:"After Update Your Account Should Get Verified Again",
       emailAlreadyExists:"Email Already Exist",
-      emailAlreadyExistsDescription:"Change your email because someone else use this email"
-      
+      emailAlreadyExistsDescription:"Change your email because someone else use this email",
+      notVerified1:"Not Verified(Please wait until verification)"
     },
   },
   el: { // Greek translations
@@ -220,7 +220,7 @@ const resources = {
       no: "Όχι",
       yes: "Ναι",
       verified: "Επαληθευμένος", // Added translation for Verified
-      notVerified: "Μη Επαληθευμένος" ,// Added translation for Not Verified
+      notVerified: "Μη Επαληθευμένος(Απορριφθήκατε. Δημιουργήστε καινούργιο λογαριασμό με τα σωστά στοιχεία)" ,// Added translation for Not Verified
       showname:"Δείξε όνομα",
       showinstagram:"Δείξε Το Instagram",
       showlastname:"Δείξε το επίθετο",
@@ -310,8 +310,8 @@ const resources = {
       youarenotwοman:"Πρέπει να είσαι γυναίκα για να υποβάλεις",
       verifyagain:"Μετα την ενημέρωση θα πρέπει να ξαναεπαλυθευτεί ο λογιαρασμός",
       emailAlreadyExists:"Το email υπάρχει ήδη",
-      emailAlreadyExistsDescription:"Άλλαξε το email γιατί κάποιος άλλος το χρησιμοποιεί"
-
+      emailAlreadyExistsDescription:"Άλλαξε το email γιατί κάποιος άλλος το χρησιμοποιεί",
+      notVerified1:"Μη Επαληθευμένος (Περιμνέτε μέχρι την επαλήθευση)"
     },
   },
   

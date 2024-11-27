@@ -199,7 +199,11 @@ app.post('/ads/:userId', async (req, res) => {
     // Check if the user is verified
     const userResult = await pool.query('SELECT first_name, verified FROM users WHERE encrypted_code = $1', [userId]);
 
-    if (userResult.rows.length === 0 || !userResult.rows[0].verified) {
+    if (
+      userResult.rows.length === 0 || 
+      userResult.rows[0].verified === false || 
+      userResult.rows[0].verified === null
+    ) {
       return res.status(403).json({ message: 'Your account is not verified.' });
     }
 

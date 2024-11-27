@@ -187,7 +187,7 @@ const AdDetail: React.FC = () => {
       });
       const userData = await userResponse.json();
 
-      if (!userData || !userData.verified) {
+      if (!userData || userData.verified === false || userData.verified === null)  {
         toast({
           title: t('error'),
           description: t('accountNotVerified'),

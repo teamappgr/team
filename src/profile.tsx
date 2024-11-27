@@ -404,13 +404,26 @@ const Profile = () => {
       ))}
 
 
-            <Box>
-              <Stack direction="row">
-                <Badge colorScheme={profileData.verified ? 'green' : 'red'}>
-                  {profileData.verified ? t('verified') : t('notVerified')}
-                </Badge>
-              </Stack>
-            </Box>
+<Box>
+  <Stack direction="row">
+    <Badge 
+      colorScheme={
+        profileData.verified === true 
+          ? 'green' 
+          : profileData.verified === null 
+            ? 'red' 
+            : 'red'
+      }
+    >
+      {profileData.verified === true 
+        ? t('verified') 
+        : profileData.verified === null 
+          ? t('notVerified1')
+          : t('notVerified')
+      }
+    </Badge>
+  </Stack>
+</Box>
 
             <Button
         leftIcon={<SettingsIcon />}
