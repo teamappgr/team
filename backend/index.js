@@ -510,8 +510,15 @@ app.post('/requests/:id/accept', async (req, res) => {
         message: `User accepted your request`, // Changed to be more clear
       });
 
-      // Send the push notification
-      await webpush.sendNotification(subscription, payload);
+      // Send the push notification inside a try-catch block
+      try {
+        await webpush.sendNotification(subscription, payload);
+        console.log('Push notification sent successfully.');
+      } catch (pushError) {
+        console.error('Error sending push notification:', pushError);
+        // Respond with a message saying the notification failed
+        return res.status(500).json({ message: 'Request accepted but failed to send push notification.' });
+      }
     } else {
       // Log that no subscription was found but continue execution
       console.log(`No subscription found for user: ${userId}. Skipping notification.`);
@@ -526,6 +533,7 @@ app.post('/requests/:id/accept', async (req, res) => {
     res.status(500).json({ message: 'Error accepting request' });
   }
 });
+
 
 
 // Reject a request
@@ -899,7 +907,7 @@ app.post('/send-notification', async (req, res) => {
 
 app.post('/requests/:userId', async (req, res) => {
   const { ad_id } = req.body; // Get ad_id from the request body
-  const user_id =  req.params.userId; // Use decrypted userId and parse it properly
+  const user_id = req.params.userId; // Use decrypted userId and parse it properly
 
   if (!user_id || !ad_id) {
     return res.status(400).json({ message: 'User ID or Ad ID not provided' });
@@ -978,16 +986,24 @@ app.post('/requests/:userId', async (req, res) => {
         message: `A user has expressed interest in your event: ${ad.title}`,
       });
 
-      // Send the push notification
-      await webpush.sendNotification(subscription, payload);
-    } 
+      // Send the push notification inside a try-catch block
+      try {
+        await webpush.sendNotification(subscription, payload);
+        console.log('Push notification sent successfully.');
+      } catch (pushError) {
+        console.error('Error sending push notification:', pushError);
+        // Respond with a message saying the notification failed
+        return res.status(500).json({ message: 'Request created but failed to send push notification.' });
+      }
+    }
 
     res.status(201).json({ message: 'Request created successfully' });
   } catch (error) {
     console.error('Error creating request:', error);
-    res.status(500).json({ message: 'Error creating request' });
+    res.status(500).json({ message: 'Error creating request', error: error.message });
   }
 });
+
 
 
 
