@@ -510,15 +510,8 @@ app.post('/requests/:id/accept', async (req, res) => {
         message: `User accepted your request`, // Changed to be more clear
       });
 
-      // Send the push notification inside a try-catch block
-      try {
-        await webpush.sendNotification(subscription, payload);
-        console.log('Push notification sent successfully.');
-      } catch (pushError) {
-        console.error('Error sending push notification:', pushError);
-        // Respond with a message saying the notification failed
-        return res.status(500).json({ message: 'Request accepted but failed to send push notification.' });
-      }
+      // Send the push notification
+      await webpush.sendNotification(subscription, payload);
     } else {
       // Log that no subscription was found but continue execution
       console.log(`No subscription found for user: ${userId}. Skipping notification.`);
@@ -533,7 +526,6 @@ app.post('/requests/:id/accept', async (req, res) => {
     res.status(500).json({ message: 'Error accepting request' });
   }
 });
-
 
 
 // Reject a request
