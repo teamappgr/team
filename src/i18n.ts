@@ -311,7 +311,7 @@ const resources = {
       verifyagain:"Μετα την ενημέρωση θα πρέπει να ξαναεπαλυθευτεί ο λογιαρασμός",
       emailAlreadyExists:"Το email υπάρχει ήδη",
       emailAlreadyExistsDescription:"Άλλαξε το email γιατί κάποιος άλλος το χρησιμοποιεί",
-      notVerified1:"Μη Επαληθευμένος (Περιμνέτε μέχρι την επαλήθευση)"
+      notVerified1:"Μη Επαληθευμένος (Περιμένετε μέχρι την επαλήθευση)"
     },
   },
   

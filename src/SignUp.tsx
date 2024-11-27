@@ -484,7 +484,7 @@ const switchCamera = () => {
     <Flex height="100vh" width="100vw" alignItems="center" justifyContent="center" backgroundColor="gray.50">
       
       <Box width="400px" p={8} border="1px solid lightgray" borderRadius="md" bg="white" shadow="md">
-        <VStack spacing={4} align="stretch">
+        <VStack spacing={0} align="stretch">
           <Text fontSize="2xl" mb={4} textAlign="left">{t('signUp')}</Text>
           <Progress value={(activeStep + 1) * (100 / steps.length)} mb={4} />
           
@@ -499,12 +499,12 @@ const switchCamera = () => {
                     active={<Text color="blue.500">{index + 1}</Text>}
                   />
                 </StepIndicator>
-                <Box flexShrink="0">
-                  <Box textAlign="left">
-                    <StepTitle>{t(step.title)}</StepTitle>
-                    <StepDescription>{t(step.description)}</StepDescription>
-                  </Box>
-                </Box>
+                <Box flexShrink="0" width="100%" maxWidth="300px">
+      <Box textAlign="left" whiteSpace="normal" wordBreak="break-word">
+        <StepTitle>{t(step.title)}</StepTitle>
+        <StepDescription>{t(step.description)}</StepDescription>
+      </Box>
+    </Box>
                 <StepSeparator />
               </Step>
             ))}

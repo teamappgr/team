@@ -405,24 +405,28 @@ const Profile = () => {
 
 
 <Box>
-  <Stack direction="row">
-    <Badge 
-      colorScheme={
-        profileData.verified === true 
-          ? 'green' 
-          : profileData.verified === null 
-            ? 'red' 
+<Stack direction="row" spacing={3}>
+      <Badge
+        colorScheme={
+          profileData.verified === true
+            ? 'green'
+            : profileData.verified === null
+            ? 'red'
             : 'red'
-      }
-    >
-      {profileData.verified === true 
-        ? t('verified') 
-        : profileData.verified === null 
+        }
+        display="inline-block" // Ensures it behaves as an inline element
+        width="100%" // Ensures the Badge can take up full width
+        maxWidth="auto" // Maximum width for the badge
+        whiteSpace="normal" // Ensures wrapping of text within the badge
+        wordBreak="break-word" // Breaks long words if needed
+      >
+        {profileData.verified === true
+          ? t('verified')
+          : profileData.verified === null
           ? t('notVerified1')
-          : t('notVerified')
-      }
-    </Badge>
-  </Stack>
+          : t('notVerified')}
+      </Badge>
+    </Stack>
 </Box>
 
             <Button
