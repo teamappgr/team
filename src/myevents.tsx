@@ -71,7 +71,26 @@ const MyEvents: React.FC = () => {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
-
+  const [isCancelOpen, setIsCancelOpen] = useState(false); // State for Cancel AlertDialog
+  const cancelActionRef = useRef<HTMLButtonElement>(null); // Ref for AlertDialog focus
+  const [selectedRequestId, setSelectedRequestId] = useState<number | null>(null); // Track the request ID for cancel action
+  
+  const onCancelOpen = (requestId: number) => {
+    setSelectedRequestId(requestId); // Store the request ID
+    setIsCancelOpen(true); // Open the Cancel dialog
+  };
+  
+  const onCancelClose = () => {
+    setIsCancelOpen(false); // Close the Cancel dialog
+    setSelectedRequestId(null); // Clear the selected request ID
+  };
+  
+  const handleCancelConfirm = () => {
+    if (selectedRequestId !== null) {
+      handleDeleteRequest(selectedRequestId); // Call your existing delete function
+    }
+    onCancelClose(); // Close the dialog
+  };
   const onOpen = (requestId: number, adId: number, action: 'accept' | 'reject') => {
     console.log(`Opening dialog with requestId: ${requestId}, adId: ${adId}, action: ${action}`);
     setSelectedRequest({ requestId, adId, action });
@@ -607,9 +626,12 @@ const MyEvents: React.FC = () => {
                                      request.answer === 0 ? t('rejected') : 
                                      t('pending')}
                                 </Text>
-                                <Button colorScheme="red" onClick={() => handleDeleteRequest(request.id)}>
-                                    Cancel
-                                </Button>
+                                <Button
+  colorScheme="red"
+  onClick={() => onCancelOpen(request.id)} // Open the AlertDialog and pass the request ID
+>
+  {t('cancel')}
+</Button>
                             </Box>
                         ))}
                     </AccordionPanel>
@@ -618,7 +640,33 @@ const MyEvents: React.FC = () => {
         )}
     </Box>
 
-    {/* Alert Dialog for Confirming Deletion */}
+    <AlertDialog
+  isOpen={isCancelOpen}
+  leastDestructiveRef={cancelActionRef}
+  onClose={onCancelClose}
+>
+  <AlertDialogOverlay>
+    <AlertDialogContent>
+      <AlertDialogHeader fontSize="lg" fontWeight="bold">
+        {t('confirmCancellation')}
+      </AlertDialogHeader>
+
+      <AlertDialogBody>
+        {t('areYouSureYouWantToCancel')}
+      </AlertDialogBody>
+
+      <AlertDialogFooter>
+        <Button ref={cancelActionRef} onClick={onCancelClose}>
+          {t('no')}
+        </Button>
+        <Button colorScheme="red" onClick={handleCancelConfirm} ml={3}>
+          {t('yes')}
+        </Button>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialogOverlay>
+</AlertDialog>
+
     <AlertDialog isOpen={isDeleteOpen} leastDestructiveRef={cancelRef} onClose={onDeleteClose}>
         <AlertDialogOverlay>
             <AlertDialogContent>
