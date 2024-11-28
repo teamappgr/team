@@ -186,7 +186,7 @@ const resources = {
       fillContactInfo: "Συμπληρώστε όνομα, email και τηλεφώνο",
       uploadImage: "Ανέβασμα Εικόνας",
       uploadImageDescription: "Ανεβάστε φωτογραφία του πάσου για επαλήθευση",
-      instagramInfo: "Πληροφορίες Instagram",
+      instagramInfo: "Instagram",
       enterInstagramInfo: "Εισάγετε το Instagram σας και κωδικό.",
       missingFields: "Συμπληρώστε όλα τα απαιτούμενα πεδία πριν προχωρήσετε.",
       step: "Βήμα",
