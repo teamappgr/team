@@ -27,7 +27,7 @@ const resources = {
       fillContactInfo: "Fill out your name, email, and phone number.",
       uploadImage: "Upload Image",
       uploadImageDescription: "Upload a picture for verification.",
-      instagramInfo: "Instagram Info",
+      instagramInfo: "Instagram",
       enterInstagramInfo: "Enter your Instagram account and password.",
       missingFields: "Please fill in all required fields before proceeding.",
       step: "Step",
