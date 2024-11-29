@@ -1,16 +1,16 @@
 {
   "files": {
-    "main.css": "http://localhost:3000/static/css/main.f855e6bc.css",
-    "main.js": "http://localhost:3000/static/js/main.5da53a85.js",
-    "static/js/845.e61d76ce.chunk.js": "http://localhost:3000/static/js/845.e61d76ce.chunk.js",
-    "static/media/backimg.jpeg": "http://localhost:3000/static/media/backimg.9aecbfa7eadcc55e3d26.jpeg",
-    "index.html": "http://localhost:3000/index.html",
-    "main.f855e6bc.css.map": "http://localhost:3000/static/css/main.f855e6bc.css.map",
-    "main.5da53a85.js.map": "http://localhost:3000/static/js/main.5da53a85.js.map",
-    "845.e61d76ce.chunk.js.map": "http://localhost:3000/static/js/845.e61d76ce.chunk.js.map"
+    "main.css": "https://teamappgr.github.io/team/static/css/main.f855e6bc.css",
+    "main.js": "https://teamappgr.github.io/team/static/js/main.0d134f59.js",
+    "static/js/845.e61d76ce.chunk.js": "https://teamappgr.github.io/team/static/js/845.e61d76ce.chunk.js",
+    "static/media/backimg.jpeg": "https://teamappgr.github.io/team/static/media/backimg.9aecbfa7eadcc55e3d26.jpeg",
+    "index.html": "https://teamappgr.github.io/team/index.html",
+    "main.f855e6bc.css.map": "https://teamappgr.github.io/team/static/css/main.f855e6bc.css.map",
+    "main.0d134f59.js.map": "https://teamappgr.github.io/team/static/js/main.0d134f59.js.map",
+    "845.e61d76ce.chunk.js.map": "https://teamappgr.github.io/team/static/js/845.e61d76ce.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.f855e6bc.css",
-    "static/js/main.5da53a85.js"
+    "static/js/main.0d134f59.js"
   ]
 }
