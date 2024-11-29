@@ -597,6 +597,7 @@ const switchCamera = () => {
                   required
                 >
                   <option value="Pan. Pireos">Πανεπηστήμειο Πειραιώς</option>
+                  {/* <option value="Pan. Dit. Attikis">Π.Α.Δ.Α</option> */}
                 </Select>
 
                 <canvas ref={canvasRef} style={{ display: 'none' }} width="400" height="300" />
