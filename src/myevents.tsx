@@ -696,7 +696,7 @@ const MyEvents: React.FC = () => {
         <AlertDialogOverlay>
             <AlertDialogContent>
                 <AlertDialogHeader fontSize="lg" fontWeight="bold">
-                    Confirm Action
+                {t('confirm')}
                 </AlertDialogHeader>
                 <AlertDialogCloseButton />
                 <AlertDialogBody>
@@ -707,7 +707,7 @@ const MyEvents: React.FC = () => {
                     {t('cancel')}
                     </Button>
                     <Button colorScheme="red" onClick={handleConfirm} ml={3}>
-                        {selectedRequest?.action === 'accept' ? 'Accept' : 'Reject'}
+                    {selectedRequest?.action === 'accept' ? t('accept') : t('reject')}
                     </Button>
                 </AlertDialogFooter>
             </AlertDialogContent>
