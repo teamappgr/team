@@ -36,6 +36,7 @@ interface User {
   instagram_account: string;
   gender: string;
   answer: number;
+  university: string;
 }
 
 interface Ad {
@@ -480,6 +481,7 @@ const MyEvents: React.FC = () => {
                                                 />
                                             <Text><strong>{t('firstName')}:</strong> {user.first_name}<strong> {t('lastName')}:</strong>{user.last_name}</Text>
                                             <Text><strong>Instagram:</strong> {user.instagram_account}</Text>
+                                            <Text><strong>Instagram:</strong> {user.university}</Text>
                                             <Box display="flex" alignItems="center">
 
                                             </Box>

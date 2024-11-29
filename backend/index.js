@@ -291,6 +291,7 @@ app.get('/ads/:id/requests/:userId', async (req, res) => {
         u.last_name, 
         u.instagram_account, 
         u.gender, 
+        u.university,
         r.answer
       FROM requests r
       JOIN users u ON r.user_id = u.encrypted_code
