@@ -277,8 +277,8 @@ const MyEvents: React.FC = () => {
       );
   
       toast({
-        title: 'Success',
-        description: `Request ${action}ed successfully.`,
+        title: t('success'),
+        description: t('request_action_success', { action }),
         status: 'success',
         duration: 5000,
         isClosable: true,
