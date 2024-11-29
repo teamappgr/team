@@ -324,7 +324,7 @@ const resources = {
       thankyoucontact:"Σας ευχαριστούμε που επικοινωνήσατε μαζί μας. Θα επικοινωνήσουμε μαζί σας σύντομα.",
       sending:"Αποστολή...",
       requestDeleted:"Η αίτηση ακυρώθηκε",
-      request_action_success: "Η αίτηση {{action}}ήκε επιτυχώς."
+      request_action_success: "Η αίτηση {{action}}ed επιτυχώς."
 
     },
   },
