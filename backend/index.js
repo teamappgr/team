@@ -562,6 +562,22 @@ app.post('/requests/:id/reject', async (req, res) => {
         'UPDATE ads SET available = available + 1 WHERE id = $1',
         [adId]
       );
+      const query = `
+      DELETE FROM GroupMembers
+      WHERE group_id = (
+          SELECT g.group_id
+          FROM groups g
+          JOIN requests r ON g.ad_id = r.ad_id
+          WHERE r.id = $1
+      )
+      AND user_id = (
+          SELECT r.user_id
+          FROM requests r
+          WHERE r.id = $1
+      );
+    `;
+    await pool.query(query, [id]);
+
     }
 
     // Update the requests table to set the answer to 0 (rejected)
@@ -984,12 +1000,14 @@ app.post('/requests/:userId', async (req, res) => {
         console.log('Push notification sent successfully.');
       } catch (pushError) {
         console.error('Error sending push notification:', pushError);
-        // Respond with a message saying the notification failed
-        return res.status(500).json({ message: 'Request created but failed to send push notification.' });
+        // Log the error but don't stop the request process
+        // Continue to send the success response
       }
     }
 
+    // Return success response even if notification failed
     res.status(201).json({ message: 'Request created successfully' });
+
   } catch (error) {
     console.error('Error creating request:', error);
     res.status(500).json({ message: 'Error creating request', error: error.message });
