@@ -166,7 +166,9 @@ const resources = {
       msgsent:"Message Sent!",
       thankyoucontact:"Thank you for contacting us. We will get back to you soon.",
       sending:"Sending...",
-      requestDeleted:"Request Canceled"
+      requestDeleted:"Request Canceled",
+      request_action_success: "Request {{action}}ed successfully."
+
     },
   },
   el: { // Greek translations
@@ -321,7 +323,8 @@ const resources = {
       msgsent:"Το μήνυμα εστάλη!",
       thankyoucontact:"Σας ευχαριστούμε που επικοινωνήσατε μαζί μας. Θα επικοινωνήσουμε μαζί σας σύντομα.",
       sending:"Αποστολή...",
-      requestDeleted:"Η αίτηση ακυρώθηκε"
+      requestDeleted:"Η αίτηση ακυρώθηκε",
+      request_action_success: "Η αίτηση {{action}}ήκε επιτυχώς."
 
     },
   },
