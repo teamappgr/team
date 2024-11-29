@@ -161,7 +161,9 @@ const resources = {
       verifyagain:"After Update Your Account Should Get Verified Again",
       emailAlreadyExists:"Email Already Exist",
       emailAlreadyExistsDescription:"Change your email because someone else use this email",
-      notVerified1:"Not Verified(Please wait until verification)"
+      notVerified1:"Not Verified(Please wait until verification)",
+      msgsent:"Message Sent!",
+      thankyoucontact:"Thank you for contacting us. We will get back to you soon."
     },
   },
   el: { // Greek translations
@@ -311,7 +313,9 @@ const resources = {
       verifyagain:"Μετα την ενημέρωση θα πρέπει να ξαναεπαλυθευτεί ο λογιαρασμός",
       emailAlreadyExists:"Το email υπάρχει ήδη",
       emailAlreadyExistsDescription:"Άλλαξε το email γιατί κάποιος άλλος το χρησιμοποιεί",
-      notVerified1:"Μη Επαληθευμένος (Περιμένετε μέχρι την επαλήθευση)"
+      notVerified1:"Μη Επαληθευμένος (Περιμένετε μέχρι την επαλήθευση)",
+      msgsent:"Το μήνυμα εστάλη!",
+      thankyoucontact:"Σας ευχαριστούμε που επικοινωνήσατε μαζί μας. Θα επικοινωνήσουμε μαζί σας σύντομα."
     },
   },
   

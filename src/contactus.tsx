@@ -22,9 +22,11 @@ const ContactUs: React.FC = () => {
   const toast = useToast();
   const { t } = useTranslation();
   const navigate = useNavigate(); // Initialize navigate
+  const [loading, setLoading] = useState(false); // Loading state
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true); // Set loading to true when form submission starts
 
     // Example: Sending email using EmailJS or your preferred service
     try {
@@ -39,8 +41,8 @@ const ContactUs: React.FC = () => {
       if (!response.ok) throw new Error('Failed to send message.');
 
       toast({
-        title: 'Message Sent!',
-        description: 'Thank you for contacting us. We will get back to you soon.',
+        title:  t('msgsent'),
+        description:  t('thankyoucontact'),
         status: 'success',
         duration: 5000,
         isClosable: true,
@@ -58,6 +60,8 @@ const ContactUs: React.FC = () => {
         duration: 5000,
         isClosable: true,
       });
+    }finally {
+      setLoading(false); // Reset loading state after submission is complete
     }
   };
 
@@ -103,7 +107,12 @@ const ContactUs: React.FC = () => {
               rows={6}
             />
           </FormControl>
-          <Button colorScheme="teal" type="submit">
+          <Button
+            colorScheme="teal"
+            type="submit"
+            isLoading={loading} // Add Chakra UI's isLoading prop
+            loadingText={t('sending')} // Add loading text during submission
+          >
             {t('sendmessage')}
           </Button>
         </form>
