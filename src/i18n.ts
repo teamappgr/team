@@ -163,7 +163,9 @@ const resources = {
       emailAlreadyExistsDescription:"Change your email because someone else use this email",
       notVerified1:"Not Verified(Please wait until verification)",
       msgsent:"Message Sent!",
-      thankyoucontact:"Thank you for contacting us. We will get back to you soon."
+      thankyoucontact:"Thank you for contacting us. We will get back to you soon.",
+      sending:"Sending..."
+
     },
   },
   el: { // Greek translations
@@ -315,7 +317,8 @@ const resources = {
       emailAlreadyExistsDescription:"Άλλαξε το email γιατί κάποιος άλλος το χρησιμοποιεί",
       notVerified1:"Μη Επαληθευμένος (Περιμένετε μέχρι την επαλήθευση)",
       msgsent:"Το μήνυμα εστάλη!",
-      thankyoucontact:"Σας ευχαριστούμε που επικοινωνήσατε μαζί μας. Θα επικοινωνήσουμε μαζί σας σύντομα."
+      thankyoucontact:"Σας ευχαριστούμε που επικοινωνήσατε μαζί μας. Θα επικοινωνήσουμε μαζί σας σύντομα.",
+      sending:"Αποστολή..."
     },
   },
   
