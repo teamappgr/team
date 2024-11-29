@@ -164,8 +164,8 @@ const resources = {
       notVerified1:"Not Verified(Please wait until verification)",
       msgsent:"Message Sent!",
       thankyoucontact:"Thank you for contacting us. We will get back to you soon.",
-      sending:"Sending..."
-
+      sending:"Sending...",
+      requestDeleted:"Request Canceled"
     },
   },
   el: { // Greek translations
@@ -318,7 +318,9 @@ const resources = {
       notVerified1:"Μη Επαληθευμένος (Περιμένετε μέχρι την επαλήθευση)",
       msgsent:"Το μήνυμα εστάλη!",
       thankyoucontact:"Σας ευχαριστούμε που επικοινωνήσατε μαζί μας. Θα επικοινωνήσουμε μαζί σας σύντομα.",
-      sending:"Αποστολή..."
+      sending:"Αποστολή...",
+      requestDeleted:"Η αίτηση ακυρώθηκε"
+
     },
   },
   
