@@ -23,3 +23,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .env
+
+update.bat
+full_restart.bat
+npm_start.bat
+node_server.bat
